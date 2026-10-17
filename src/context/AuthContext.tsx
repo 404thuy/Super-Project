@@ -1,0 +1,291 @@
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import type { User } from '../types';
+
+interface AuthResponse {
+  success: boolean;
+  error?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
+  isSettingsModalOpen: boolean;
+  openSettingsModal: () => void;
+  closeSettingsModal: () => void;
+  updateAvatar: (newAvatarUrl: string) => Promise<AuthResponse>;
+  updatePassword: (oldPassword: string, newPassword: string) => Promise<AuthResponse>;
+  loginWithPassword: (username: string, password: string) => Promise<AuthResponse>;
+  registerWithEmail: (username: string, password: string, displayName?: string, email?: string) => Promise<AuthResponse>;
+  registerUser: (username: string, password: string, displayName?: string, email?: string) => Promise<AuthResponse>;
+  loginWithEmail: (username: string, name?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  isSupabaseConfigured: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const TOKEN_KEY = 'lovecard_session_token';
+const USER_CACHE_KEY = 'lovecard_user_cache_v2';
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem(USER_CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Lấy token từ header Authorization
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  // Khôi phục phiên làm việc từ Oracle 19c backend khi tải lại trang (F5)
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkSession() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && data.success && data.user) {
+            setUser(data.user);
+            localStorage.setItem(USER_CACHE_KEY, JSON.stringify(data.user));
+          } else if (mounted) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_CACHE_KEY);
+            setUser(null);
+          }
+        } else {
+          if (mounted) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_CACHE_KEY);
+            setUser(null);
+          }
+        }
+      } catch (err) {
+        console.warn('Session verification notice:', err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+
+  const openSettingsModal = () => setIsSettingsModalOpen(true);
+  const closeSettingsModal = () => setIsSettingsModalOpen(false);
+
+  // Đăng ký tài khoản thủ công: Tên đăng nhập (không dấu, viết liền), Tên hiển thị, Mật khẩu
+  const registerUser = async (
+    username: string,
+    password: string,
+    displayName?: string,
+    email?: string
+  ): Promise<AuthResponse> => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim().toLowerCase().replace(/\s+/g, ''),
+          displayName: displayName?.trim() || username.trim(),
+          password,
+          email: email?.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Đăng ký tài khoản không thành công' };
+      }
+
+      if (data.token) {
+        localStorage.setItem(TOKEN_KEY, data.token);
+      }
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(data.user));
+      }
+
+      closeAuthModal();
+      return { success: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Lỗi kết nối tới máy chủ Oracle';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Tương thích ngược với hàm registerWithEmail
+  const registerWithEmail = registerUser;
+
+  // Đăng nhập bằng Tên tài khoản & Mật khẩu
+  const loginWithPassword = async (username: string, password: string): Promise<AuthResponse> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim().toLowerCase().replace(/\s+/g, ''),
+          password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Tên tài khoản hoặc mật khẩu không chính xác' };
+      }
+
+      if (data.token) {
+        localStorage.setItem(TOKEN_KEY, data.token);
+      }
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(data.user));
+      }
+
+      closeAuthModal();
+      return { success: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Lỗi kết nối tới máy chủ Oracle';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Đăng nhập nhanh tài khoản trải nghiệm
+  const loginWithEmail = async (username: string, name?: string) => {
+    await registerUser(username, 'lovecard123', name);
+  };
+
+  // Cập nhật ảnh đại diện vào bảng DA.USERS
+  const updateAvatar = async (newAvatarUrl: string): Promise<AuthResponse> => {
+    if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
+
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ avatarUrl: newAvatarUrl }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Cập nhật ảnh đại diện thất bại' };
+      }
+
+      const updatedUser: User = { ...user, avatarUrl: newAvatarUrl };
+      setUser(updatedUser);
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser));
+      return { success: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Lỗi cập nhật ảnh đại diện';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Đổi mật khẩu trong bảng DA.USERS
+  const updatePassword = async (oldPassword: string, newPassword: string): Promise<AuthResponse> => {
+    if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Mật khẩu cũ không chính xác' };
+      }
+
+      return { success: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Lỗi cập nhật mật khẩu';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Đăng xuất và xóa phiên trong DA.USER_SESSIONS
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+    } catch {}
+
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_CACHE_KEY);
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthModalOpen,
+        openAuthModal,
+        closeAuthModal,
+        isSettingsModalOpen,
+        openSettingsModal,
+        closeSettingsModal,
+        updateAvatar,
+        updatePassword,
+        loginWithPassword,
+        registerUser,
+        registerWithEmail,
+        loginWithEmail,
+        logout,
+        isSupabaseConfigured: false,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
