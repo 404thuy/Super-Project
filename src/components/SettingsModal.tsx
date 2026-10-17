@@ -17,196 +17,234 @@ interface PresetAvatar {
   id: string;
   name: string;
   url: string;
-  category: 'animal' | 'cute' | 'funny' | 'anime';
+  category: 'meme' | 'animal' | 'anime' | 'funny' | 'pixel';
 }
 
 const PRESET_AVATARS: PresetAvatar[] = [
-  // 🐾 ĐỘNG VẬT MEME NỔI TIẾNG & DỄ THƯƠNG (HOT MEME)
+  // 🔥 TOP MEME HUYỀN THOẠI (VIRAL INTERNET MEMES)
+  {
+    id: 'meme-popcat',
+    name: 'Mèo há miệng Popcat (Viral)',
+    category: 'meme',
+    url: 'https://popcat.click/twitter-card.jpg',
+  },
+  {
+    id: 'meme-cheems',
+    name: 'Chó Shiba Cheems trầm cảm',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/cheems.png',
+  },
+  {
+    id: 'meme-doge',
+    name: 'Chó Shiba Doge liếc mắt huyền thoại',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/doge.png',
+  },
+  {
+    id: 'meme-fine',
+    name: 'This Is Fine (Vẫn ổn trong biển lửa)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/fine.png',
+  },
+  {
+    id: 'meme-smudge',
+    name: 'Mèo Smudge ngồi bàn ăn bị mắng',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/woman-cat.png',
+  },
+  {
+    id: 'meme-grumpy',
+    name: 'Grumpy Cat (Mèo quạu khó ở)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/grumpycat.png',
+  },
+  {
+    id: 'meme-pepe',
+    name: 'Ếch xanh Pepe cảm xúc (Feels Bad)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/sadfrog.png',
+  },
+  {
+    id: 'meme-bongo',
+    name: 'Mèo gõ trống Bongo Cat siêu quẩy',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/bongo.png',
+  },
+  {
+    id: 'meme-rollsafe',
+    name: 'Roll Safe (Gõ trán thông minh)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/rollsafe.png',
+  },
+  {
+    id: 'meme-ams',
+    name: 'Hải cẩu ngượng ngùng (Awkward Seal)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/ams.png',
+  },
+  {
+    id: 'meme-harold',
+    name: 'Cụ ông Harold (Hide The Pain)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/harold.png',
+  },
+  {
+    id: 'meme-success',
+    name: 'Success Kid (Bé nắm chặt tay quyết tâm)',
+    category: 'meme',
+    url: 'https://api.memegen.link/images/success.png',
+  },
+
+  // 🐾 THÚ CƯNG & ĐỘNG VẬT SIÊU CUTE (CHỤP THẬT HD)
   {
     id: 'animal-capybara',
     name: 'Capybara thong dong (Bộ trưởng Ngoại giao)',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CapybaraChill&backgroundColor=ffd5dc',
-  },
-  {
-    id: 'animal-cheems',
-    name: 'Chó Shiba Cheems Meme',
-    category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CheemsDoge&backgroundColor=ffdfbf',
-  },
-  {
-    id: 'animal-popcat',
-    name: 'Mèo Meme há miệng Popcat',
-    category: 'animal',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=PopCatSurprise&backgroundColor=d1d4f9',
-  },
-  {
-    id: 'animal-politecat',
-    name: 'Mèo cười gượng lịch sự (Polite Cat)',
-    category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PoliteCatOllie&backgroundColor=c0aede',
+    url: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=250&auto=format&fit=crop',
   },
   {
     id: 'animal-corgi',
-    name: 'Cún Corgi mông quả đào ngơ ngác',
+    name: 'Cún Corgi mông đào tinh nghịch',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CorgiHappy&backgroundColor=ffdfbf',
+    url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=250&auto=format&fit=crop',
   },
   {
-    id: 'animal-scared-hamster',
-    name: 'Hamster hoảng sợ Meme',
+    id: 'animal-cat',
+    name: 'Bé mèo mắt tròn xoe ngơ ngác',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=ScaredHamster&backgroundColor=ffd5dc',
-  },
-  {
-    id: 'animal-crying-cat',
-    name: 'Mèo dỗi hờn khóc nhè Meme',
-    category: 'animal',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SadCryingCat&backgroundColor=ddd6fe',
-  },
-  {
-    id: 'animal-smug-cat',
-    name: 'Mèo đeo kính râm siêu ngầu',
-    category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CoolSmugCat&backgroundColor=b6e3f4',
+    url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=250&auto=format&fit=crop',
   },
   {
     id: 'animal-panda',
-    name: 'Gấu trúc Panda lăn tròn lười biếng',
+    name: 'Gấu trúc Panda tròn ủm lười biếng',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BabyPandaRoll&backgroundColor=e0f2fe',
+    url: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=250&auto=format&fit=crop',
   },
   {
-    id: 'animal-duck',
-    name: 'Vịt vàng bối rối',
+    id: 'animal-rabbit',
+    name: 'Bé thỏ bông trắng má hồng',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=DucklingMeme&backgroundColor=ffeb3b',
+    url: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=250&auto=format&fit=crop',
   },
   {
-    id: 'animal-otter',
-    name: 'Bé rái cá chắp tay xin xỏ',
+    id: 'animal-hamster',
+    name: 'Chuột Hamster ăn hạt dẻ',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CuteOtterBeg&backgroundColor=fed7aa',
+    url: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=250&auto=format&fit=crop',
   },
   {
-    id: 'animal-seal',
-    name: 'Hải cẩu tròn xoe đáng yêu',
+    id: 'animal-shiba',
+    name: 'Chó Shiba nụ cười tỏa nắng',
     category: 'animal',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=LazySealRound&backgroundColor=c7d2fe',
+    url: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=250&auto=format&fit=crop',
+  },
+  {
+    id: 'animal-cat-glasses',
+    name: 'Mèo xám đeo kính ngầu',
+    category: 'animal',
+    url: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=250&auto=format&fit=crop',
   },
 
-  // 🎀 CUTE ĐÁNG YÊU
+  // 🌸 CHIBI ANIME & MANGA TRENDY (DICEBEAR LORELEI PASTEL)
   {
-    id: 'cute-1',
-    name: 'Bé thỏ hồng má đào',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PinkBunny',
+    id: 'anime-sakura',
+    name: 'Cô bé Anime tóc hồng hoa anh đào',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=SakuraChan&backgroundColor=ffd5dc',
   },
   {
-    id: 'cute-2',
-    name: 'Bé gấu nâu bánh mật',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BrownBear',
+    id: 'anime-shadow',
+    name: 'Cool Boy Anime tóc bạc lạnh lùng',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ShadowKun&backgroundColor=d1d4f9',
   },
   {
-    id: 'cute-3',
-    name: 'Mèo con mắt to tròn',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=KittenPeach',
+    id: 'anime-neko',
+    name: 'Neko Girl tai mèo nhí nhảnh',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=NekoMimi&backgroundColor=fed7aa',
   },
   {
-    id: 'cute-4',
-    name: 'Cún con vui vẻ tai cụp',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyPuppy',
+    id: 'anime-magic',
+    name: 'Pháp sư Chibi mắt biếc huyền bí',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=MagicLuna&backgroundColor=e0f2fe',
   },
   {
-    id: 'cute-5',
-    name: 'Cáo tuyết mỉm cười',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=SnowFox',
+    id: 'anime-idol',
+    name: 'Chibi Idol tóc vàng rạng rỡ',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=StarIdol&backgroundColor=fef08a',
   },
   {
-    id: 'cute-6',
-    name: 'Chim cánh cụt lóng ngóng',
-    category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PenguinWaddle',
+    id: 'anime-kitsune',
+    name: 'Nàng cáo Kitsune kiêu kỳ',
+    category: 'anime',
+    url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=KitsuneYuki&backgroundColor=fbcfe8',
   },
 
-  // 😎 HÀI HƯỚC & BIỂU CẢM
+  // 😎 BIỂU CẢM HÀI HƯỚC & GEN Z (FUN EMOJI)
   {
-    id: 'funny-1',
-    name: 'Mặt cười ngầu đeo kính râm',
+    id: 'funny-cool',
+    name: 'Mặt cười ngầu đeo kính râm đen',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=CoolEmoji',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=CoolEmoji&backgroundColor=bbf7d0',
   },
   {
-    id: 'funny-2',
-    name: 'Bắn tim ngọt ngào',
+    id: 'funny-heart',
+    name: 'Bắn tim ngọt ngào mê đắm',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=HeartEyes',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=HeartEyes&backgroundColor=fecdd3',
   },
   {
-    id: 'funny-3',
-    name: 'Cười tít mắt ha ha',
+    id: 'funny-joy',
+    name: 'Cười tít mắt haha nghiêng ngả',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=JoySmile',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=JoySmile&backgroundColor=fef08a',
   },
   {
-    id: 'funny-4',
-    name: 'Nháy mắt tinh nghịch',
+    id: 'funny-wink',
+    name: 'Nháy mắt thả thính tinh nghịch',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=WinkFun',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=WinkFun&backgroundColor=fed7aa',
   },
   {
-    id: 'funny-5',
-    name: 'Mặt ngơ ngác vô tội',
+    id: 'funny-sparkle',
+    name: 'Mắt sao lấp lánh kinh ngạc',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SillyFace',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SparkleFace&backgroundColor=ddd6fe',
   },
   {
-    id: 'funny-6',
-    name: 'Mắt lấp lánh ánh sao',
+    id: 'funny-silly',
+    name: 'Mặt đần ngơ ngác đang load dữ liệu',
     category: 'funny',
-    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SparkleFace',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=DumbFace&backgroundColor=e2e8f0',
   },
 
-  // 🌸 CHIBI & ANIME TRENDY
+  // 👾 PIXEL ART & GAMING RETRO
   {
-    id: 'anime-1',
-    name: 'Bé dâu tây má hồng',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Strawberry',
+    id: 'pixel-cat',
+    name: 'Mèo Pixel 8-Bit cổ điển',
+    category: 'pixel',
+    url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelCat&backgroundColor=fed7aa',
   },
   {
-    id: 'anime-2',
-    name: 'Cô bé tai mèo Anime',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=NekoChan',
+    id: 'pixel-knight',
+    name: 'Hiệp sĩ dũng cảm Pixel Art',
+    category: 'pixel',
+    url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=RetroKnight&backgroundColor=bfdbfe',
   },
   {
-    id: 'anime-3',
-    name: 'Cool boy áo hoodie',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=LeoCool',
+    id: 'pixel-cyber',
+    name: 'Game thủ Cyberpunk tương lai',
+    category: 'pixel',
+    url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=CyberHero&backgroundColor=e9d5ff',
   },
   {
-    id: 'anime-4',
-    name: 'Công chúa hoa anh đào',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sakura',
-  },
-  {
-    id: 'anime-5',
-    name: 'Robot vui tính thông thái',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sparky',
-  },
-  {
-    id: 'anime-6',
-    name: 'Phi hành gia du hành vũ trụ',
-    category: 'anime',
-    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=AstroKid',
+    id: 'pixel-robot',
+    name: 'Robot thám hiểm không gian',
+    category: 'pixel',
+    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=AstroBot&backgroundColor=c7d2fe',
   },
 ];
 
@@ -220,7 +258,7 @@ export default function SettingsModal() {
     Boolean(user?.username?.startsWith('guest_'));
 
   const [activeTab, setActiveTab] = useState<'avatar' | 'password'>('avatar');
-  const [avatarCategory, setAvatarCategory] = useState<'all' | 'animal' | 'cute' | 'funny' | 'anime'>('all');
+  const [avatarCategory, setAvatarCategory] = useState<'all' | 'meme' | 'animal' | 'anime' | 'funny' | 'pixel'>('all');
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(user?.avatarUrl || '');
 
   // Reset tab về avatar nếu là tài khoản khách
@@ -440,7 +478,7 @@ export default function SettingsModal() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Chọn ảnh Meme & Động vật nổi tiếng:</span>
+                  <span>Kho Ảnh Đại Diện (Top Meme, Thú Cưng, Anime & Gen Z):</span>
                 </span>
               </div>
 
@@ -448,10 +486,11 @@ export default function SettingsModal() {
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar shrink-0">
                 {[
                   { id: 'all', label: 'Tất cả' },
-                  { id: 'animal', label: '🐾 Động Vật Meme' },
-                  { id: 'cute', label: '🎀 Cute Đáng Yêu' },
-                  { id: 'funny', label: '😎 Hài Hước Meme' },
-                  { id: 'anime', label: '🌸 Chibi Trendy' },
+                  { id: 'meme', label: '🔥 Top Meme' },
+                  { id: 'animal', label: '🐾 Thú Cưng Cute' },
+                  { id: 'anime', label: '🌸 Chibi Anime' },
+                  { id: 'funny', label: '😎 Hài Hước Gen Z' },
+                  { id: 'pixel', label: '👾 Pixel Retro' },
                 ].map((cat) => (
                   <button
                     key={cat.id}
@@ -471,8 +510,30 @@ export default function SettingsModal() {
                 ))}
               </div>
 
+              {/* Preview Avatar đang chọn */}
+              {(() => {
+                const currentAvatar = PRESET_AVATARS.find((a) => a.url === selectedAvatarUrl);
+                return (
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-purple-50/80 border border-purple-100 text-xs">
+                    <span className="text-slate-600 font-medium truncate">
+                      {currentAvatar ? (
+                        <>
+                          <span className="font-bold text-purple-700">Đã chọn: </span>
+                          <span className="text-slate-800 font-semibold">{currentAvatar.name}</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-500 italic">Chọn một ảnh ở dưới hoặc dán link ảnh tùy chọn</span>
+                      )}
+                    </span>
+                    <span className="text-[11px] text-purple-600 font-bold shrink-0 ml-2">
+                      {filteredAvatars.length} ảnh
+                    </span>
+                  </div>
+                );
+              })()}
+
               {/* Avatar Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-56 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-56 overflow-y-auto p-1.5 border border-slate-100 rounded-2xl bg-slate-50/60">
                 {filteredAvatars.map((avatar) => {
                   const isSelected = selectedAvatarUrl === avatar.url;
                   return (
@@ -485,18 +546,19 @@ export default function SettingsModal() {
                       }}
                       className={`relative aspect-square rounded-2xl p-1 transition-all group cursor-pointer ${
                         isSelected
-                          ? 'ring-2 ring-purple-600 bg-purple-50 scale-105'
-                          : 'hover:bg-white hover:shadow-xs'
+                          ? 'ring-2 ring-purple-600 bg-purple-100/70 shadow-md scale-105'
+                          : 'bg-white hover:bg-purple-50/50 hover:shadow-xs border border-slate-100 hover:scale-102'
                       }`}
                       title={avatar.name}
                     >
                       <img
                         src={avatar.url}
                         alt={avatar.name}
-                        className="w-full h-full rounded-xl object-contain"
+                        loading="lazy"
+                        className="w-full h-full rounded-xl object-cover"
                       />
                       {isSelected && (
-                        <span className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-purple-600 text-white shadow-xs">
+                        <span className="absolute top-1 right-1 p-0.5 rounded-full bg-purple-600 text-white shadow-xs">
                           <Check className="w-2.5 h-2.5" />
                         </span>
                       )}
