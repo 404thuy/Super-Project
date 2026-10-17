@@ -132,19 +132,18 @@ export default function Templates() {
               >
                 {/* Entire upper portion is clickable directly to Studio */}
                 <Link to={`/studio/${tmpl.id}`} className="block relative">
-                  {/* Real Preview Photo Cover */}
-                  <div className="relative h-52 sm:h-56 overflow-hidden bg-slate-900">
+                  {/* Hero Image Section (Chiếm diện tích lớn, tỉ lệ 4:3 đẹp mắt) */}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
                     <img
                       src={tmpl.thumbnail}
                       alt={tmpl.titleVi}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       loading="lazy"
                     />
-                    {/* Subtle gradient vignette at bottom of image for readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
 
                     {/* Category Pill */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-800 shadow-sm">
+                    <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">
                       {tmpl.category === '20-10'
                         ? '🌹 20/10'
                         : tmpl.category === 'love'
@@ -157,24 +156,23 @@ export default function Templates() {
                     </div>
 
                     {/* Action Controls: Preview & Heart Button */}
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+                    <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
                       <Link
                         to={`/card/demo-${tmpl.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-black/40 hover:bg-black/70 backdrop-blur-md text-white p-2 rounded-full text-xs font-semibold shadow-sm flex items-center justify-center transition-colors"
+                        className="bg-black/50 hover:bg-black/75 backdrop-blur-md text-white p-2 rounded-full text-xs font-semibold shadow-sm flex items-center justify-center transition-all active:scale-90 hover:scale-105"
                         title="Xem thử thiệp mẫu"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </Link>
 
-                      {/* Heart Button (Each account can like 1 time, saves to history) */}
                       <button
                         type="button"
                         onClick={(e) => handleToggleHeart(tmpl.id, e)}
-                        className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center ${
+                        className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center cursor-pointer hover:scale-105 ${
                           isLiked
                             ? 'bg-rose-500 text-white shadow-md shadow-rose-500/40 ring-2 ring-white/70'
-                            : 'bg-black/40 hover:bg-black/70 text-white hover:text-rose-300'
+                            : 'bg-black/50 hover:bg-black/75 text-white hover:text-rose-300'
                         }`}
                         title={
                           isLiked
@@ -190,70 +188,46 @@ export default function Templates() {
                       </button>
                     </div>
 
-                    {/* Title overlaid nicely on bottom of cover */}
-                    <div className="absolute bottom-3 left-4 right-4 text-white">
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-rose-300 block mb-0.5">
-                        {tmpl.icon} {tmpl.title}
-                      </span>
-                      <h3 className="text-lg font-bold drop-shadow-sm leading-snug">
-                        {tmpl.titleVi}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Card Description & Stats */}
-                  <div className="p-4 sm:p-5 space-y-2">
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                      {tmpl.descriptionVi}
-                    </p>
-
-                    {/* Template Stats Badge (Views, Hearts, Uses - Real live data) */}
-                    <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-400 font-medium">
-                      <span className="flex items-center gap-1 hover:text-purple-600 transition-colors">
-                        <Eye className="w-3.5 h-3.5 text-purple-500" />
+                    {/* Live Stats Pill ở góc dưới trái của ảnh */}
+                    <div className="absolute bottom-3 left-3.5 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[11px] font-medium text-white/90 pointer-events-none">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3 text-purple-300" />
                         <span>{formatStat(stats.views)}</span>
                       </span>
-
-                      {/* Clickable Heart stat */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleToggleHeart(tmpl.id, e)}
-                        className={`flex items-center gap-1 transition-colors ${
-                          isLiked ? 'text-rose-600 font-bold' : 'hover:text-rose-600'
-                        }`}
-                        title={isLiked ? 'Đã thả tim (nhấp để bỏ thích)' : 'Thả tim mẫu thiệp'}
-                      >
-                        <Heart
-                          className={`w-3.5 h-3.5 text-rose-500 ${
-                            isLiked ? 'fill-rose-500' : ''
-                          }`}
-                        />
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3 h-3 text-rose-300" />
                         <span>{formatStat(stats.hearts)}</span>
-                      </button>
-
-                      <span className="flex items-center gap-1 hover:text-indigo-600 transition-colors">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{formatStat(stats.uses)} lượt tạo</span>
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-300" />
+                        <span>{formatStat(stats.uses)}</span>
                       </span>
                     </div>
                   </div>
                 </Link>
 
-                {/* Minimal, single clean touch action */}
-                <div className="px-4 sm:px-5 pb-4 pt-1 flex items-center justify-between border-t border-slate-100">
-                  <Link
-                    to={`/card/demo-${tmpl.id}`}
-                    className="text-xs font-medium text-slate-400 hover:text-purple-600 flex items-center gap-1 transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Xem mẫu</span>
-                  </Link>
+                {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
+                <div className="p-4 sm:p-4.5 flex items-center justify-between gap-3 bg-white">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to={`/studio/${tmpl.id}`}
+                      className="block font-extrabold text-sm sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
+                      title={tmpl.titleVi}
+                    >
+                      {tmpl.icon} {tmpl.titleVi}
+                    </Link>
+                    <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                      Hiệu ứng 3D • Mở khóa trải nghiệm
+                    </p>
+                  </div>
 
                   <Link
                     to={`/studio/${tmpl.id}`}
-                    className="text-xs font-bold text-purple-600 hover:text-purple-700 group-hover:translate-x-0.5 transition-transform flex items-center gap-1"
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                   >
-                    <span>Tạo thiệp này</span>
+                    <span>Tạo thiệp</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

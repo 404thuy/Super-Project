@@ -668,117 +668,102 @@ export default function Landing() {
             return (
               <div
                 key={tmpl.id}
-                className="group glass-rose-card rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col"
               >
-                {/* Entire Card Header Link */}
-                <Link to={`/studio/${tmpl.id}`} className="block relative">
-                  <div className="relative h-56 sm:h-60 overflow-hidden bg-slate-900">
+                {/* Hero Image Section (Chiếm diện tích lớn, tỉ lệ 4:3 đẹp mắt) */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                  <Link to={`/studio/${tmpl.id}`} className="block w-full h-full">
                     <img
                       src={tmpl.thumbnail}
                       alt={tmpl.titleVi}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-black/20" />
-
-                    {/* Category Badge */}
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1">
-                      <span>{tmpl.category === '20-10' ? '🌹 20/10' : tmpl.category === 'love' ? '💖 Yêu thương' : tmpl.category === 'gratitude' ? '🏮 Tri ân' : '✨ Đặc biệt'}</span>
-                    </div>
-
-                    {/* Top Right Actions: Preview Eye & Heart */}
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-                      <Link
-                        to={`/card/demo-${tmpl.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-black/45 hover:bg-black/75 backdrop-blur-md text-white p-2 rounded-full text-xs transition-colors flex items-center justify-center"
-                        title="Xem thử mẫu thiệp"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={(e) => handleToggleHeart(tmpl.id, e)}
-                        className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center ${
-                          isLiked
-                            ? 'bg-rose-500 text-white shadow-md shadow-rose-500/40 ring-2 ring-white/80'
-                            : 'bg-black/45 hover:bg-black/75 text-white hover:text-rose-300'
-                        }`}
-                        title={isLiked ? 'Bỏ thích mẫu này' : 'Thả tim & lưu mẫu vào lịch sử'}
-                      >
-                        <Heart
-                          className={`w-3.5 h-3.5 transition-transform ${
-                            isLiked ? 'fill-white text-white scale-110' : ''
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    {/* Bottom Title Overlay */}
-                    <div className="absolute bottom-3.5 left-4 right-4 text-white">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-base">{tmpl.icon}</span>
-                        <span className="text-[10px] uppercase font-extrabold tracking-widest text-rose-300">
-                          {tmpl.title}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold drop-shadow-sm leading-snug">
-                        {tmpl.titleVi}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Card Description & Realistic Live Stats */}
-                  <div className="p-5 space-y-3">
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                      {tmpl.descriptionVi}
-                    </p>
-
-                    {/* Stats Ribbon */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-semibold">
-                      <span className="flex items-center gap-1 text-slate-500">
-                        <Eye className="w-3.5 h-3.5 text-purple-500" />
-                        <span>{formatStat(stats.views)} lượt xem</span>
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={(e) => handleToggleHeart(tmpl.id, e)}
-                        className={`flex items-center gap-1 transition-colors ${
-                          isLiked ? 'text-rose-600 font-bold' : 'hover:text-rose-600'
-                        }`}
-                      >
-                        <Heart
-                          className={`w-3.5 h-3.5 text-rose-500 ${isLiked ? 'fill-rose-500' : ''}`}
-                        />
-                        <span>{formatStat(stats.hearts)} tim</span>
-                      </button>
-
-                      <span className="flex items-center gap-1 text-amber-600">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{formatStat(stats.uses)} lượt tạo</span>
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Card Action Footer */}
-                <div className="px-5 pb-4 pt-1 flex items-center justify-between border-t border-rose-100/50">
-                  <Link
-                    to={`/card/demo-${tmpl.id}`}
-                    className="text-xs font-semibold text-slate-500 hover:text-purple-600 flex items-center gap-1 transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Xem mẫu</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
                   </Link>
 
+                  {/* Category Badge */}
+                  <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1 pointer-events-none">
+                    <span>
+                      {tmpl.category === '20-10'
+                        ? '🌹 20/10'
+                        : tmpl.category === 'love'
+                        ? '💖 Yêu thương'
+                        : tmpl.category === 'gratitude'
+                        ? '🏮 Tri ân'
+                        : '✨ Đặc biệt'}
+                    </span>
+                  </div>
+
+                  {/* Top Right Actions: Preview Eye & Heart */}
+                  <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
+                    <Link
+                      to={`/card/demo-${tmpl.id}`}
+                      className="bg-black/50 hover:bg-black/75 backdrop-blur-md text-white p-2 rounded-full text-xs transition-all active:scale-90 flex items-center justify-center hover:scale-105"
+                      title="Xem thử mẫu thiệp"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleHeart(tmpl.id, e)}
+                      className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center cursor-pointer hover:scale-105 ${
+                        isLiked
+                          ? 'bg-rose-500 text-white shadow-md shadow-rose-500/40 ring-2 ring-white/80'
+                          : 'bg-black/50 hover:bg-black/75 text-white hover:text-rose-300'
+                      }`}
+                      title={isLiked ? 'Bỏ thích mẫu này' : 'Thả tim & lưu mẫu'}
+                    >
+                      <Heart
+                        className={`w-3.5 h-3.5 transition-transform ${
+                          isLiked ? 'fill-white text-white scale-110' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Live Stats Pill đặt tinh tế ở góc dưới trái của ảnh */}
+                  <div className="absolute bottom-3 left-3.5 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[11px] font-medium text-white/90 pointer-events-none">
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-purple-300" />
+                      <span>{formatStat(stats.views)}</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3 h-3 text-rose-300" />
+                      <span>{formatStat(stats.hearts)}</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-300" />
+                      <span>{formatStat(stats.uses)}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
+                <div className="p-4 sm:p-4.5 flex items-center justify-between gap-3 bg-white">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to={`/studio/${tmpl.id}`}
+                      className="block font-extrabold text-sm sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
+                      title={tmpl.titleVi}
+                    >
+                      {tmpl.icon} {tmpl.titleVi}
+                    </Link>
+                    <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                      Hiệu ứng 3D • Mở khóa trải nghiệm
+                    </p>
+                  </div>
+
+                  {/* Nút Tạo thiệp */}
                   <Link
                     to={`/studio/${tmpl.id}`}
                     onClick={() => soundFx.playHeartPop()}
-                    className="text-xs font-extrabold text-rose-600 hover:text-rose-700 group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200"
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                   >
-                    <span>Tạo thiệp này</span>
+                    <span>Tạo thiệp</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
