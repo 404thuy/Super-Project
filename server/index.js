@@ -443,6 +443,18 @@ app.put('/api/auth/change-password', async (req, res) => {
     return res.status(401).json({ success: false, error: 'Yêu cầu đăng nhập' });
   }
 
+  // Tài khoản khách không thể đổi mật khẩu
+  if (
+    req.user.username === 'khach_trainghiem' ||
+    req.user.id === 'usr_demo_guest' ||
+    (req.user.username && req.user.username.startsWith('khach_'))
+  ) {
+    return res.status(403).json({
+      success: false,
+      error: 'Tài khoản khách dùng thử không thể đổi mật khẩu. Vui lòng đăng ký tài khoản chính thức.',
+    });
+  }
+
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
     return res.status(400).json({ success: false, error: 'Vui lòng cung cấp mật khẩu cũ và mới' });

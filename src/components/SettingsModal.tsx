@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -213,9 +213,22 @@ const PRESET_AVATARS: PresetAvatar[] = [
 export default function SettingsModal() {
   const { user, isSettingsModalOpen, closeSettingsModal, updateAvatar, updatePassword } = useAuth();
 
+  const isGuest =
+    user?.username === 'khach_trainghiem' ||
+    user?.id === 'usr_demo_guest' ||
+    Boolean(user?.username?.startsWith('khach_')) ||
+    Boolean(user?.username?.startsWith('guest_'));
+
   const [activeTab, setActiveTab] = useState<'avatar' | 'password'>('avatar');
   const [avatarCategory, setAvatarCategory] = useState<'all' | 'animal' | 'cute' | 'funny' | 'anime'>('all');
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(user?.avatarUrl || '');
+
+  // Reset tab về avatar nếu là tài khoản khách
+  useEffect(() => {
+    if (isGuest) {
+      setActiveTab('avatar');
+    }
+  }, [isGuest, isSettingsModalOpen]);
 
   // Password fields
   const [oldPassword, setOldPassword] = useState('');
@@ -335,49 +348,68 @@ export default function SettingsModal() {
               </span>
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">Cài Đặt Tài Khoản</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">Cài Đặt Tài Khoản</h2>
+                {isGuest && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                    Khách dùng thử
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 font-medium">@{user.username || 'user'} • {user.displayName}</p>
             </div>
           </div>
 
-          {/* Tab Selector */}
-          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-4 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                soundFx.playPinClick();
-                setErrorMessage(null);
-                setSuccessMessage(null);
-                setActiveTab('avatar');
-              }}
-              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'avatar'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Smile className="w-4 h-4 text-purple-600" />
-              <span>Đổi Ảnh Đại Diện</span>
-            </button>
+          {/* Tab Selector - Chỉ hiển thị mục Đổi Mật Khẩu cho tài khoản đăng ký chính thức */}
+          {!isGuest ? (
+            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-4 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playPinClick();
+                  setErrorMessage(null);
+                  setSuccessMessage(null);
+                  setActiveTab('avatar');
+                }}
+                className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'avatar'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Smile className="w-4 h-4 text-purple-600" />
+                <span>Đổi Ảnh Đại Diện</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundFx.playPinClick();
-                setErrorMessage(null);
-                setSuccessMessage(null);
-                setActiveTab('password');
-              }}
-              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'password'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Lock className="w-4 h-4 text-rose-500" />
-              <span>Đổi Mật Khẩu</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playPinClick();
+                  setErrorMessage(null);
+                  setSuccessMessage(null);
+                  setActiveTab('password');
+                }}
+                className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'password'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Lock className="w-4 h-4 text-rose-500" />
+                <span>Đổi Mật Khẩu</span>
+              </button>
+            </div>
+          ) : (
+            <div className="mb-4 px-3.5 py-2.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100/80 rounded-2xl flex items-center justify-between text-xs text-purple-800">
+              <span className="flex items-center gap-2 font-bold">
+                <Smile className="w-4 h-4 text-purple-600" />
+                <span>Chọn Ảnh Đại Diện (Meme & Động Vật)</span>
+              </span>
+              <span className="text-[11px] font-medium text-purple-600">
+                Chế độ trải nghiệm
+              </span>
+            </div>
+          )}
 
           {/* Feedback Alerts */}
           {errorMessage && (
@@ -509,8 +541,8 @@ export default function SettingsModal() {
             </div>
           )}
 
-          {/* TAB 2: PASSWORD CHANGE */}
-          {activeTab === 'password' && (
+          {/* TAB 2: PASSWORD CHANGE (Chỉ dành cho tài khoản chính thức) */}
+          {!isGuest && activeTab === 'password' && (
             <form onSubmit={handleSavePassword} className="space-y-3 flex-1">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
