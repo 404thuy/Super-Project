@@ -310,12 +310,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     closeAuthModal();
   };
 
-  // Cập nhật ảnh đại diện vào bảng DA.USERS
+  // Cập nhật ảnh đại diện vào bảng DA.USERS (với cơ chế đồng bộ mượt mà)
   const updateAvatar = async (newAvatarUrl: string): Promise<AuthResponse> => {
     if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
 
+    const updatedUser: User = { ...user, avatarUrl: newAvatarUrl };
+    setUser(updatedUser);
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser));
+
+    // Cập nhật tài khoản local nếu có
     try {
-      const res = await fetch('/api/auth/profile', {
+      const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
+      if (user.username && stored[user.username]) {
+        stored[user.username].user.avatarUrl = newAvatarUrl;
+        localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
+      }
+    } catch {}
+
+    // Gửi đồng bộ lên CSDL Oracle phía server
+    try {
+      await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -323,20 +337,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({ avatarUrl: newAvatarUrl }),
       });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Cập nhật ảnh đại diện thất bại' };
-      }
-
-      const updatedUser: User = { ...user, avatarUrl: newAvatarUrl };
-      setUser(updatedUser);
-      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser));
-      return { success: true };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Lỗi cập nhật ảnh đại diện';
-      return { success: false, error: msg };
+      console.warn('Sync avatar to server notice:', err);
     }
+
+    return { success: true };
   };
 
   // Đổi mật khẩu trong bảng DA.USERS

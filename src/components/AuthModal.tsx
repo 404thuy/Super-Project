@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -56,6 +56,16 @@ export default function AuthModal() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Mỗi khi mở Modal hoặc đăng xuất vào lại, mặc định LUÔN LUÔN hiển thị tab Đăng Nhập
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      setTab('login');
+      setErrorMessage(null);
+      setPassword('');
+      setShowPassword(false);
+    }
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 

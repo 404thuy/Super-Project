@@ -8,7 +8,6 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
-  ShieldCheck,
   Camera,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -18,64 +17,138 @@ interface PresetAvatar {
   id: string;
   name: string;
   url: string;
-  category: 'cute' | 'funny' | 'anime';
+  category: 'animal' | 'cute' | 'funny' | 'anime';
 }
 
 const PRESET_AVATARS: PresetAvatar[] = [
-  // Cute Chibi Avatars
+  // 🐾 ĐỘNG VẬT MEME NỔI TIẾNG & DỄ THƯƠNG (HOT MEME)
+  {
+    id: 'animal-capybara',
+    name: 'Capybara thong dong (Bộ trưởng Ngoại giao)',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CapybaraChill&backgroundColor=ffd5dc',
+  },
+  {
+    id: 'animal-cheems',
+    name: 'Chó Shiba Cheems Meme',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CheemsDoge&backgroundColor=ffdfbf',
+  },
+  {
+    id: 'animal-popcat',
+    name: 'Mèo Meme há miệng Popcat',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=PopCatSurprise&backgroundColor=d1d4f9',
+  },
+  {
+    id: 'animal-politecat',
+    name: 'Mèo cười gượng lịch sự (Polite Cat)',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PoliteCatOllie&backgroundColor=c0aede',
+  },
+  {
+    id: 'animal-corgi',
+    name: 'Cún Corgi mông quả đào ngơ ngác',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CorgiHappy&backgroundColor=ffdfbf',
+  },
+  {
+    id: 'animal-scared-hamster',
+    name: 'Hamster hoảng sợ Meme',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=ScaredHamster&backgroundColor=ffd5dc',
+  },
+  {
+    id: 'animal-crying-cat',
+    name: 'Mèo dỗi hờn khóc nhè Meme',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SadCryingCat&backgroundColor=ddd6fe',
+  },
+  {
+    id: 'animal-smug-cat',
+    name: 'Mèo đeo kính râm siêu ngầu',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CoolSmugCat&backgroundColor=b6e3f4',
+  },
+  {
+    id: 'animal-panda',
+    name: 'Gấu trúc Panda lăn tròn lười biếng',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BabyPandaRoll&backgroundColor=e0f2fe',
+  },
+  {
+    id: 'animal-duck',
+    name: 'Vịt vàng bối rối',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=DucklingMeme&backgroundColor=ffeb3b',
+  },
+  {
+    id: 'animal-otter',
+    name: 'Bé rái cá chắp tay xin xỏ',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CuteOtterBeg&backgroundColor=fed7aa',
+  },
+  {
+    id: 'animal-seal',
+    name: 'Hải cẩu tròn xoe đáng yêu',
+    category: 'animal',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=LazySealRound&backgroundColor=c7d2fe',
+  },
+
+  // 🎀 CUTE ĐÁNG YÊU
   {
     id: 'cute-1',
-    name: 'Bé thỏ hồng',
+    name: 'Bé thỏ hồng má đào',
     category: 'cute',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PinkBunny',
   },
   {
     id: 'cute-2',
-    name: 'Bé gấu nâu',
+    name: 'Bé gấu nâu bánh mật',
     category: 'cute',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BrownBear',
   },
   {
     id: 'cute-3',
-    name: 'Mèo con má đào',
+    name: 'Mèo con mắt to tròn',
     category: 'cute',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=KittenPeach',
   },
   {
     id: 'cute-4',
-    name: 'Cún con vui vẻ',
+    name: 'Cún con vui vẻ tai cụp',
     category: 'cute',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyPuppy',
   },
   {
     id: 'cute-5',
-    name: 'Panda dễ thương',
+    name: 'Cáo tuyết mỉm cười',
     category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PandaSweet',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=SnowFox',
   },
   {
     id: 'cute-6',
-    name: 'Vịt con vàng óng',
+    name: 'Chim cánh cụt lóng ngóng',
     category: 'cute',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Duckling',
+    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PenguinWaddle',
   },
 
-  // Hài Hước & Biểu Cảm Vui Nhộn
+  // 😎 HÀI HƯỚC & BIỂU CẢM
   {
     id: 'funny-1',
-    name: 'Mặt cười ngầu',
+    name: 'Mặt cười ngầu đeo kính râm',
     category: 'funny',
     url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=CoolEmoji',
   },
   {
     id: 'funny-2',
-    name: 'Thả tim ngọt ngào',
+    name: 'Bắn tim ngọt ngào',
     category: 'funny',
     url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=HeartEyes',
   },
   {
     id: 'funny-3',
-    name: 'Cười tít mắt',
+    name: 'Cười tít mắt ha ha',
     category: 'funny',
     url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=JoySmile',
   },
@@ -87,18 +160,18 @@ const PRESET_AVATARS: PresetAvatar[] = [
   },
   {
     id: 'funny-5',
-    name: 'Mặt ngơ ngác đáng yêu',
+    name: 'Mặt ngơ ngác vô tội',
     category: 'funny',
     url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SillyFace',
   },
   {
     id: 'funny-6',
-    name: 'Biểu tượng lấp lánh',
+    name: 'Mắt lấp lánh ánh sao',
     category: 'funny',
     url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=SparkleFace',
   },
 
-  // Chibi & Anime Trendy
+  // 🌸 CHIBI & ANIME TRENDY
   {
     id: 'anime-1',
     name: 'Bé dâu tây má hồng',
@@ -107,33 +180,33 @@ const PRESET_AVATARS: PresetAvatar[] = [
   },
   {
     id: 'anime-2',
-    name: 'Cô bé tai mèo',
+    name: 'Cô bé tai mèo Anime',
     category: 'anime',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=NekoChan',
   },
   {
     id: 'anime-3',
-    name: 'Boy hoodie ngầu',
+    name: 'Cool boy áo hoodie',
     category: 'anime',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=LeoCool',
   },
   {
     id: 'anime-4',
-    name: 'Hoa anh đào Sakura',
+    name: 'Công chúa hoa anh đào',
     category: 'anime',
     url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sakura',
   },
   {
     id: 'anime-5',
-    name: 'Bé thỏ Chibi',
+    name: 'Robot vui tính thông thái',
     category: 'anime',
-    url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Bunny',
+    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sparky',
   },
   {
     id: 'anime-6',
-    name: 'Robot vui tính',
+    name: 'Phi hành gia du hành vũ trụ',
     category: 'anime',
-    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sparky',
+    url: 'https://api.dicebear.com/7.x/bottts/svg?seed=AstroKid',
   },
 ];
 
@@ -141,7 +214,7 @@ export default function SettingsModal() {
   const { user, isSettingsModalOpen, closeSettingsModal, updateAvatar, updatePassword } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'avatar' | 'password'>('avatar');
-  const [avatarCategory, setAvatarCategory] = useState<'all' | 'cute' | 'funny' | 'anime'>('all');
+  const [avatarCategory, setAvatarCategory] = useState<'all' | 'animal' | 'cute' | 'funny' | 'anime'>('all');
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(user?.avatarUrl || '');
 
   // Password fields
@@ -171,7 +244,7 @@ export default function SettingsModal() {
       setTimeout(() => {
         setSuccessMessage(null);
         closeSettingsModal();
-      }, 1200);
+      }, 1000);
     } else {
       setErrorMessage(res.error || 'Cập nhật ảnh đại diện thất bại');
     }
@@ -210,9 +283,9 @@ export default function SettingsModal() {
       setTimeout(() => {
         setSuccessMessage(null);
         closeSettingsModal();
-      }, 1500);
+      }, 1200);
     } else {
-      setErrorMessage(res.error || 'Đổi mật khẩu thất bại');
+      setErrorMessage(res.error || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu cũ.');
     }
   };
 
@@ -223,37 +296,34 @@ export default function SettingsModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={closeSettingsModal}
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-md"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
         />
 
         {/* Modal Window */}
         <motion.div
-          initial={{ y: '100%', opacity: 0.8 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-          className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-7 z-10 border border-slate-100 max-h-[92vh] overflow-y-auto"
+          initial={{ scale: 0.94, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.94, opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-5 sm:p-6 z-10 border border-slate-100 max-h-[90vh] flex flex-col"
         >
-          {/* Mobile Drag Pill */}
-          <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
-
           {/* Close Button */}
           <button
             onClick={closeSettingsModal}
-            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Modal Header */}
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-5 shrink-0">
             <div className="relative">
               <img
                 src={selectedAvatarUrl || user.avatarUrl}
@@ -266,12 +336,12 @@ export default function SettingsModal() {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">Cài Đặt Tài Khoản</h2>
-              <p className="text-xs text-slate-500 truncate max-w-[240px] sm:max-w-xs">{user.email}</p>
+              <p className="text-xs text-slate-500 font-medium">@{user.username || 'user'} • {user.displayName}</p>
             </div>
           </div>
 
           {/* Tab Selector */}
-          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-5">
+          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl mb-4 shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -280,7 +350,7 @@ export default function SettingsModal() {
                 setSuccessMessage(null);
                 setActiveTab('avatar');
               }}
-              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'avatar'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
@@ -298,7 +368,7 @@ export default function SettingsModal() {
                 setSuccessMessage(null);
                 setActiveTab('password');
               }}
-              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'password'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
@@ -314,7 +384,7 @@ export default function SettingsModal() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2"
+              className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 shrink-0"
             >
               <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
@@ -325,7 +395,7 @@ export default function SettingsModal() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2"
+              className="mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2 shrink-0"
             >
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{successMessage}</span>
@@ -334,29 +404,33 @@ export default function SettingsModal() {
 
           {/* TAB 1: AVATAR PICKER */}
           {activeTab === 'avatar' && (
-            <div className="space-y-4">
+            <div className="space-y-3.5 flex-1 overflow-y-auto pr-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Chọn ảnh có sẵn (Cute, Hài hước, Hot)</span>
+                  <span>Chọn ảnh Meme & Động vật nổi tiếng:</span>
                 </span>
               </div>
 
               {/* Category Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar shrink-0">
                 {[
                   { id: 'all', label: 'Tất cả' },
-                  { id: 'cute', label: '🐾 Cute Đáng Yêu' },
+                  { id: 'animal', label: '🐾 Động Vật Meme' },
+                  { id: 'cute', label: '🎀 Cute Đáng Yêu' },
                   { id: 'funny', label: '😎 Hài Hước Meme' },
                   { id: 'anime', label: '🌸 Chibi Trendy' },
                 ].map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setAvatarCategory(cat.id as typeof avatarCategory)}
-                    className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    onClick={() => {
+                      soundFx.playPinClick();
+                      setAvatarCategory(cat.id as any);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                       avatarCategory === cat.id
-                        ? 'bg-slate-900 text-white'
+                        ? 'bg-slate-900 text-white shadow-sm'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -366,65 +440,64 @@ export default function SettingsModal() {
               </div>
 
               {/* Avatar Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-60 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50">
-                {filteredAvatars.map((preset) => {
-                  const isSelected = selectedAvatarUrl === preset.url;
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-56 overflow-y-auto p-1 border border-slate-100 rounded-2xl bg-slate-50/50">
+                {filteredAvatars.map((avatar) => {
+                  const isSelected = selectedAvatarUrl === avatar.url;
                   return (
                     <button
-                      key={preset.id}
+                      key={avatar.id}
                       type="button"
                       onClick={() => {
                         soundFx.playPinClick();
-                        setSelectedAvatarUrl(preset.url);
+                        setSelectedAvatarUrl(avatar.url);
                       }}
-                      className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group ${
+                      className={`relative aspect-square rounded-2xl p-1 transition-all group cursor-pointer ${
                         isSelected
-                          ? 'border-purple-600 ring-2 ring-purple-600/30 scale-105 shadow-md'
-                          : 'border-slate-200 hover:border-purple-300 hover:scale-105'
+                          ? 'ring-2 ring-purple-600 bg-purple-50 scale-105'
+                          : 'hover:bg-white hover:shadow-xs'
                       }`}
-                      title={preset.name}
+                      title={avatar.name}
                     >
                       <img
-                        src={preset.url}
-                        alt={preset.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        loading="lazy"
+                        src={avatar.url}
+                        alt={avatar.name}
+                        className="w-full h-full rounded-xl object-contain"
                       />
                       {isSelected && (
-                        <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white stroke-[3]" />
-                        </div>
+                        <span className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-purple-600 text-white shadow-xs">
+                          <Check className="w-2.5 h-2.5" />
+                        </span>
                       )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Custom Image URL input */}
+              {/* Hoặc dán link ảnh tùy chọn */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   Hoặc dán đường link ảnh tùy chọn:
                 </label>
                 <input
                   type="url"
-                  placeholder="https://example.com/anh-cua-ban.jpg"
                   value={selectedAvatarUrl}
                   onChange={(e) => setSelectedAvatarUrl(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  placeholder="https://example.com/avatar.png"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 font-mono text-slate-600"
                 />
               </div>
 
-              {/* Save Button */}
+              {/* Nút lưu ảnh đại diện */}
               <button
                 type="button"
                 onClick={handleSaveAvatar}
                 disabled={loading || selectedAvatarUrl === user.avatarUrl}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-rose-500 hover:opacity-95 text-white font-bold text-sm shadow-md shadow-purple-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-700 hover:to-rose-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/20 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Đang lưu ảnh...</span>
+                    <span>Đang cập nhật...</span>
                   </>
                 ) : (
                   <>
@@ -436,74 +509,65 @@ export default function SettingsModal() {
             </div>
           )}
 
-          {/* TAB 2: CHANGE PASSWORD */}
+          {/* TAB 2: PASSWORD CHANGE */}
           {activeTab === 'password' && (
-            <form onSubmit={handleSavePassword} className="space-y-3.5">
+            <form onSubmit={handleSavePassword} className="space-y-3 flex-1">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   Mật khẩu hiện tại
                 </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu hiện tại"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                  />
-                </div>
+                <input
+                  type="password"
+                  required
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   Mật khẩu mới <span className="text-slate-400 font-normal">(tối thiểu 6 ký tự)</span>
                 </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu mới"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                  />
-                </div>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   Xác nhận mật khẩu mới
                 </label>
-                <div className="relative">
-                  <ShieldCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Nhập lại mật khẩu mới"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                  />
-                </div>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-2 disabled:opacity-50"
+                className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Đang cập nhật mật khẩu...</span>
+                    <span>Đang cập nhật...</span>
                   </>
                 ) : (
                   <>
-                    <Check className="w-4 h-4" />
-                    <span>Cập Nhật Mật Khẩu</span>
+                    <Lock className="w-4 h-4" />
+                    <span>Đổi Mật Khẩu</span>
                   </>
                 )}
               </button>

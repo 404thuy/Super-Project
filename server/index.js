@@ -395,7 +395,24 @@ app.put('/api/auth/profile', async (req, res) => {
   }
 
   const { displayName, avatarUrl } = req.body;
+  const updatedUser = {
+    ...req.user,
+    displayName: displayName || req.user.displayName,
+    avatarUrl: avatarUrl || req.user.avatarUrl,
+  };
 
+  // 1. Cập nhật memoryStore dự phòng
+  if (req.sessionToken && memoryStore.sessions.has(req.sessionToken)) {
+    const s = memoryStore.sessions.get(req.sessionToken);
+    s.user = updatedUser;
+  }
+  if (req.user.username && memoryStore.users.has(req.user.username)) {
+    const u = memoryStore.users.get(req.user.username);
+    u.displayName = updatedUser.displayName;
+    u.avatarUrl = updatedUser.avatarUrl;
+  }
+
+  // 2. Cập nhật vào CSDL Oracle nếu kết nối thành công
   try {
     await query(
       `UPDATE DA.USERS
@@ -409,18 +426,15 @@ app.put('/api/auth/profile', async (req, res) => {
         userId: req.user.id,
       }
     );
-
-    const updatedUser = {
-      ...req.user,
-      displayName: displayName || req.user.displayName,
-      avatarUrl: avatarUrl || req.user.avatarUrl,
-    };
-
-    return res.json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error('Update profile error:', err);
-    return res.status(500).json({ success: false, error: 'Lỗi cập nhật: ' + err.message });
+    console.warn('Update profile database notice:', err.message);
+    if (!isDbConnectionError(err)) {
+      return res.status(500).json({ success: false, error: sanitizeErrorMessage(err) });
+    }
+    // Nếu là lỗi chưa kết nối Oracle, vẫn coi là thành công vì đã lưu vào memoryStore
   }
+
+  return res.json({ success: true, user: updatedUser });
 });
 
 // Đổi mật khẩu
