@@ -1,6 +1,6 @@
 -- =========================================================================
 -- SCRIPT KHỞI TẠO CƠ SỞ DỮ LIỆU CHUẨN ORACLE 19C CHO DỰ ÁN THIỆP 20/10
--- SCHEMA: DA | PASSWORD: Matkhaua123@ | CONNECT: localhost:1521/ORCL
+-- SCHEMA: DA | PASSWORD: Matkhaua123@ | CONNECT: localhost:1521/ORCLPDB
 -- =========================================================================
 
 -- Kích hoạt cờ hỗ trợ Oracle Multitenant / Pluggable Database nếu chạy bằng SYS

@@ -15,7 +15,7 @@ oracledb.autoCommit = true;
 const dbConfig = {
   user: process.env.ORACLE_USER || 'DA',
   password: process.env.ORACLE_PASSWORD || 'Matkhaua123@',
-  connectString: process.env.ORACLE_CONNECT_STRING || 'localhost:1521/ORCL',
+  connectString: process.env.ORACLE_CONNECT_STRING || 'localhost:1521/ORCLPDB',
 };
 
 let pool = null;
@@ -31,10 +31,17 @@ export async function getPool() {
         poolIncrement: 1,
         poolTimeout: 60,
       });
-      console.log('✅ Kết nối Oracle 19c thành công!');
+
+      // Kiểm tra thực tế một kết nối để xác thực tài khoản
+      const testConn = await pool.getConnection();
+      await testConn.close();
+
+      console.log('✅ Kết nối Oracle 19c [DA@ORCLPDB] thành công và sẵn sàng!');
     } catch (err) {
       console.error('❌ Lỗi kết nối Oracle 19c:', err.message);
-      console.error('💡 Gợi ý: Hãy kiểm tra Oracle Listener, Service Name (ORCL / ORCLPDB / XE) và tài khoản DA trong file .env');
+      if (err.message && err.message.includes('ORA-01017')) {
+        console.error('💡 Gợi ý: Trong Oracle 19c, schema người dùng DA nằm trong Pluggable Database (ORCLPDB hoặc ORCLPDB1), không phải CDB root (ORCL). Hãy đảm bảo ORACLE_CONNECT_STRING=localhost:1521/ORCLPDB');
+      }
       throw err;
     }
   }
