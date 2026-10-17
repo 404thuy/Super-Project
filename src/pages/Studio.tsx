@@ -179,45 +179,54 @@ export default function Studio() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col pt-16 sm:pt-20">
+    <div className="min-h-screen bg-slate-100 flex flex-col pt-16">
       {/* Studio Header Bar */}
-      <header className="fixed top-0 inset-x-0 h-16 sm:h-20 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 z-30 px-4 sm:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="fixed top-0 inset-x-0 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 z-30 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 shadow-xs">
+        {/* Left: Back & Title */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 max-w-[50%] sm:max-w-none">
           <Link
             to="/templates"
-            className="p-2 -ml-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+            title="Quay lại danh sách mẫu thiệp"
+            className="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all active:scale-95 border border-transparent hover:border-slate-200"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </Link>
-          <div>
-            <h1 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-1">
-              {template.titleVi}
-            </h1>
-            <p className="text-[11px] text-slate-500 hidden sm:block">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-extrabold text-xs sm:text-base text-slate-900 truncate">
+                {template.titleVi}
+              </h1>
+              <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60 shrink-0">
+                Mẫu {template.category || '20/10'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 truncate hidden sm:block">
               {template.descriptionVi}
             </p>
           </div>
         </div>
 
-        {/* Mobile View Switcher (Edit vs Preview) */}
-        <div className="flex md:hidden bg-slate-100 p-1 rounded-xl border border-slate-200">
+        {/* Center: Mobile View Switcher (Edit vs Preview) */}
+        <div className="flex md:hidden bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shrink-0 shadow-inner">
           <button
+            type="button"
             onClick={() => setMobileTab('edit')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mobileTab === 'edit'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500'
+                ? 'bg-white text-purple-700 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Soạn</span>
           </button>
           <button
+            type="button"
             onClick={() => setMobileTab('preview')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mobileTab === 'preview'
-                ? 'bg-white text-purple-700 shadow-sm'
-                : 'text-slate-500'
+                ? 'bg-white text-purple-700 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -225,15 +234,27 @@ export default function Studio() {
           </button>
         </div>
 
-        {/* Primary Action Button */}
-        <button
-          onClick={handleSaveAndShare}
-          disabled={isSaving}
-          className="px-4 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-500/25 flex items-center gap-2 active:scale-95 transition-all disabled:opacity-70"
-        >
-          <Share2 className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
-          <span>{isSaving ? 'Đang lưu vào Oracle...' : 'Hoàn tất & Gửi'}</span>
-        </button>
+        {/* Right: Primary Action Button */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleSaveAndShare}
+            disabled={isSaving}
+            className="h-9 sm:h-10 px-3.5 sm:px-5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:from-purple-700 hover:via-pink-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+          >
+            <Share2 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaving ? 'animate-spin' : ''}`} />
+            <span>
+              {isSaving ? (
+                'Đang lưu...'
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Hoàn tất & </span>
+                  <span>Gửi thiệp</span>
+                </>
+              )}
+            </span>
+          </button>
+        </div>
       </header>
 
       {/* Main Studio Body */}
