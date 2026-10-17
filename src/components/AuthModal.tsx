@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Loader2,
   AtSign,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundFx } from '../utils/soundEffects';
@@ -24,7 +26,7 @@ function formatFriendlyError(msg: string | null): string | null {
   ) {
     return 'Tên tài khoản hoặc mật khẩu không chính xác.';
   }
-  if (msg.includes('ORA-00001') || msg.includes('unique constraint')) {
+  if (msg.includes('ORA-00001') || msg.includes('unique constraint') || msg.includes('đã có người đăng ký')) {
     return 'Tên tài khoản này đã tồn tại trong hệ thống. Vui lòng chọn tên khác.';
   }
   if (
@@ -33,7 +35,7 @@ function formatFriendlyError(msg: string | null): string | null {
     msg.includes('TNS') ||
     msg.includes('Lỗi máy chủ')
   ) {
-    return 'Không thể kết nối đến máy chủ cơ sở dữ liệu Oracle. Vui lòng kiểm tra lại dịch vụ.';
+    return 'Không thể kết nối đến máy chủ cơ sở dữ liệu. Vui lòng thử lại sau.';
   }
   return msg;
 }
@@ -51,6 +53,7 @@ export default function AuthModal() {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -112,6 +115,7 @@ export default function AuthModal() {
   const handleQuickDemo = async () => {
     setErrorMessage(null);
     setLoading(true);
+    soundFx.playPinClick();
     await loginWithEmail('khach_trainghiem', 'Khách Trải Nghiệm');
     setLoading(false);
     soundFx.playSuccessChime();
@@ -225,7 +229,7 @@ export default function AuthModal() {
               </motion.div>
             )}
 
-            {/* Mật khẩu */}
+            {/* Mật khẩu có nút MẮT BẬT/TẮT HIỆN MẬT KHẨU */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-bold text-slate-700">
@@ -238,13 +242,27 @@ export default function AuthModal() {
               <div className="relative">
                 <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
                 />
+                {/* Nút mắt xem mật khẩu */}
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4 text-rose-500" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-slate-400" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -284,6 +302,7 @@ export default function AuthModal() {
               type="button"
               onClick={() => {
                 setErrorMessage(null);
+                setShowPassword(false);
                 setTab(tab === 'login' ? 'register' : 'login');
               }}
               className="text-slate-600 hover:text-slate-900 font-bold hover:underline cursor-pointer"
