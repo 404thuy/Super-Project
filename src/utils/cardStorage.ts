@@ -356,8 +356,17 @@ interface CompactPayload {
     ph?: string;   // passcodeHint
     a?: string;    // audioUrl
     mp?: string;   // musicPreset
+    ast?: number;  // audioStartTime
+    aet?: number;  // audioEndTime
     f?: string;    // fontFamily
     tc?: string;   // themeColor
+    ct?: 'cyan' | 'purple' | 'rose' | 'gold' | 'midnight'; // crystalTheme
+    cc?: 'rose' | 'heart' | 'swans' | 'castle' | 'teddy';  // crystalCenterpiece
+    cw?: 'snow' | 'sparkles' | 'petals' | 'hearts' | 'notes'; // crystalWeather
+    cbt?: string;  // crystalBaseTitle
+    cbs?: string;  // crystalBaseSubtitle
+    cq?: string[]; // crystalQuotes
+    ccap?: string[]; // cinemaCaptions
   };
 }
 
@@ -378,8 +387,17 @@ export function encodeCardData(
         ph: config.passcodeHint,
         a: config.audioUrl,
         mp: config.musicPreset,
+        ast: config.audioStartTime,
+        aet: config.audioEndTime,
         f: config.fontFamily,
         tc: config.themeColor,
+        ct: config.crystalTheme,
+        cc: config.crystalCenterpiece,
+        cw: config.crystalWeather,
+        cbt: config.crystalBaseTitle,
+        cbs: config.crystalBaseSubtitle,
+        cq: config.crystalQuotes,
+        ccap: config.cinemaCaptions,
       },
     };
 
@@ -436,8 +454,17 @@ export function decodeCardData(
         passcodeHint: data.c?.ph || fallbackTemplate.defaultConfig.passcodeHint,
         audioUrl: data.c?.a || fallbackTemplate.defaultConfig.audioUrl,
         musicPreset: data.c?.mp || fallbackTemplate.defaultConfig.musicPreset,
+        audioStartTime: data.c?.ast ?? fallbackTemplate.defaultConfig.audioStartTime,
+        audioEndTime: data.c?.aet ?? fallbackTemplate.defaultConfig.audioEndTime,
         fontFamily: data.c?.f || fallbackTemplate.defaultConfig.fontFamily,
         themeColor: data.c?.tc || fallbackTemplate.defaultConfig.themeColor,
+        crystalTheme: data.c?.ct || fallbackTemplate.defaultConfig.crystalTheme,
+        crystalCenterpiece: data.c?.cc || fallbackTemplate.defaultConfig.crystalCenterpiece,
+        crystalWeather: data.c?.cw || fallbackTemplate.defaultConfig.crystalWeather,
+        crystalBaseTitle: data.c?.cbt || fallbackTemplate.defaultConfig.crystalBaseTitle,
+        crystalBaseSubtitle: data.c?.cbs || fallbackTemplate.defaultConfig.crystalBaseSubtitle,
+        crystalQuotes: data.c?.cq || fallbackTemplate.defaultConfig.crystalQuotes,
+        cinemaCaptions: data.c?.ccap || fallbackTemplate.defaultConfig.cinemaCaptions,
         images: [], // Default to empty array - only user images are loaded
       },
     };

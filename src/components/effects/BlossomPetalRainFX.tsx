@@ -322,7 +322,7 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
   };
 
   return (
-    <div className="relative w-full h-full min-h-[520px] sm:min-h-[620px] overflow-hidden select-none">
+    <div className="relative w-full h-full min-h-[100%] overflow-hidden select-none">
       {/* Spring Water Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-rose-50 to-purple-100" />
 
@@ -336,7 +336,7 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
       />
 
       {/* Center Interactive Botanical Frame */}
-      <div className="relative z-20 flex items-center justify-center w-full h-full min-h-[520px] sm:min-h-[620px] p-4 pointer-events-none">
+      <div className="relative z-20 flex items-center justify-center w-full h-full min-h-[100%] p-2.5 sm:p-6 pointer-events-none overflow-y-auto">
         <AnimatePresence mode="wait">
           {!ribbonUntied && mode === 'recipient' ? (
             <motion.div
@@ -382,92 +382,140 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
             </motion.div>
           ) : showCard ? (
             /* ========================================================
-               BOTANICAL PRESSED-FLOWER GLASS FRAME
+               BOTANICAL PRESSED-FLOWER DOUBLE GLASS HERBARIUM FRAME
                ======================================================== */
             <motion.div
               key="popup-card"
               initial={{ y: 50, opacity: 0, scale: 0.85, rotateX: 20 }}
               animate={{ y: 0, opacity: 1, scale: 1, rotateX: 0 }}
               transition={{ duration: 0.8, type: 'spring', bounce: 0.3 }}
-              className="pointer-events-auto w-full max-w-2xl mx-auto"
+              className="pointer-events-auto w-full max-w-2xl mx-auto py-2"
             >
-              <div className="relative bg-white/95 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl border-2 border-rose-300/80 shadow-[0_25px_60px_-15px_rgba(244,63,94,0.35)] text-center space-y-5">
-                {/* Botanical Corner Flower Ornaments */}
-                <div className="absolute top-3 left-4 text-rose-400 opacity-60">🌸</div>
-                <div className="absolute top-3 right-4 text-rose-400 opacity-60">🌹</div>
+              <div className="relative bg-[#FFFDF9]/95 backdrop-blur-2xl p-5 sm:p-9 rounded-3xl border-2 sm:border-4 border-amber-300/90 shadow-[0_30px_90px_rgba(244,63,94,0.4)] ring-2 ring-amber-400/40 text-center space-y-4 sm:space-y-5 overflow-hidden">
+                {/* Baroque Brass Filigree Corner Ornaments */}
+                <span className="absolute top-2.5 left-3 text-amber-500 text-lg pointer-events-none select-none z-20">⚜</span>
+                <span className="absolute top-2.5 right-3 text-amber-500 text-lg pointer-events-none select-none z-20">⚜</span>
+                <span className="absolute bottom-2.5 left-3 text-amber-500 text-lg pointer-events-none select-none z-20">⚜</span>
+                <span className="absolute bottom-2.5 right-3 text-amber-500 text-lg pointer-events-none select-none z-20">⚜</span>
 
-                <div>
-                  <span className="text-[11px] font-bold tracking-widest uppercase text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
-                    Khung Kính Hoa Ép Nghệ Thuật 20/10
+                {/* Pressed Dried Sakura Petals Inside Glass */}
+                <span className="absolute top-12 left-5 text-xl opacity-60 pointer-events-none select-none rotate-12">🌸</span>
+                <span className="absolute top-28 right-6 text-sm opacity-50 pointer-events-none select-none -rotate-45">🌺</span>
+                <span className="absolute bottom-16 left-6 text-base opacity-50 pointer-events-none select-none rotate-45">🌿</span>
+                <span className="absolute bottom-24 right-5 text-lg opacity-60 pointer-events-none select-none -rotate-12">🌸</span>
+
+                {/* Glass Light Reflection Sheen */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-rose-100/30 via-white/40 to-amber-100/30 pointer-events-none" />
+                <div className="absolute -top-24 -left-24 w-60 h-60 bg-gradient-to-br from-white/70 to-transparent rotate-45 pointer-events-none blur-sm" />
+
+                {/* Header Tag with Botanical Laurel */}
+                <div className="relative z-10">
+                  <span className="text-[10px] sm:text-[11px] font-black tracking-widest uppercase text-amber-950 bg-gradient-to-r from-amber-100 via-rose-100 to-amber-100 px-4 py-1 rounded-full border border-amber-300/90 shadow-2xs">
+                    ✦ KHUNG HOA ÉP THỦY TINH HOÀNG GIA ✦
                   </span>
                   <h2
-                    className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2"
-                    style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Be Vietnam Pro', sans-serif` : "'Be Vietnam Pro', sans-serif" }}
+                    className="text-2xl sm:text-4xl font-black text-rose-950 mt-2 font-serif tracking-tight"
+                    style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Playfair Display', serif` : "'Playfair Display', serif" }}
                   >
-                    Gửi {config.recipientName} 🌸
+                    Gửi: {config.recipientName || 'Người phụ nữ tuyệt vời'} 🌸
                   </h2>
+                  <div className="w-20 h-0.5 mx-auto bg-gradient-to-r from-transparent via-rose-400 to-transparent mt-1.5 opacity-80" />
                 </div>
 
-                {/* Main Floral Letter with Water Ripple Glint */}
+                {/* Main Floral Letter with Soft Rose Watermark */}
                 <div
-                  className="text-slate-800 leading-relaxed text-base sm:text-lg bg-pink-50/60 p-5 sm:p-7 rounded-2xl border border-pink-100 text-left font-serif shadow-inner whitespace-pre-line relative"
-                  style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Be Vietnam Pro', sans-serif` : "'Be Vietnam Pro', sans-serif" }}
+                  className="relative z-10 text-slate-800 leading-relaxed text-base sm:text-lg bg-gradient-to-br from-rose-50/80 via-white/80 to-amber-50/70 p-5 sm:p-7 rounded-2xl border border-rose-200/90 text-left font-serif shadow-[inset_0_2px_8px_rgba(244,63,94,0.06)] whitespace-pre-line overflow-hidden"
+                  style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Playfair Display', serif` : "'Playfair Display', serif" }}
                 >
-                  {config.mainText}
+                  <div className="absolute -bottom-4 -right-2 text-rose-300/25 text-5xl select-none pointer-events-none font-serif">
+                    🌸
+                  </div>
+                  {config.mainText || 'Chúc em ngày 20/10 thật rạng rỡ như mùa xuân, đẹp tựa cánh hoa và ấm áp như nắng mai!'}
                 </div>
 
                 {/* Pressed Flower Photo Gallery Floating Frame */}
-                {userImages.length > 0 && (
-                  <div className="pt-2 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                      <span className="flex items-center gap-1.5 text-rose-600">
-                        <Flower2 className="w-4 h-4 text-rose-500" />
-                        <span>Kỷ Niệm Lồng Khung Thủy Tinh ({userImages.length} ảnh)</span>
-                      </span>
-                      {userImages.length > 1 && (
-                        <span className="text-[11px] text-slate-400">Chạm để đổi ảnh</span>
-                      )}
-                    </div>
+                {(() => {
+                  const photosToDisplay = userImages.length > 0 ? userImages : [
+                    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&auto=format&fit=crop&q=80',
+                  ];
+                  return (
+                    <div className="relative z-10 pt-2 space-y-2 border-t border-rose-200/70">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+                        <span className="flex items-center gap-1.5 text-rose-700">
+                          <Flower2 className="w-4 h-4 text-rose-500" />
+                          <span>
+                            {userImages.length > 0
+                              ? `Kỷ Niệm Ép Khung Kính (${userImages.length} ảnh)`
+                              : 'Khung Ảnh Kỷ Niệm Ép Hoa Khô (Gợi ý)'}
+                          </span>
+                        </span>
+                        <span className="text-[11px] text-slate-400 italic">Chạm để đổi khung</span>
+                      </div>
 
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
-                      {userImages.map((img, i) => (
-                        <motion.div
-                          key={i}
-                          whileHover={{ scale: 1.06 }}
-                          onClick={() => {
-                            soundFx.playPaperSwoosh();
-                            setActivePhotoIdx(i);
-                          }}
-                          className={`relative p-2 rounded-2xl bg-white/90 border-2 shadow-lg cursor-pointer transition-all ${
-                            activePhotoIdx === i
-                              ? 'border-rose-500 ring-4 ring-rose-200/60 scale-105'
-                              : 'border-rose-200/70 opacity-80'
-                          }`}
-                          style={{ width: '130px' }}
-                        >
-                          <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-                            <img src={img} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          {/* Pressed flower petal icon overlay */}
-                          <div className="absolute -bottom-1 -right-1 text-xs">🌸</div>
-                        </motion.div>
-                      ))}
+                      <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap pt-1">
+                        {photosToDisplay.map((img, i) => (
+                          <motion.div
+                            key={i}
+                            whileHover={{ scale: 1.08, rotate: i % 2 === 0 ? 2 : -2 }}
+                            onClick={() => {
+                              soundFx.playPaperSwoosh();
+                              setActivePhotoIdx(i);
+                            }}
+                            className={`relative p-2 rounded-2xl bg-white/95 border-2 shadow-xl cursor-pointer transition-all ${
+                              activePhotoIdx === i
+                                ? 'border-rose-500 ring-4 ring-rose-200/80 scale-105 z-20'
+                                : 'border-rose-200/80 hover:border-rose-400 z-10 opacity-90'
+                            }`}
+                            style={{ width: '135px' }}
+                          >
+                            <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-rose-100/80">
+                              <img src={img} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            {/* Pressed flower petal icon overlay */}
+                            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-xs shadow-xs">
+                              🌸
+                            </div>
+                            <p className="text-[10px] font-bold text-center text-slate-600 mt-1 italic">
+                              {userImages.length > 0 ? `Kỷ niệm #${i + 1}` : `Khung ảnh #${i + 1}`}
+                            </p>
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
-                {/* Sender Signature */}
-                <div className="text-right pt-1">
-                  <p
-                    className="text-lg font-bold text-rose-600 italic"
-                    style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Be Vietnam Pro', sans-serif` : "'Be Vietnam Pro', sans-serif" }}
+                {/* Sender Signature & Interactive Blossom Action */}
+                <div className="relative z-10 pt-2 flex items-center justify-between border-t border-rose-200/70">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFx.playPaperSwoosh();
+                      // Trigger a vortex burst
+                      vortexAngleRef.current += Math.PI * 2;
+                      windVector.current = { x: 4.5, y: -2.5 };
+                      setTimeout(() => {
+                        windVector.current = { x: 0, y: 0 };
+                      }, 1200);
+                    }}
+                    className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-rose-50 to-pink-100 hover:from-rose-100 hover:to-pink-200 text-rose-700 text-xs font-bold border border-rose-300/80 flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs"
                   >
-                    — {config.senderName} 🌹
+                    <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Lốc xoáy cánh hoa</span>
+                  </button>
+
+                  <p
+                    className="text-lg sm:text-xl font-bold text-rose-600 italic font-serif"
+                    style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Playfair Display', serif` : "'Playfair Display', serif" }}
+                  >
+                    — {config.senderName || 'Người ngưỡng mộ em'} 🌹
                   </p>
                 </div>
 
                 {/* Guide tooltip */}
-                <div className="pt-1 text-center text-[11px] text-slate-400 flex items-center justify-center gap-1">
+                <div className="relative z-10 pt-1 text-center text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-center gap-1">
                   <Wind className="w-3.5 h-3.5 text-rose-400" />
                   <span>Vuốt màn hình để tạo cơn gió xoáy cuốn cánh hoa bay lượn</span>
                 </div>

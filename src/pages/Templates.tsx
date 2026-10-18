@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { TEMPLATES } from '../types';
+import TemplateThumbnail from '../components/TemplateThumbnail';
 import {
   formatStat,
   getTemplateLiveStats,
@@ -24,6 +25,7 @@ const CATEGORY_TABS: { value: Category; label: string; icon: string }[] = [
 ];
 
 export default function Templates() {
+  const navigate = useNavigate();
   const { user, openAuthModal } = useAuth();
   const [category, setCategory] = useState<Category>('all');
   const [likedTemplateIds, setLikedTemplateIds] = useState<string[]>(() =>
@@ -101,22 +103,24 @@ export default function Templates() {
           </p>
         </div>
 
-        {/* Category Filter Pills (Horizontal scroll on mobile without visible scrollbar) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center">
-          {CATEGORY_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setCategory(tab.value)}
-              className={`whitespace-nowrap px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
-                category === tab.value
-                  ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-xs'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
+        {/* Category Filter Pills (Horizontal scroll on mobile without visible scrollbar, centered on desktop) */}
+        <div className="w-full overflow-x-auto no-scrollbar pb-2 pt-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-fit mx-auto px-4 sm:px-6">
+            {CATEGORY_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setCategory(tab.value)}
+                className={`whitespace-nowrap px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                  category === tab.value
+                    ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-xs'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Clean, Non-cluttered Template Cards Grid */}
@@ -131,16 +135,16 @@ export default function Templates() {
                 className="group bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
                 {/* Entire upper portion is clickable directly to Studio */}
-                <Link to={`/studio/${tmpl.id}`} className="block relative">
-                  {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
+                <div
+                  onClick={() => navigate(`/studio/${tmpl.id}`)}
+                  className="block relative cursor-pointer"
+                >
+                  {/* Hero Preview Section: live CSS/SVG render of the actual effect */}
                   <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
-                    <img
-                      src={tmpl.thumbnail}
-                      alt={tmpl.titleVi}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
+                    <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                      <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
 
                     {/* Category Pill */}
                     <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">
@@ -206,7 +210,7 @@ export default function Templates() {
                       </span>
                     </div>
                   </div>
-                </Link>
+                </div>
 
                 {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
                 <div className="p-3 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">

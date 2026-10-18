@@ -182,6 +182,25 @@ INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT,
 INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT) VALUES ('cinema-filmstrip', N'Cinema Filmstrip', 0, 0, 0);
 INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT) VALUES ('interactive-bouquet', N'Interactive Bouquet', 0, 0, 0);
 
+-- =========================================================================
+-- PHẦN 6: 5 MẪU TIKTOK HOT TREND MỚI (NHÂN DỊP 20/10)
+-- =========================================================================
+
+INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+VALUES ('hold-to-reveal', N'Trạm Sạc Yêu Thương (Nhấn Giữ)', 0, 0, 0);
+
+INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+VALUES ('foggy-mirror', N'Lăng Kính Sương Mờ (Chạm & Lau)', 0, 0, 0);
+
+INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+VALUES ('blow-mic-reveal', N'Điều Ước Bồ Công Anh (Thổi vào Mic)', 0, 0, 0);
+
+INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+VALUES ('polaroid-swipe', N'Trạm Ký Ức Polaroid (Vuốt Thẻ)', 0, 0, 0);
+
+INSERT INTO DA.TEMPLATES (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+VALUES ('ai-gesture-unlock', N'Mật Mã Nụ Cười (Camera AI)', 0, 0, 0);
+
 COMMIT;
 
 -- Thông báo hoàn thành

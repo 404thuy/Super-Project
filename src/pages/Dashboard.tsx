@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { TEMPLATES, type CreatedCard, type CardTemplate } from '../types';
+import TemplateThumbnail from '../components/TemplateThumbnail';
 import {
   getUserCards,
   fetchUserCards,
@@ -388,13 +389,10 @@ export default function Dashboard() {
                       <Link to={`/studio/${tmpl.id}`} className="block relative">
                         {/* Compact on mobile, rich on desktop */}
                         <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
-                          <img
-                            src={tmpl.thumbnail}
-                            alt={tmpl.titleVi}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
+                          <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                            <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
 
                           {/* Category Pill */}
                           <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">

@@ -27,6 +27,7 @@ import {
 } from '../utils/cardStorage';
 import { soundFx } from '../utils/soundEffects';
 import { useAuth } from '../context/AuthContext';
+import { getSongById, getSongCoverUrl } from '../data/vietnameseMusic';
 
 export default function CardViewer() {
   const { cardId } = useParams<{ cardId: string }>();
@@ -61,6 +62,9 @@ export default function CardViewer() {
     const mappedId = TEMPLATE_ALIASES[cleanId] || cleanId;
     return TEMPLATES.find((t) => t.id === mappedId || t.id === cleanId) || TEMPLATES[0];
   };
+
+  // Check if viewing in demo mode (from template store) vs shared recipient card
+  const isDemo = Boolean(cardId && cardId.startsWith('demo-'));
 
   // Initial synchronous decoding
   let initialTemplateId = 'passcode-envelope';
@@ -135,13 +139,25 @@ export default function CardViewer() {
 
     // Start background music preset if configured
     if (activeConfig.musicPreset || activeConfig.audioUrl) {
-      soundFx.startBackgroundMusic(activeConfig.musicPreset, activeConfig.audioUrl);
+      soundFx.startBackgroundMusic(
+        activeConfig.musicPreset,
+        activeConfig.audioUrl,
+        activeConfig.audioStartTime || 0,
+        activeConfig.audioEndTime
+      );
     }
 
     return () => {
       soundFx.stopBackgroundMusic();
     };
-  }, [resolvedCardId, template?.id, activeConfig.musicPreset, activeConfig.audioUrl]);
+  }, [
+    resolvedCardId,
+    template?.id,
+    activeConfig.musicPreset,
+    activeConfig.audioUrl,
+    activeConfig.audioStartTime,
+    activeConfig.audioEndTime,
+  ]);
 
   // Handle Mute/Unmute toggle
   const handleToggleMute = () => {
@@ -155,27 +171,25 @@ export default function CardViewer() {
     setReplayKey((prev) => prev + 1);
   };
 
-  // Handle Recipient Heart Reaction (1 heart per user account, toggles like/unlike, saves to history)
+  // Handle Recipient Heart Reaction (Drops hearts with delightful confetti; syncs to account if logged in)
   const handleHeartReaction = async () => {
-    if (!user) {
-      soundFx.playPinClick();
-      openAuthModal();
-      return;
-    }
+    soundFx.playHeartPop();
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      origin: { y: 0.8 },
+    });
+    setHasLiked(true);
+    setHeartsCount((prev) => prev + (hasLiked ? 0 : 1));
 
-    const res = await toggleTemplateHeart(template.id, user.id);
-    setHasLiked(res.isLiked);
-    setHeartsCount(res.newHearts);
-
-    if (res.isLiked) {
-      soundFx.playHeartPop();
-      confetti({
-        particleCount: 60,
-        spread: 70,
-        origin: { y: 0.8 },
-      });
-    } else {
-      soundFx.playPinClick();
+    if (user) {
+      try {
+        const res = await toggleTemplateHeart(template.id, user.id);
+        setHasLiked(res.isLiked);
+        setHeartsCount(res.newHearts);
+      } catch (err) {
+        console.warn('Lỗi lưu tim:', err);
+      }
     }
   };
 
@@ -208,13 +222,54 @@ export default function CardViewer() {
     <div className="relative min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between overflow-x-hidden">
       {/* Floating Ambient Controls Bar */}
       <header className="fixed top-4 inset-x-4 sm:inset-x-8 z-40 flex items-center justify-between pointer-events-none max-w-6xl mx-auto">
-        <Link
-          to="/"
-          className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold transition-all shadow-lg active:scale-95"
-        >
-          <span className="text-rose-400">✨</span>
-          <span>LoveCard 20/10</span>
-        </Link>
+        {isDemo ? (
+          <Link
+            to="/templates"
+            className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold transition-all shadow-lg active:scale-95"
+            title="Quay lại danh sách mẫu"
+          >
+            <span className="text-rose-400">✨</span>
+            <span>LoveCard 20/10</span>
+          </Link>
+        ) : (
+          <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold shadow-lg select-none">
+            <span className="text-rose-400">✨</span>
+            <span>LoveCard 20/10</span>
+          </div>
+        )}
+
+        {/* Center Music Pill */}
+        {(() => {
+          const song = soundFx.getCurrentSong() || getSongById(activeConfig.musicPreset || '');
+          if (!song && !activeConfig.musicPreset) return null;
+          return (
+            <div
+              onClick={handleToggleMute}
+              className="pointer-events-auto hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-xl border border-white/15 text-white text-xs font-medium cursor-pointer transition-all shadow-lg select-none"
+              title={isMuted ? 'Bấm để bật nhạc' : 'Bấm để tắt âm'}
+            >
+              <img
+                src={getSongCoverUrl(song)}
+                alt=""
+                className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/30"
+              />
+              <span className="font-bold text-rose-300 truncate max-w-[140px]">
+                {activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3 Tải Lên') : (song?.title || 'Giai điệu lãng mạn')}
+              </span>
+              <span className="text-slate-400 text-[10px]">•</span>
+              <span className="text-slate-300 text-[11px] truncate max-w-[110px]">
+                {activeConfig.audioUrl ? 'Bản Thu Gốc' : (song?.artist || 'LoveCard')}
+              </span>
+              {!isMuted && (
+                <span className="flex items-end gap-0.5 h-2.5 ml-1">
+                  <span className="w-0.5 h-full bg-rose-400 animate-bounce" />
+                  <span className="w-0.5 h-1.5 bg-rose-400 animate-bounce [animation-delay:0.2s]" />
+                  <span className="w-0.5 h-2 bg-rose-400 animate-bounce [animation-delay:0.4s]" />
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Right utility buttons */}
         <div className="pointer-events-auto flex items-center gap-2">
@@ -256,9 +311,15 @@ export default function CardViewer() {
       <main
         ref={cardContainerRef}
         key={replayKey}
-        className="w-full flex-1 flex items-center justify-center pt-20 pb-28 px-2 sm:px-4"
+        className={`w-full flex-1 flex items-center justify-center px-1 sm:px-4 ${
+          isDemo ? 'pt-14 pb-16 sm:pt-20 sm:pb-28' : 'pt-14 pb-4 sm:pt-16 sm:pb-6'
+        }`}
       >
-        <div className="w-full max-w-4xl mx-auto h-[78vh] min-h-[580px] max-h-[820px] rounded-3xl overflow-hidden shadow-2xl relative border border-white/10 bg-slate-900/50 backdrop-blur-sm">
+        <div className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative border border-white/10 bg-slate-900/50 backdrop-blur-sm ${
+          isDemo
+            ? 'h-[calc(100dvh-7.5rem)] sm:h-[84vh] min-h-[460px] sm:min-h-[580px] max-h-[860px]'
+            : 'h-[calc(100dvh-4.5rem)] sm:h-[88vh] min-h-[480px] sm:min-h-[600px] max-h-[900px]'
+        }`}>
           <EffectRenderer
             effectType={template.effectType}
             config={activeConfig}
@@ -267,41 +328,42 @@ export default function CardViewer() {
         </div>
       </main>
 
-      {/* Bottom Floating Action Dock */}
-      <footer className="fixed bottom-4 inset-x-4 sm:inset-x-8 z-40 flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-white/15 shadow-2xl flex items-center gap-3 sm:gap-6">
-          {/* Heart Button */}
-          <button
-            onClick={handleHeartReaction}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all active:scale-90 ${
-              hasLiked
-                ? 'bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
-                : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <motion.div whileTap={{ scale: 1.4 }}>
-              <Heart
-                className={`w-4 h-4 ${
-                  hasLiked ? 'text-rose-500 fill-rose-500' : 'text-slate-400'
-                }`}
-              />
-            </motion.div>
-            <span>{formatStat(heartsCount)}</span>
-          </button>
+      {/* Bottom Floating Action Dock: CHỈ hiển thị khi xem thử mẫu (Demo), KHÔNG hiển thị ở link gửi cho người nhận */}
+      {isDemo && (
+        <footer className="fixed bottom-4 inset-x-4 sm:inset-x-8 z-40 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto px-4 py-2 sm:py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-white/15 shadow-2xl flex items-center gap-3 sm:gap-6">
+            {/* Heart Button */}
+            <button
+              onClick={handleHeartReaction}
+              title="Thả tim yêu thương"
+              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all active:scale-90 cursor-pointer ${
+                hasLiked
+                  ? 'bg-rose-500/30 text-rose-300 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <motion.div whileTap={{ scale: 1.4 }}>
+                <Heart
+                  className={`w-4 h-4 ${
+                    hasLiked ? 'text-rose-500 fill-rose-500' : 'text-slate-400'
+                  }`}
+                />
+              </motion.div>
+              <span>{formatStat(heartsCount)}</span>
+            </button>
 
-          <div className="h-4 w-px bg-white/20" />
-
-          {/* CTA: Make your own card */}
-          <Link
-            to="/templates"
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-400 to-purple-400 hover:opacity-90 transition-opacity"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-            <span>Tự tạo thiệp của bạn</span>
-            <ArrowRight className="w-3.5 h-3.5 text-purple-400 ml-0.5" />
-          </Link>
-        </div>
-      </footer>
+            <div className="h-4 w-px bg-white/20" />
+            <Link
+              to={`/studio/${template.id}`}
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-400 to-purple-400 hover:opacity-90 transition-opacity"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+              <span>Tự tạo thiệp của bạn</span>
+              <ArrowRight className="w-3.5 h-3.5 text-purple-400 ml-0.5" />
+            </Link>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

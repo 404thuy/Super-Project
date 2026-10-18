@@ -3,7 +3,10 @@ import cors from 'cors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
+import pkg from 'zingmp3-api-full';
+const ZingMp3 = pkg.ZingMp3 || pkg;
 import { query } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +21,8 @@ app.use(cors());
 // Hỗ trợ upload ảnh Base64 chất lượng cao lên tới 50MB
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Serve file nhạc tĩnh từ thư mục public/music
+app.use('/music', express.static(path.resolve(__dirname, '../public/music')));
 
 // Helper băm mật khẩu bảo mật SHA-256
 function hashPassword(password) {
@@ -676,6 +681,21 @@ app.post('/api/cards', async (req, res) => {
         }
       );
     } else {
+      // Đảm bảo templateId tồn tại trong DA.TEMPLATES để không bao giờ bị ORA-02291
+      try {
+        await query(
+          `MERGE INTO DA.TEMPLATES t
+           USING (SELECT :templateId AS TEMPLATE_ID, :templateId AS TEMPLATE_NAME FROM DUAL) s
+           ON (t.TEMPLATE_ID = s.TEMPLATE_ID)
+           WHEN NOT MATCHED THEN
+             INSERT (TEMPLATE_ID, TEMPLATE_NAME, VIEWS_COUNT, HEARTS_COUNT, USES_COUNT)
+             VALUES (s.TEMPLATE_ID, s.TEMPLATE_NAME, 0, 0, 0)`,
+          { templateId }
+        );
+      } catch (tmplErr) {
+        console.warn('Auto ensure template in DB warning:', tmplErr?.message || tmplErr);
+      }
+
       // Tạo mới thiệp
       await query(
         `INSERT INTO DA.CARDS (
@@ -915,7 +935,262 @@ app.post('/api/cards/:cardId/heart', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------
+// Tốc Độ Cao: API Lấy Stream Nhạc Có Lời Ca Sĩ Chuẩn (Apple CDN)
+// ----------------------------------------------------
+const musicPreviewCache = new Map();
+
+app.get('/api/music-preview', async (req, res) => {
+  const { term } = req.query;
+  if (!term) return res.status(400).json({ success: false, error: 'Thiếu từ khóa term' });
+
+  const cacheKey = term.toLowerCase().trim();
+  if (musicPreviewCache.has(cacheKey)) {
+    return res.json({ success: true, fromCache: true, ...musicPreviewCache.get(cacheKey) });
+  }
+
+  try {
+    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=VN&media=music&limit=1`;
+    const response = await fetch(itunesUrl);
+    const data = await response.json();
+    if (data.results && data.results.length > 0 && data.results[0].previewUrl) {
+      const item = data.results[0];
+      const result = {
+        previewUrl: item.previewUrl,
+        trackName: item.trackName,
+        artistName: item.artistName,
+        artworkUrl: item.artworkUrl100,
+      };
+      musicPreviewCache.set(cacheKey, result);
+      return res.json({ success: true, ...result });
+    }
+    return res.json({ success: false, error: 'Không tìm thấy bản thu phù hợp' });
+  } catch (err) {
+    console.warn('Lỗi lấy music-preview:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Danh sách các bài hát cần tải về lưu sẵn trực tiếp vào máy
+const SONGS_TO_BUNDLE = [
+  { id: 'giac-mo-tinh-co', query: 'Giac Mo Tinh Co Hiya' },
+  { id: 'gio', query: 'Gio JanK' },
+  { id: 'tim-em', query: 'Tim Em Hngle' },
+  { id: 'khong-buong', query: 'Khong Buong Hngle' },
+  { id: 'anh-nang-cua-anh', query: 'Anh Nang Cua Anh Duc Phuc' },
+  { id: 'noi-nay-co-anh', query: 'Noi Nay Co Anh Son Tung M-TP' },
+  { id: 'ngay-dau-tien', query: 'Ngay Dau Tien Duc Phuc' },
+  { id: 'cuoi-thoi', query: 'Cuoi Thoi Masew' },
+  { id: 'nang-tho', query: 'Nang Tho Hoang Dung' },
+  { id: 'mot-nha', query: 'Mot Nha Da LAB' },
+  { id: 'see-tinh', query: 'See Tinh Hoang Thuy Linh' },
+  { id: 'hon-ca-yeu', query: 'Hon Ca Yeu Duc Phuc' },
+  { id: 'em-dong-y-i-do', query: 'Em Dong Y Duc Phuc' },
+  { id: 'bat-tinh-yeu-len', query: 'Bat Tinh Yeu Len Tang Duy Tan' },
+  { id: 'bao-tien-mot-mo-binh-yen', query: 'Bao Tien Mot Mo Binh Yen 14 Casper' },
+  { id: 'da-vu', query: 'Da Vu Tang Duy Tan' },
+  { id: 'co-em-cho', query: 'Co Em Cho MIN' },
+  { id: 'thich-em-hoi-nhieu', query: 'Thich Em Hoi Nhieu Wren Evans' },
+  { id: 'tung-quen', query: 'Tung Quen Wren Evans' },
+  { id: 'va-vao-giai-dieu-nay', query: 'Va Vao Giai Dieu Nay MCK' },
+  { id: 'co-gai-den-tu-hom-qua', query: 'Co Gai Den Tu Hom Qua Vu' },
+  { id: 'chua-bao-gio-me-ke', query: 'Chua Bao Gio Me Ke MIN' },
+  { id: 'uoc-mo-cua-me', query: 'Uoc Mo Cua Me Van Mai Huong' },
+  { id: 'me-yeu', query: 'Me Yeu Phuong Uyen' },
+  { id: 'nhat-ky-cua-me', query: 'Nhat Ky Cua Me Hien Thuc' },
+  { id: 'cau-hon', query: 'Cau Hon Van Mai Huong' },
+  { id: 'mat-troi-cua-em', query: 'Mat Troi Cua Em Phuong Ly' },
+  { id: 'tinh-yeu-khung-long', query: 'Tinh Yeu Khung Long Fay' },
+];
+
+async function downloadAndBundleSongs() {
+  const musicDir = path.resolve(__dirname, '../public/music');
+  if (!fs.existsSync(musicDir)) {
+    fs.mkdirSync(musicDir, { recursive: true });
+  }
+
+  console.log('[MUSIC] 🔄 Đang kiểm tra và tải sẵn toàn bộ file nhạc vào thư mục public/music...');
+  for (const song of SONGS_TO_BUNDLE) {
+    const targetFile = path.join(musicDir, `${song.id}.mp3`);
+    if (fs.existsSync(targetFile) && fs.statSync(targetFile).size > 1000) {
+      continue;
+    }
+
+    try {
+      const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(song.query)}&country=VN&media=music&limit=1`;
+      const res = await fetch(itunesUrl);
+      const data = await res.json();
+      if (data.results && data.results.length > 0 && data.results[0].previewUrl) {
+        const audioRes = await fetch(data.results[0].previewUrl);
+        const arrayBuffer = await audioRes.arrayBuffer();
+        fs.writeFileSync(targetFile, Buffer.from(arrayBuffer));
+        console.log(`[MUSIC] ✅ Đã lưu sẵn file: public/music/${song.id}.mp3 (${(arrayBuffer.byteLength / 1024).toFixed(0)} KB)`);
+      }
+    } catch (err) {
+      console.warn(`[MUSIC] ⚠️ Không thể tải trước bài ${song.id}:`, err.message);
+    }
+  }
+  console.log('[MUSIC] 🎉 Hoàn tất chuẩn bị kho nhạc có sẵn trong máy!');
+}
+
+// Endpoint kích hoạt đồng bộ nhạc thủ công
+app.get('/api/sync-music', async (req, res) => {
+  downloadAndBundleSongs();
+  return res.json({ success: true, message: 'Đang tải sẵn nhạc vào thư mục public/music' });
+});
+
+// Helper tìm kiếm YouTube Video ID qua truy vấn tìm kiếm
+async function searchYouTubeVideoId(query) {
+  try {
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+    const html = await res.text();
+    const match = html.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Endpoint tìm YouTube Video ID cho bài hát
+app.get('/api/youtube-search', async (req, res) => {
+  const q = req.query.q || '';
+  if (!q) return res.status(400).json({ success: false, error: 'Thiếu từ khóa q' });
+  const youtubeId = await searchYouTubeVideoId(q);
+  if (youtubeId) {
+    return res.json({ success: true, youtubeId });
+  }
+  return res.json({ success: false, error: 'Không tìm thấy video YouTube phù hợp' });
+});
+
+// Endpoint tìm kiếm nhạc trực tuyến từ Internet (Zing MP3 Full Track + YouTube Video ID Fallback)
+app.get('/api/search-music', async (req, res) => {
+  const q = req.query.q || '';
+  if (!q || q.trim().length === 0) {
+    return res.json({ results: [] });
+  }
+
+  const queryStr = q.trim();
+
+  // 1. Tìm trên Zing MP3 trước để lấy bản thu MP3 đầy đủ chuẩn (128kbps Full bài)
+  try {
+    const zingRes = await ZingMp3.search(queryStr);
+    const rawSongs = (zingRes.data?.songs || []).slice(0, 15);
+
+    if (rawSongs.length > 0) {
+      const songDetails = await Promise.all(
+        rawSongs.map(async (s) => {
+          try {
+            const d = await ZingMp3.getSong(s.encodeId);
+            return { song: s, streamUrl: d.data?.['128'] || null };
+          } catch {
+            return { song: s, streamUrl: null };
+          }
+        })
+      );
+
+      const results = await Promise.all(
+        songDetails.map(async ({ song, streamUrl }) => {
+          const durationSec = song.duration || 240;
+          const mins = Math.floor(durationSec / 60);
+          const secs = durationSec % 60;
+          const durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+          const artworkUrl = song.thumbnailM || song.thumbnail;
+          const artistName = song.artistsNames || song.artists?.[0]?.name || 'Nghệ sĩ';
+
+          let finalAudioUrl = streamUrl;
+          let youtubeId = null;
+
+          if (!finalAudioUrl) {
+            youtubeId = await searchYouTubeVideoId(`${song.title} ${artistName}`);
+            if (youtubeId) {
+              finalAudioUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+            }
+          }
+
+          return {
+            id: `online-${song.encodeId}`,
+            title: song.title,
+            artist: artistName,
+            category: 'chill',
+            categoryLabel: 'Tìm Kiếm Online',
+            tag: song.genre?.name || 'Online Hits',
+            duration: durationStr,
+            chorusLyric: `Bản thu chuẩn của ca sĩ "${artistName}" từ Internet.`,
+            icon: '🌐',
+            color: 'from-sky-500 to-indigo-600',
+            hasVocals: true,
+            audioUrl: finalAudioUrl || undefined,
+            youtubeId: youtubeId || undefined,
+            coverUrl: artworkUrl,
+            startSeconds: 0,
+            synthPreset: 'spring-acoustic',
+          };
+        })
+      );
+
+      return res.json({ results: results.filter((r) => r.audioUrl || r.youtubeId) });
+    }
+  } catch (err) {
+    console.warn('ZingMp3 search error, falling back to iTunes/YouTube:', err);
+  }
+
+  // 2. Dự phòng: Tìm qua iTunes + kết hợp YouTube video ID để luôn nghe được trọn bài
+  try {
+    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(queryStr)}&country=VN&media=music&limit=15`;
+    const response = await fetch(itunesUrl);
+    const data = await response.json();
+
+    const rawItems = (data.results || []).filter((item) => item.trackName);
+    const results = await Promise.all(
+      rawItems.map(async (item) => {
+        const durationSec = item.trackTimeMillis ? Math.round(item.trackTimeMillis / 1000) : 240;
+        const mins = Math.floor(durationSec / 60);
+        const secs = durationSec % 60;
+        const durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+        const artworkUrl = item.artworkUrl100
+          ? item.artworkUrl100.replace('100x100bb', '600x600bb')
+          : undefined;
+        const artist = item.artistName || 'Nghệ sĩ';
+
+        const ytId = await searchYouTubeVideoId(`${item.trackName} ${artist}`);
+
+        return {
+          id: `online-${item.trackId}`,
+          title: item.trackName,
+          artist,
+          category: 'chill',
+          categoryLabel: 'Tìm Kiếm Online',
+          tag: item.primaryGenreName || 'Online Hits',
+          duration: durationStr,
+          chorusLyric: `Bản thu gốc của ca sĩ "${artist}" tìm thấy từ Internet.`,
+          icon: '🌐',
+          color: 'from-sky-500 to-indigo-600',
+          hasVocals: true,
+          audioUrl: ytId ? `https://www.youtube.com/watch?v=${ytId}` : item.previewUrl,
+          youtubeId: ytId || undefined,
+          coverUrl: artworkUrl,
+          startSeconds: 0,
+          synthPreset: 'spring-acoustic',
+        };
+      })
+    );
+
+    return res.json({ results });
+  } catch (err) {
+    console.error('Error searching music online:', err);
+    return res.status(500).json({ error: 'Không thể tìm kiếm nhạc trực tuyến' });
+  }
+});
+
 // Khởi chạy Server
 app.listen(PORT, () => {
   console.log(`🚀 Backend Express API đang chạy tại http://localhost:${PORT}`);
+  // Tự động tải sẵn toàn bộ file nhạc vào thư mục public/music
+  downloadAndBundleSongs();
 });

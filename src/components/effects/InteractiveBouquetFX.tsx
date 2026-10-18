@@ -1,6 +1,7 @@
 import { useState, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Heart, RotateCcw, Volume2, Flower2, Maximize2, X } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import type { CardConfig } from '../../types';
 import { soundFx } from '../../utils/soundEffects';
 
@@ -23,9 +24,9 @@ interface FlowerItem {
   meaning: string;
 }
 
-export default function InteractiveBouquetFX({ config }: Props) {
+export default function InteractiveBouquetFX({ config, mode }: Props) {
   const gradientId = useId();
-  const [isUntied, setIsUntied] = useState(false);
+  const [isUntied, setIsUntied] = useState(mode === 'studio');
   const [selectedCharmIndex, setSelectedCharmIndex] = useState<number | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [bloomedFlowers, setBloomedFlowers] = useState<Record<number, boolean>>({
@@ -36,15 +37,20 @@ export default function InteractiveBouquetFX({ config }: Props) {
   const [butterflyPos, setButterflyPos] = useState({ x: 50, y: 35 });
 
   const photos: string[] = config.images && config.images.length > 0 ? config.images : [];
-  const sender = config.senderName || 'Người gửi ẩn danh';
-  const recipient = config.recipientName || 'Người nhận thương mến';
+  const sender = config.senderName || 'Người yêu em';
+  const recipient = config.recipientName || 'Cô Giáo Kính Yêu';
   const message = config.mainText || 'Chúc bạn luôn xinh đẹp, hạnh phúc và toả sáng rực rỡ như những đóa hoa ngát hương!';
 
   const defaultCharmQuotes = [
     'Nụ cười của bạn là ánh nắng rực rỡ nhất 🌸',
     'Mỗi khoảnh khắc có bạn đều ngát hương ngọt ngào 🌷',
     'Mong bạn luôn được nâng niu và yêu thương vô điều kiện 💖',
-    'Bình an trong tâm hồn và rạng rỡ mỗi ngày mới ✨',
+  ];
+
+  const fallbackCharms = [
+    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&auto=format&fit=crop&q=80',
   ];
 
   const flowers: FlowerItem[] = [
@@ -73,6 +79,12 @@ export default function InteractiveBouquetFX({ config }: Props) {
     soundFx.playPaperSwoosh();
     soundFx.playSuccessChime();
     setIsUntied(true);
+    confetti({
+      particleCount: 80,
+      spread: 90,
+      origin: { y: 0.65 },
+      colors: ['#FB7185', '#F43F5E', '#FBBF24', '#FDA4AF', '#FFF'],
+    });
   };
 
   const handleOpenCharm = (index: number) => {
@@ -83,11 +95,11 @@ export default function InteractiveBouquetFX({ config }: Props) {
 
   const totalBloomed = Object.values(bloomedFlowers).filter(Boolean).length;
 
-  const charmsList: (string | null)[] =
-    photos.length > 0 ? photos.slice(0, 3) : [null, null];
+  const charmsList: string[] =
+    photos.length > 0 ? photos.slice(0, 3) : fallbackCharms;
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden bg-gradient-to-b from-[#1a0814] via-[#2d0f25] to-[#12050e] text-white flex flex-col items-center justify-between select-none p-4">
+    <div className="relative w-full h-full min-h-full overflow-y-auto sm:overflow-hidden bg-gradient-to-b from-[#1a0814] via-[#2d0f25] to-[#12050e] text-white flex flex-col items-center justify-start sm:justify-between select-none p-2.5 sm:p-4">
       {/* Dynamic Background Petals & Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-rose-500/15 rounded-full blur-[140px]" />
@@ -300,7 +312,7 @@ export default function InteractiveBouquetFX({ config }: Props) {
 
           {/* Hanging 2-Sided Floral Photo Charms (Tucked inside the bouquet) */}
           <div className="absolute inset-0 z-20 pointer-events-none">
-            {charmsList.map((photoUrl: string | null, cIdx: number) => {
+            {charmsList.map((photoUrl: string, cIdx: number) => {
               const charmPositions = [
                 { left: '26%', top: '64%', rotation: -12 },
                 { left: '72%', top: '62%', rotation: 14 },
@@ -326,25 +338,16 @@ export default function InteractiveBouquetFX({ config }: Props) {
                   <motion.div
                     whileHover={{ scale: 1.15, rotate: pos.rotation + 4 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative w-16 h-20 rounded-xl p-1 bg-gradient-to-br from-amber-300 via-rose-300 to-amber-500 shadow-2xl border border-white/60 flex flex-col items-center justify-center overflow-hidden"
+                    className="relative w-18 h-22 sm:w-20 sm:h-24 rounded-2xl p-1 bg-gradient-to-br from-amber-300 via-rose-300 to-amber-500 shadow-2xl border-2 border-white/70 flex flex-col items-center justify-center overflow-hidden"
                   >
-                    {photoUrl ? (
-                      <img
-                        src={photoUrl}
-                        alt={`Charm ${cIdx + 1}`}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-lg bg-rose-950/80 flex flex-col items-center justify-center p-1 text-center">
-                        <Heart className="w-5 h-5 text-rose-400 fill-rose-400/50 mb-0.5" />
-                        <span className="text-[8px] font-medium text-amber-200 leading-tight">
-                          Thẻ Lời Chúc
-                        </span>
-                      </div>
-                    )}
+                    <img
+                      src={photoUrl}
+                      alt={`Charm ${cIdx + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
 
                     {/* Badge tag */}
-                    <div className="absolute bottom-1 bg-black/60 backdrop-blur-sm px-1 rounded text-[7px] text-amber-300 font-mono">
+                    <div className="absolute bottom-1 bg-black/65 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] text-amber-300 font-mono font-bold">
                       #{cIdx + 1} Lật mở
                     </div>
                   </motion.div>
@@ -418,35 +421,73 @@ export default function InteractiveBouquetFX({ config }: Props) {
       </main>
 
       {/* Bottom Envelope Letter & Recipient Greeting Card */}
-      <footer className="relative z-20 w-full max-w-md pb-2">
+      <footer className="relative z-20 w-full max-w-xl pb-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl flex flex-col gap-2"
+          className="p-4 sm:p-5 rounded-3xl bg-[#FFFDF8]/95 text-slate-800 border-2 border-amber-300/90 shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex flex-col gap-3 relative overflow-hidden"
         >
-          <div className="flex items-center justify-between text-xs text-rose-200/80">
-            <span className="flex items-center gap-1 font-medium text-rose-200">
-              <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-              Thư Gắn Bó Hoa
+          {/* Filigree Corner Accents */}
+          <span className="absolute top-2 left-2.5 text-amber-500 text-xs select-none">❖</span>
+          <span className="absolute top-2 right-2.5 text-amber-500 text-xs select-none">❖</span>
+          <span className="absolute bottom-2 left-2.5 text-amber-500 text-xs select-none">❖</span>
+          <span className="absolute bottom-2 right-2.5 text-amber-500 text-xs select-none">❖</span>
+
+          <div className="flex items-center justify-between border-b border-amber-200/80 pb-2">
+            <div className="flex items-center gap-1.5 font-bold text-rose-700 text-xs sm:text-sm">
+              <Flower2 className="w-4 h-4 text-rose-500 animate-pulse" />
+              <span>Thư Bó Hoa 20/10 Gửi {recipient}</span>
+            </div>
+            <span className="text-[11px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300">
+              Từ: {sender}
             </span>
-            <span className="text-[11px] text-amber-300 font-mono">Từ: {sender}</span>
           </div>
 
-          <p className="text-xs text-white/90 line-clamp-2 italic leading-relaxed">
+          <p
+            className="text-sm sm:text-base text-slate-800 italic leading-relaxed font-serif whitespace-pre-line bg-amber-50/50 p-3 rounded-2xl border border-amber-200/70"
+            style={{ fontFamily: config.fontFamily ? `${config.fontFamily}, 'Playfair Display', serif` : "'Playfair Display', serif" }}
+          >
             "{message}"
           </p>
 
-          <div className="flex items-center justify-between pt-1 border-t border-white/10">
-            <span className="text-[10px] text-rose-300/70">
-              Chạm từng đóa hoa để nở rộ • Chạm thẻ charm để ngắm 2 mặt
-            </span>
-            <button
-              onClick={() => handleOpenCharm(0)}
-              className="text-[11px] font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1"
-            >
-              <Maximize2 className="w-3 h-3" />
-              Xem Đầy Đủ
-            </button>
+          {/* Charms quick thumbnail bar */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-rose-800">3 Thẻ Charm:</span>
+              <div className="flex items-center gap-1.5">
+                {charmsList.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleOpenCharm(idx)}
+                    className="w-8 h-8 rounded-lg overflow-hidden border border-amber-400 shadow-xs hover:scale-110 transition-transform cursor-pointer"
+                    title={`Mở thẻ charm #${idx + 1}`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {mode === 'studio' && (
+                <button
+                  type="button"
+                  onClick={() => setIsUntied(!isUntied)}
+                  className="text-[11px] font-bold text-rose-700 hover:text-rose-900 underline"
+                >
+                  {isUntied ? 'Buộc lại nơ' : 'Mở nơ hoa'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleOpenCharm(0)}
+                className="text-xs font-bold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 px-3 py-1.5 rounded-full shadow-md flex items-center gap-1 transition-all active:scale-95"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Xem charm 2 mặt</span>
+              </button>
+            </div>
           </div>
         </motion.div>
       </footer>

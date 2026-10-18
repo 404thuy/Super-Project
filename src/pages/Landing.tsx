@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TEMPLATES, type CardTemplate } from '../types';
+import TemplateThumbnail from '../components/TemplateThumbnail';
 import {
   formatStat,
   getTemplateLiveStats,
@@ -32,7 +33,7 @@ import { soundFx } from '../utils/soundEffects';
 import { PRESET_WISHES } from '../utils/presetWishes';
 import { useAuth } from '../context/AuthContext';
 
-type TemplateCategoryFilter = 'all' | '20-10' | 'love' | 'gratitude' | '3d';
+type TemplateCategoryFilter = 'all' | '20-10' | 'love' | 'birthday' | 'gratitude' | 'friends';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -191,18 +192,7 @@ export default function Landing() {
   // Filter Templates
   const filteredTemplates = TEMPLATES.filter((tmpl) => {
     if (activeCategory === 'all') return true;
-    if (activeCategory === '20-10') return tmpl.category === '20-10';
-    if (activeCategory === 'love') return tmpl.category === 'love';
-    if (activeCategory === 'gratitude') return tmpl.category === 'gratitude';
-    if (activeCategory === '3d') {
-      return (
-        tmpl.effectType === 'GALAXY_3D' ||
-        tmpl.effectType === 'LANTERN_3D' ||
-        tmpl.effectType === 'CRYSTAL_CAROUSEL' ||
-        tmpl.effectType === 'BOUQUET_3D'
-      );
-    }
-    return true;
+    return tmpl.category === activeCategory;
   });
 
   // Wishes for current tab
@@ -305,7 +295,7 @@ export default function Landing() {
             {/* Trust & Real Features Ribbon - Compact & Overflow-Free on Mobile */}
             <div className="pt-3 sm:pt-4 border-t border-rose-100/80 grid grid-cols-3 gap-1.5 sm:gap-4 max-w-xl mx-auto lg:mx-0">
               <div className="bg-white/75 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-rose-100/70 shadow-xs flex flex-col justify-center items-center text-center min-h-[60px] sm:min-h-[86px] overflow-hidden">
-                <p className="text-xs sm:text-base lg:text-lg font-black text-rose-600 truncate max-w-full">9 Mẫu Thiệp</p>
+                <p className="text-xs sm:text-base lg:text-lg font-black text-rose-600 truncate max-w-full">{TEMPLATES.length} Mẫu Thiệp</p>
                 <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate max-w-full">Hiệu ứng 3D</p>
               </div>
               <div className="bg-white/75 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-purple-100/70 shadow-xs flex flex-col justify-center items-center text-center min-h-[60px] sm:min-h-[86px] overflow-hidden">
@@ -615,7 +605,7 @@ export default function Landing() {
       <section className="relative z-10 py-10 sm:py-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-12 space-y-2 sm:space-y-3">
+        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-2 sm:space-y-3">
           <span className="text-[10px] sm:text-xs font-bold tracking-widest text-rose-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-rose-100/80 border border-rose-200/50">
             Kho Mẫu Thiệp 20/10 Đặc Sắc
           </span>
@@ -625,15 +615,18 @@ export default function Landing() {
           <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chạm vào thiệp bạn yêu thích để bắt đầu viết lời chúc, thêm ảnh kỷ niệm và gửi tặng người phụ nữ bạn trân quý.
           </p>
+        </div>
 
-          {/* Category Filter Pills (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center px-1 pt-2 sm:pt-4">
+        {/* Category Filter Pills (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-6 sm:mb-10">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-fit mx-auto px-4 sm:px-6">
             {[
               { id: 'all', label: 'Tất cả mẫu', count: TEMPLATES.length, icon: '✨' },
-              { id: '20-10', label: 'Mừng 20/10', count: 3, icon: '🌹' },
-              { id: 'love', label: 'Lời Yêu Thương', count: 3, icon: '💖' },
-              { id: 'gratitude', label: 'Tri Ân Mẹ & Cô', count: 1, icon: '🏮' },
-              { id: '3d', label: 'Hiệu Ứng 3D', count: 4, icon: '🌌' },
+              { id: '20-10', label: '20/10 & 8/3', count: TEMPLATES.filter((t) => t.category === '20-10').length, icon: '🌹' },
+              { id: 'love', label: 'Tình yêu', count: TEMPLATES.filter((t) => t.category === 'love').length, icon: '💖' },
+              { id: 'birthday', label: 'Sinh nhật', count: TEMPLATES.filter((t) => t.category === 'birthday').length, icon: '🎂' },
+              { id: 'gratitude', label: 'Tri ân Mẹ & Cô', count: TEMPLATES.filter((t) => t.category === 'gratitude').length, icon: '🏮' },
+              { id: 'friends', label: 'Bạn bè', count: TEMPLATES.filter((t) => t.category === 'friends').length, icon: '🎞️' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -673,25 +666,24 @@ export default function Landing() {
                 {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
                 <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
                   <Link to={`/studio/${tmpl.id}`} className="block w-full h-full">
-                    <img
-                      src={tmpl.thumbnail}
-                      alt={tmpl.titleVi}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
+                    <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                      <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
                   </Link>
 
                   {/* Category Badge */}
-                  <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1 pointer-events-none">
+                  <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1 pointer-events-none z-10">
                     <span>
                       {tmpl.category === '20-10'
                         ? '🌹 20/10'
                         : tmpl.category === 'love'
-                        ? '💖 Yêu thương'
+                        ? '💖 Tình yêu'
+                        : tmpl.category === 'birthday'
+                        ? '🎂 Sinh nhật'
                         : tmpl.category === 'gratitude'
                         ? '🏮 Tri ân'
-                        : '✨ Đặc biệt'}
+                        : '🎞️ Bạn bè'}
                     </span>
                   </div>
 
@@ -777,7 +769,7 @@ export default function Landing() {
           WISH INSPIRATION & GENERATOR SECTION (Unique 20/10 Feature)
           ======================================================== */}
       <section className="relative z-10 py-10 sm:py-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
-        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10 space-y-2 sm:space-y-3">
+        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-2 sm:space-y-3">
           <span className="text-[10px] sm:text-xs font-bold tracking-widest text-purple-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-purple-100/80 border border-purple-200/50">
             Cảm Hứng Viết Thiệp 20/10
           </span>
@@ -787,9 +779,11 @@ export default function Landing() {
           <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chưa biết viết gì cho hay? Chọn ngay đối tượng bạn muốn gửi để sao chép hoặc áp dụng trực tiếp vào thiệp chỉ với 1 chạm.
           </p>
+        </div>
 
-          {/* Target Selector Tabs (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center px-1 pt-2 sm:pt-3">
+        {/* Target Selector Tabs (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-6 sm:mb-10">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-fit mx-auto px-4 sm:px-6">
             {[
               { id: 'wife', label: 'Vợ & Người Yêu', icon: '💖' },
               { id: 'mom', label: 'Mẹ Kính Yêu', icon: '🌸' },

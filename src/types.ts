@@ -28,7 +28,13 @@ export type EffectType =
   | 'LANTERN_3D'
   | 'CRYSTAL_CAROUSEL'
   | 'CINEMA_FILM'
-  | 'BOUQUET_3D';
+  | 'BOUQUET_3D'
+  // 5 TikTok Hot Trend Interactive Templates
+  | 'HOLD_TO_REVEAL'
+  | 'FOGGY_MIRROR'
+  | 'BLOW_MIC'
+  | 'POLAROID_SWIPE'
+  | 'AI_GESTURE';
 
 export interface CardConfig {
   recipientName: string;
@@ -38,10 +44,21 @@ export interface CardConfig {
   passcodeHint?: string;
   audioUrl?: string;
   musicPreset?: string;
+  audioStartTime?: number;
+  audioEndTime?: number;
   images?: string[];
   themeColor?: string;
   fontFamily?: string;
   backgroundColor?: string;
+  // Crystal Carousel 3D Customizations
+  crystalTheme?: 'cyan' | 'purple' | 'rose' | 'gold' | 'midnight';
+  crystalCenterpiece?: 'rose' | 'heart' | 'swans' | 'castle' | 'teddy';
+  crystalWeather?: 'snow' | 'sparkles' | 'petals' | 'hearts' | 'notes';
+  crystalQuotes?: string[];
+  crystalBaseTitle?: string;
+  crystalBaseSubtitle?: string;
+  // Cinema Filmstrip Customizations
+  cinemaCaptions?: string[];
 }
 
 export interface CreatedCard {
@@ -101,7 +118,7 @@ export const TEMPLATES: CardTemplate[] = [
       passcodeHint: 'Ngày Phụ Nữ Việt Nam 20/10',
       themeColor: '#FB7185',
       fontFamily: 'Be Vietnam Pro',
-      musicPreset: 'romantic-piano',
+      musicPreset: 'anh-nang-cua-anh',
       images: [],
     },
   },
@@ -123,7 +140,7 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Mỗi ngôi sao trên bầu trời là một kỷ niệm đẹp của chúng mình. Em là vũ trụ duy nhất của anh! ✨',
       themeColor: '#818CF8',
       fontFamily: 'Playfair Display',
-      musicPreset: 'cosmic-ambient',
+      musicPreset: 'nang-tho',
       images: [],
     },
   },
@@ -145,7 +162,7 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Chúc em ngày 20/10 thật rạng rỡ như mùa xuân, đẹp tựa cánh hoa và ấm áp như nắng mai. Em xứng đáng được yêu thương! 🌸',
       themeColor: '#F472B6',
       fontFamily: 'Be Vietnam Pro',
-      musicPreset: 'spring-acoustic',
+      musicPreset: 'noi-nay-co-anh',
       images: [],
     },
   },
@@ -167,7 +184,7 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Nếu tình yêu là một bản nhạc, thì em chính là giai điệu đẹp nhất mà anh từng được nghe. Mỗi khoảnh khắc bên em là một nốt nhạc ngọt ngào 🎵',
       themeColor: '#F59E0B',
       fontFamily: 'Playfair Display',
-      musicPreset: 'romantic-piano',
+      musicPreset: 'mot-nha',
       images: [],
     },
   },
@@ -189,7 +206,7 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Bất ngờ chưa! 🎉 Em là món quà quý giá nhất mà cuộc đời dành tặng anh. Chúc em ngày đặc biệt ngập tràn hạnh phúc! 💕',
       themeColor: '#FBBF24',
       fontFamily: 'Be Vietnam Pro',
-      musicPreset: 'music-box',
+      musicPreset: 'cuoi-thoi',
       images: [],
     },
   },
@@ -211,7 +228,7 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Gửi ngọn đèn trời mang theo ngàn lời chúc bình an, sức khỏe và hạnh phúc nhất đến Mẹ kính yêu. Cảm ơn Mẹ đã luôn là ánh sáng dịu dàng của đời con! 🏮',
       themeColor: '#F97316',
       fontFamily: 'Be Vietnam Pro',
-      musicPreset: 'music-box',
+      musicPreset: 'chua-bao-gio-me-ke',
       images: [],
     },
   },
@@ -233,8 +250,21 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Vòng quay thời gian có thể không ngừng chuyển động, nhưng tình yêu anh dành cho em sẽ mãi vẹn nguyên và lấp lánh như đóa hồng pha lê này 🌹✨',
       themeColor: '#06B6D4',
       fontFamily: 'Playfair Display',
-      musicPreset: 'music-box',
+      musicPreset: 'ngay-dau-tien',
       images: [],
+      crystalTheme: 'cyan',
+      crystalCenterpiece: 'rose',
+      crystalWeather: 'snow',
+      crystalQuotes: [
+        'Mỗi khoảnh khắc bên em đều lấp lánh như viên pha lê.',
+        'Em là điều ngọt ngào nhất mà số phận đã sắp đặt.',
+        'Chúc em ngày 20/10 ngập tràn niềm vui và bình yên.',
+        'Nụ cười của em thắp sáng cả thế giới xung quanh.',
+        'Mãi yêu thương và trân trọng từng phút giây bên nhau.',
+        'Gửi tặng công chúa đóa hồng vĩnh cửu không tàn 🌹',
+      ],
+      crystalBaseTitle: 'HỘP NHẠC PHA LÊ',
+      crystalBaseSubtitle: 'Dành tặng Công Chúa Của Anh',
     },
   },
   {
@@ -255,8 +285,14 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Mỗi khoảnh khắc chúng ta bên nhau đều xứng đáng là một thước phim kinh điển. Cảm ơn vì đã luôn đồng hành và làm cho thanh xuân rực rỡ đến thế! 🎬',
       themeColor: '#D97706',
       fontFamily: 'Plus Jakarta Sans',
-      musicPreset: 'spring-acoustic',
+      musicPreset: 'co-gai-den-tu-hom-qua',
       images: [],
+      cinemaCaptions: [
+        'Phân cảnh 1: Ngày định mệnh ta gặp nhau giữa thế gian muôn màu.',
+        'Phân cảnh 2: Nụ cười của bạn là ánh nắng rạng rỡ nhất trong đời.',
+        'Phân cảnh 3: Dù cuộc đời có ra sao, chúng ta vẫn luôn đồng hành.',
+        'Phân cảnh 4: Chúc bạn ngày 20/10 ngập tràn hạnh phúc và rạng rỡ! 🎬',
+      ],
     },
   },
   {
@@ -277,7 +313,120 @@ export const TEMPLATES: CardTemplate[] = [
       mainText: 'Nhân ngày 20/10, chúng em xin dâng tặng Cô bó hoa tươi thắm nhất cùng lòng biết ơn sâu sắc. Kính chúc Cô luôn trẻ đẹp, hạnh phúc và dồi dào nhiệt huyết! 💐',
       themeColor: '#10B981',
       fontFamily: 'Be Vietnam Pro',
-      musicPreset: 'spring-acoustic',
+      musicPreset: 'uoc-mo-cua-me',
+      images: [],
+    },
+  },
+  // =========================================================
+  // 5 MẪU TIKTOK HOT TREND MỚI (Interactive / AI)
+  // =========================================================
+  {
+    id: 'hold-to-reveal',
+    title: 'Charging Station of Love',
+    titleVi: 'Trạm Sạc Yêu Thương (Nhấn Giữ)',
+    category: '20-10',
+    description: 'Press and hold the fingerprint sensor to charge 100% love energy and unlock the secret letter',
+    descriptionVi: 'Nhấn giữ cảm biến vân tay để sạc đầy 100% năng lượng yêu thương và mở khóa bức thư bí mật',
+    effectType: 'HOLD_TO_REVEAL',
+    thumbnail: 'https://images.unsplash.com/photo-1518982380512-5a3c6f3e9239?w=800&auto=format&fit=crop&q=80',
+    icon: '🔋',
+    gradient: 'from-violet-600/80 via-fuchsia-700/70 to-rose-950',
+    stats: { views: 0, hearts: 0, uses: 0 },
+    defaultConfig: {
+      recipientName: 'Em yêu',
+      senderName: 'Người thương em',
+      mainText: 'Em là nguồn năng lượng vô tận của anh. Mỗi ngày bên em, trái tim anh luôn được sạc đầy 100% hạnh phúc! Chúc em ngày 20/10 thật rực rỡ và tươi đẹp nhé! 🔋💖',
+      themeColor: '#A855F7',
+      fontFamily: 'Be Vietnam Pro',
+      musicPreset: 'anh-nang-cua-anh',
+      images: [],
+    },
+  },
+  {
+    id: 'foggy-mirror',
+    title: 'Foggy Mirror Secret',
+    titleVi: 'Lăng Kính Sương Mờ (Chạm & Lau)',
+    category: '20-10',
+    description: 'Wipe the foggy mirror with your finger to reveal hidden memories and the secret love letter',
+    descriptionVi: 'Dùng ngón tay lau lớp hơi sương mờ trên gương để lộ ảnh kỷ niệm và tâm thư ẩn giấu',
+    effectType: 'FOGGY_MIRROR',
+    thumbnail: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
+    icon: '🪞',
+    gradient: 'from-slate-600/80 via-blue-900/70 to-indigo-950',
+    stats: { views: 0, hearts: 0, uses: 0 },
+    defaultConfig: {
+      recipientName: 'Em',
+      senderName: 'Anh',
+      mainText: 'Đằng sau lớp sương mờ của cuộc sống, em luôn là ánh sáng rõ ràng nhất mà anh nhìn thấy. Yêu em rất nhiều! 🪞✨',
+      themeColor: '#6366F1',
+      fontFamily: 'Playfair Display',
+      musicPreset: 'nang-tho',
+      images: [],
+    },
+  },
+  {
+    id: 'blow-mic-reveal',
+    title: 'Dandelion Wish Blow',
+    titleVi: 'Điều Ước Bồ Công Anh (Thổi vào Mic)',
+    category: '20-10',
+    description: 'Blow into the microphone to scatter dandelion petals and reveal your 20/10 wishes',
+    descriptionVi: 'Thổi vào micro điện thoại để làm bay cánh hoa bồ công anh và đánh thức lời chúc 20/10',
+    effectType: 'BLOW_MIC',
+    thumbnail: 'https://images.unsplash.com/photo-1490750967868-88df5691cc37?w=800&auto=format&fit=crop&q=80',
+    icon: '🌬️',
+    gradient: 'from-emerald-600/70 via-teal-800/70 to-cyan-950',
+    stats: { views: 0, hearts: 0, uses: 0 },
+    defaultConfig: {
+      recipientName: 'Người phụ nữ xinh đẹp',
+      senderName: 'Người luôn nghĩ về em',
+      mainText: 'Hãy thổi nhẹ và gửi điều ước của mình theo những cánh hoa nhé! Chúc em ngày 20/10 viên mãn, hạnh phúc và mãi mãi tươi trẻ như hoa bồ công anh! 🌼💨',
+      themeColor: '#10B981',
+      fontFamily: 'Be Vietnam Pro',
+      musicPreset: 'noi-nay-co-anh',
+      images: [],
+    },
+  },
+  {
+    id: 'polaroid-swipe',
+    title: 'Polaroid Memory Stack',
+    titleVi: 'Trạm Ký Ức Polaroid (Vuốt Thẻ)',
+    category: '20-10',
+    description: 'Swipe through stacked Polaroid memory cards to read heartfelt messages leading to a final surprise',
+    descriptionVi: 'Vuốt từng bức ảnh kỷ niệm Polaroid để đọc từng dòng tâm sự dẫn đến bất ngờ cuối cùng',
+    effectType: 'POLAROID_SWIPE',
+    thumbnail: 'https://images.unsplash.com/photo-1516906897-b4f9bca95d57?w=800&auto=format&fit=crop&q=80',
+    icon: '📸',
+    gradient: 'from-amber-700/80 via-orange-900/70 to-rose-950',
+    stats: { views: 0, hearts: 0, uses: 0 },
+    defaultConfig: {
+      recipientName: 'Em gái thân yêu',
+      senderName: 'Người luôn bên em',
+      mainText: 'Mỗi tấm ảnh là một kỷ niệm đẹp mà chúng ta đã cùng nhau tạo ra. Cảm ơn em vì luôn xuất hiện trong cuốn phim cuộc đời này! 📸❤️',
+      themeColor: '#F97316',
+      fontFamily: 'Plus Jakarta Sans',
+      musicPreset: 'see-tinh',
+      images: [],
+    },
+  },
+  {
+    id: 'ai-gesture-unlock',
+    title: 'Smile to Unlock AI',
+    titleVi: 'Mật Mã Nụ Cười (Camera AI)',
+    category: '20-10',
+    description: 'Smile or make a heart gesture in front of the camera to unlock the secret 3D gift box',
+    descriptionVi: 'Mỉm cười hoặc ghép tay thả tim trước camera AI để tự động mở hộp quà 3D bí mật',
+    effectType: 'AI_GESTURE',
+    thumbnail: 'https://images.unsplash.com/photo-1512361436605-a484bdb34b5f?w=800&auto=format&fit=crop&q=80',
+    icon: '🤖',
+    gradient: 'from-rose-500/80 via-pink-700/70 to-purple-950',
+    stats: { views: 0, hearts: 0, uses: 0 },
+    defaultConfig: {
+      recipientName: 'Công chúa của anh',
+      senderName: 'Người yêu em',
+      mainText: 'AI đã nhận ra nụ cười đẹp nhất thế giới rồi đó! 🤖💗 Ngày 20/10, chúc em luôn tỏa sáng và hạnh phúc như nụ cười vừa rồi nhé!',
+      themeColor: '#EC4899',
+      fontFamily: 'Be Vietnam Pro',
+      musicPreset: 'cuoi-thoi',
       images: [],
     },
   },
