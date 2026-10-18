@@ -612,22 +612,22 @@ export default function Landing() {
       {/* ========================================================
           TEMPLATE CATALOG SECTION (With Live Category Filter & Realistic Stats)
           ======================================================== */}
-      <section className="relative z-10 py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
+      <section className="relative z-10 py-10 sm:py-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
-          <span className="text-xs font-bold tracking-widest text-rose-600 uppercase px-3 py-1 rounded-full bg-rose-100/80 border border-rose-200/50">
+        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-12 space-y-2 sm:space-y-3">
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-rose-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-rose-100/80 border border-rose-200/50">
             Kho Mẫu Thiệp 20/10 Đặc Sắc
           </span>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
             Chọn Phong Cách Thiệp Tương Tác
           </h2>
-          <p className="text-xs sm:text-base text-slate-600">
+          <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chạm vào thiệp bạn yêu thích để bắt đầu viết lời chúc, thêm ảnh kỷ niệm và gửi tặng người phụ nữ bạn trân quý.
           </p>
 
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+          {/* Category Filter Pills (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center px-1 pt-2 sm:pt-4">
             {[
               { id: 'all', label: 'Tất cả mẫu', count: TEMPLATES.length, icon: '✨' },
               { id: '20-10', label: 'Mừng 20/10', count: 3, icon: '🌹' },
@@ -641,15 +641,15 @@ export default function Landing() {
                   soundFx.playPinClick();
                   setActiveCategory(tab.id as TemplateCategoryFilter);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                className={`whitespace-nowrap shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeCategory === tab.id
-                    ? 'bg-slate-900 text-white shadow-md scale-105'
-                    : 'bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/70'
+                    ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
+                    : 'bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/70 shadow-2xs'
                 }`}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full ${
                   activeCategory === tab.id ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-500'
                 }`}>
                   {tab.count}
@@ -776,20 +776,20 @@ export default function Landing() {
       {/* ========================================================
           WISH INSPIRATION & GENERATOR SECTION (Unique 20/10 Feature)
           ======================================================== */}
-      <section className="relative z-10 py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
-        <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
-          <span className="text-xs font-bold tracking-widest text-purple-600 uppercase px-3 py-1 rounded-full bg-purple-100/80 border border-purple-200/50">
+      <section className="relative z-10 py-10 sm:py-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
+        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10 space-y-2 sm:space-y-3">
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-purple-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-purple-100/80 border border-purple-200/50">
             Cảm Hứng Viết Thiệp 20/10
           </span>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
             Gợi Ý Lời Chúc Chạm Đến Trái Tim
           </h2>
-          <p className="text-xs sm:text-base text-slate-600">
+          <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chưa biết viết gì cho hay? Chọn ngay đối tượng bạn muốn gửi để sao chép hoặc áp dụng trực tiếp vào thiệp chỉ với 1 chạm.
           </p>
 
-          {/* Target Selector Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+          {/* Target Selector Tabs (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center px-1 pt-2 sm:pt-3">
             {[
               { id: 'wife', label: 'Vợ & Người Yêu', icon: '💖' },
               { id: 'mom', label: 'Mẹ Kính Yêu', icon: '🌸' },
@@ -803,10 +803,10 @@ export default function Landing() {
                   soundFx.playPinClick();
                   setActiveWishTarget(tab.id as any);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                className={`whitespace-nowrap shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeWishTarget === tab.id
-                    ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-105'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                    ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-[1.02]'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-2xs'
                 }`}
               >
                 <span>{tab.icon}</span>
