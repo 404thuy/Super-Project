@@ -76,7 +76,7 @@ export default function Templates() {
       : TEMPLATES.filter((t) => t.category === category);
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-20 sm:pb-24 px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-28 sm:pb-24 px-4 sm:px-6 lg:px-8">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -91,26 +91,26 @@ export default function Templates() {
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-4 sm:space-y-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
-          <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-rose-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-rose-100">
+        <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3 px-2">
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-rose-600 uppercase px-3 py-1 rounded-full bg-rose-100 inline-block">
             Kho Mẫu Thiệp 20/10
           </span>
-          <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
             Chọn Mẫu Thiệp Gửi Người Thương
           </h1>
-          <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chạm vào thiệp bạn thích để bắt đầu viết lời chúc, hoặc thả tim để lưu vào danh sách lịch sử.
           </p>
         </div>
 
-        {/* Category Filter Pills (Horizontal scroll on mobile without visible scrollbar, centered on desktop) */}
-        <div className="w-full overflow-x-auto no-scrollbar pb-2 pt-1">
-          <div className="flex items-center gap-1.5 sm:gap-2 w-fit mx-auto px-4 sm:px-6">
+        {/* Category Filter Pills (Cuộn ngang êm ái trên di động, không bị lệch lề) */}
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto">
             {CATEGORY_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setCategory(tab.value)}
-                className={`whitespace-nowrap px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                className={`whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                   category === tab.value
                     ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-xs'
@@ -124,7 +124,7 @@ export default function Templates() {
         </div>
 
         {/* Clean, Non-cluttered Template Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredTemplates.map((tmpl) => {
             const isLiked = likedTemplateIds.includes(tmpl.id);
             const stats = getTemplateLiveStats(tmpl.id);
@@ -132,7 +132,7 @@ export default function Templates() {
             return (
               <div
                 key={tmpl.id}
-                className="group bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                className="group w-full max-w-md sm:max-w-none mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
                 {/* Entire upper portion is clickable directly to Studio */}
                 <div
@@ -213,26 +213,26 @@ export default function Templates() {
                 </div>
 
                 {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
-                <div className="p-3 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">
+                <div className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3 bg-white">
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/studio/${tmpl.id}`}
-                      className="block font-extrabold text-xs sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
+                      className="block font-black text-sm sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
                       title={tmpl.titleVi}
                     >
                       {tmpl.icon} {tmpl.titleVi}
                     </Link>
-                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                    <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
                       Hiệu ứng 3D • Mở khóa trải nghiệm
                     </p>
                   </div>
 
                   <Link
                     to={`/studio/${tmpl.id}`}
-                    className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                   >
                     <span>Tạo thiệp</span>
-                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>

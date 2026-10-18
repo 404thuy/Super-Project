@@ -143,63 +143,63 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Floating Frosted Glass Mobile Bottom Navigation Capsule (Slim, Sleek & Compact) */}
-      <div className="md:hidden fixed bottom-2.5 inset-x-0 z-40 px-3 pointer-events-none flex justify-center">
-        <nav className="pointer-events-auto w-full max-w-[260px] bg-white/85 backdrop-blur-2xl border border-white/70 shadow-[0_4px_20px_rgba(0,0,0,0.10)] rounded-full p-1 flex items-center justify-between ring-1 ring-black/5">
+      {/* Floating Frosted Glass Mobile Bottom Navigation Capsule (Rộng rãi, Sang trọng & Hiện đại) */}
+      <div className="md:hidden fixed bottom-3 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
+        <nav className="pointer-events-auto w-full max-w-[360px] bg-white/92 backdrop-blur-2xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded-2xl p-1.5 flex items-center justify-between ring-1 ring-slate-900/5">
           {/* Trang chủ */}
           <Link
             to="/"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 ${
               location.pathname === '/'
-                ? 'bg-rose-100/90 text-rose-600 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium'
+                ? 'bg-rose-500 text-white font-extrabold shadow-sm shadow-rose-500/25'
+                : 'text-slate-500 hover:text-slate-800 font-semibold hover:bg-slate-50'
             }`}
           >
             <Heart
-              className={`w-4 h-4 transition-transform ${
-                location.pathname === '/' ? 'fill-rose-500 scale-105' : ''
+              className={`w-4.5 h-4.5 transition-transform ${
+                location.pathname === '/' ? 'fill-white scale-105' : ''
               }`}
             />
-            <span className="text-[9px] leading-none mt-0.5">Trang chủ</span>
+            <span className="text-[10px] leading-tight mt-1 font-bold">Trang chủ</span>
           </Link>
 
           {/* Mẫu thiệp */}
           <Link
             to="/templates"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 ${
               location.pathname === '/templates'
-                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium'
+                ? 'bg-purple-600 text-white font-extrabold shadow-sm shadow-purple-600/25'
+                : 'text-slate-500 hover:text-slate-800 font-semibold hover:bg-slate-50'
             }`}
           >
             <Sparkles
-              className={`w-4 h-4 transition-transform ${
+              className={`w-4.5 h-4.5 transition-transform ${
                 location.pathname === '/templates' ? 'scale-105' : ''
               }`}
             />
-            <span className="text-[9px] leading-none mt-0.5">Mẫu thiệp</span>
+            <span className="text-[10px] leading-tight mt-1 font-bold">Mẫu thiệp</span>
           </Link>
 
           {/* Lịch sử */}
           <Link
             to="/history"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 ${
               location.pathname === '/history' || location.pathname === '/dashboard'
-                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium'
+                ? 'bg-indigo-600 text-white font-extrabold shadow-sm shadow-indigo-600/25'
+                : 'text-slate-500 hover:text-slate-800 font-semibold hover:bg-slate-50'
             }`}
           >
             <History
-              className={`w-4 h-4 transition-transform ${
+              className={`w-4.5 h-4.5 transition-transform ${
                 location.pathname === '/history' || location.pathname === '/dashboard'
                   ? 'scale-105'
                   : ''
               }`}
             />
-            <span className="text-[9px] leading-none mt-0.5">Lịch sử</span>
+            <span className="text-[10px] leading-tight mt-1 font-bold">Lịch sử</span>
           </Link>
         </nav>
       </div>

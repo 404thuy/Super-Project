@@ -602,24 +602,24 @@ export default function Landing() {
       {/* ========================================================
           TEMPLATE CATALOG SECTION (With Live Category Filter & Realistic Stats)
           ======================================================== */}
-      <section className="relative z-10 py-10 sm:py-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80">
+      <section className="relative z-10 py-8 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80 pb-28 sm:pb-24">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-2 sm:space-y-3">
-          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-rose-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-rose-100/80 border border-rose-200/50">
+        <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8 space-y-2 sm:space-y-3 px-2">
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-rose-600 uppercase px-3 py-1 rounded-full bg-rose-100/80 border border-rose-200/50 inline-block">
             Kho Mẫu Thiệp 20/10 Đặc Sắc
           </span>
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
             Chọn Phong Cách Thiệp Tương Tác
           </h2>
-          <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chạm vào thiệp bạn yêu thích để bắt đầu viết lời chúc, thêm ảnh kỷ niệm và gửi tặng người phụ nữ bạn trân quý.
           </p>
         </div>
 
-        {/* Category Filter Pills (Sleek Horizontal Scroll on Mobile, Centered on Desktop) */}
-        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-6 sm:mb-10">
-          <div className="flex items-center gap-1.5 sm:gap-2 w-fit mx-auto px-4 sm:px-6">
+        {/* Category Filter Pills (Cuộn mượt mà không bị lệch lề trên mobile, căn giữa trên desktop) */}
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-5 sm:mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto">
             {[
               { id: 'all', label: 'Tất cả mẫu', count: TEMPLATES.length, icon: '✨' },
               { id: '20-10', label: '20/10 & 8/3', count: TEMPLATES.filter((t) => t.category === '20-10').length, icon: '🌹' },
@@ -634,15 +634,15 @@ export default function Landing() {
                   soundFx.playPinClick();
                   setActiveCategory(tab.id as TemplateCategoryFilter);
                 }}
-                className={`whitespace-nowrap shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`whitespace-nowrap shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeCategory === tab.id
                     ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                    : 'bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/70 shadow-2xs'
+                    : 'bg-white text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/80 shadow-2xs'
                 }`}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
-                <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full ${
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                   activeCategory === tab.id ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-500'
                 }`}>
                   {tab.count}
@@ -652,8 +652,8 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
+        {/* Templates Grid - Cân đối, chuẩn tỉ lệ trên điện thoại */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {filteredTemplates.map((tmpl) => {
             const stats = getTemplateLiveStats(tmpl.id);
             const isLiked = likedTemplateIds.includes(tmpl.id);
@@ -661,7 +661,7 @@ export default function Landing() {
             return (
               <div
                 key={tmpl.id}
-                className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col justify-between"
+                className="group w-full max-w-md sm:max-w-none mx-auto bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col justify-between"
               >
                 {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
                 <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
@@ -735,16 +735,16 @@ export default function Landing() {
                 </div>
 
                 {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
-                <div className="p-3 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">
+                <div className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3 bg-white">
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/studio/${tmpl.id}`}
-                      className="block font-extrabold text-xs sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
+                      className="block font-black text-sm sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
                       title={tmpl.titleVi}
                     >
                       {tmpl.icon} {tmpl.titleVi}
                     </Link>
-                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                    <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
                       Hiệu ứng 3D • Mở khóa trải nghiệm
                     </p>
                   </div>
@@ -753,10 +753,10 @@ export default function Landing() {
                   <Link
                     to={`/studio/${tmpl.id}`}
                     onClick={() => soundFx.playHeartPop()}
-                    className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    className="px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                   >
                     <span>Tạo thiệp</span>
-                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
