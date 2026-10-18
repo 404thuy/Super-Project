@@ -120,7 +120,7 @@ export default function Templates() {
         </div>
 
         {/* Clean, Non-cluttered Template Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
           {filteredTemplates.map((tmpl) => {
             const isLiked = likedTemplateIds.includes(tmpl.id);
             const stats = getTemplateLiveStats(tmpl.id);
@@ -128,12 +128,12 @@ export default function Templates() {
             return (
               <div
                 key={tmpl.id}
-                className="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                className="group bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
                 {/* Entire upper portion is clickable directly to Studio */}
                 <Link to={`/studio/${tmpl.id}`} className="block relative">
-                  {/* Hero Image Section (Chiếm diện tích lớn, tỉ lệ 4:3 đẹp mắt) */}
-                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+                  {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
+                  <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
                     <img
                       src={tmpl.thumbnail}
                       alt={tmpl.titleVi}
@@ -143,7 +143,7 @@ export default function Templates() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-black/25" />
 
                     {/* Category Pill */}
-                    <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">
+                    <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">
                       {tmpl.category === '20-10'
                         ? '🌹 20/10'
                         : tmpl.category === 'love'
@@ -156,11 +156,11 @@ export default function Templates() {
                     </div>
 
                     {/* Action Controls: Preview & Heart Button */}
-                    <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
+                    <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex items-center gap-1.5 z-10">
                       <Link
                         to={`/card/demo-${tmpl.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-black/50 hover:bg-black/75 backdrop-blur-md text-white p-2 rounded-full text-xs font-semibold shadow-sm flex items-center justify-center transition-all active:scale-90 hover:scale-105"
+                        className="bg-black/50 hover:bg-black/75 backdrop-blur-md text-white p-1.5 sm:p-2 rounded-full text-xs font-semibold shadow-sm flex items-center justify-center transition-all active:scale-90 hover:scale-105"
                         title="Xem thử thiệp mẫu"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -169,7 +169,7 @@ export default function Templates() {
                       <button
                         type="button"
                         onClick={(e) => handleToggleHeart(tmpl.id, e)}
-                        className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center cursor-pointer hover:scale-105 ${
+                        className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center cursor-pointer hover:scale-105 ${
                           isLiked
                             ? 'bg-rose-500 text-white shadow-md shadow-rose-500/40 ring-2 ring-white/70'
                             : 'bg-black/50 hover:bg-black/75 text-white hover:text-rose-300'
@@ -189,7 +189,7 @@ export default function Templates() {
                     </div>
 
                     {/* Live Stats Pill ở góc dưới trái của ảnh */}
-                    <div className="absolute bottom-3 left-3.5 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[11px] font-medium text-white/90 pointer-events-none">
+                    <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none">
                       <span className="flex items-center gap-1">
                         <Eye className="w-3 h-3 text-purple-300" />
                         <span>{formatStat(stats.views)}</span>
@@ -209,26 +209,26 @@ export default function Templates() {
                 </Link>
 
                 {/* Bottom Compact Info: Tiêu đề nổi bật & Nút Tạo thiệp gọn gàng */}
-                <div className="p-4 sm:p-4.5 flex items-center justify-between gap-3 bg-white">
+                <div className="p-3 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/studio/${tmpl.id}`}
-                      className="block font-extrabold text-sm sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
+                      className="block font-extrabold text-xs sm:text-base text-slate-900 hover:text-purple-600 transition-colors truncate"
                       title={tmpl.titleVi}
                     >
                       {tmpl.icon} {tmpl.titleVi}
                     </Link>
-                    <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
                       Hiệu ứng 3D • Mở khóa trải nghiệm
                     </p>
                   </div>
 
                   <Link
                     to={`/studio/${tmpl.id}`}
-                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-purple-500/20 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                   >
                     <span>Tạo thiệp</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </Link>
                 </div>
               </div>
