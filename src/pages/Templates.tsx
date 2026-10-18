@@ -104,8 +104,8 @@ export default function Templates() {
         </div>
 
         {/* Category Filter Pills (Cuộn ngang êm ái trên di động, không bị lệch lề) */}
-        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto">
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1">
+          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto px-1 sm:px-0">
             {CATEGORY_TABS.map((tab) => (
               <button
                 key={tab.value}
@@ -124,7 +124,7 @@ export default function Templates() {
         </div>
 
         {/* Clean, Non-cluttered Template Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
           {filteredTemplates.map((tmpl) => {
             const isLiked = likedTemplateIds.includes(tmpl.id);
             const stats = getTemplateLiveStats(tmpl.id);
@@ -132,7 +132,7 @@ export default function Templates() {
             return (
               <div
                 key={tmpl.id}
-                className="group w-full max-w-md sm:max-w-none mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                className="group w-full mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
                 {/* Entire upper portion is clickable directly to Studio */}
                 <div

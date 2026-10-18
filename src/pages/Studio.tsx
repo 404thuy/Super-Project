@@ -498,8 +498,60 @@ export default function Studio() {
     setTimeout(() => setWishAppliedNotice(null), 3000);
   };
 
-  // Handle Batch Image Upload (fills empty slots up to template's maxPhotos or dynamic for cinema)
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Helper nén ảnh siêu nhẹ và mượt mà, chống lỗi ngắt stream FileReader trên iOS Safari
+  const compressImageFile = (file: File, maxDim = 1200, quality = 0.85): Promise<string> => {
+    return new Promise((resolve) => {
+      // 1. Thử dùng Blob URL trực tiếp (không bị ảnh hưởng bởi e.target.value = '')
+      try {
+        const blobUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+          URL.revokeObjectURL(blobUrl);
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(dataUrl);
+            return;
+          }
+          fallbackRead(file, resolve);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(blobUrl);
+          fallbackRead(file, resolve);
+        };
+
+        img.src = blobUrl;
+      } catch {
+        fallbackRead(file, resolve);
+      }
+    });
+  };
+
+  const fallbackRead = (file: File, resolve: (val: string) => void) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve((e.target?.result as string) || '');
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  };
+
+  // Handle Batch Image Upload (tải hàng loạt an toàn, nén nhanh và cập nhật chuẩn xác)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -509,42 +561,55 @@ export default function Studio() {
     const maxPhotos = isCinema ? 20 : photoConfig.maxPhotos;
     const fileList = Array.from(files).slice(0, maxPhotos);
 
-    fileList.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const base64 = event.target.result as string;
-          setConfig((prev) => {
-            const current = [...(prev.images || [])];
-            if (isCinema) {
-              if (index < current.length) {
-                current[index] = base64;
+    try {
+      const base64List = await Promise.all(
+        fileList.map((file) => compressImageFile(file))
+      );
+
+      const validBase64 = base64List.filter(Boolean);
+      if (validBase64.length > 0) {
+        soundFx.playHeartPop();
+        setConfig((prev) => {
+          const current = [...(prev.images || [])];
+          if (isCinema) {
+            validBase64.forEach((b64, idx) => {
+              if (idx < current.length) {
+                current[idx] = b64;
               } else {
-                current.push(base64);
+                current.push(b64);
               }
-              return { ...prev, images: current };
+            });
+            return { ...prev, images: current };
+          }
+
+          while (current.length < maxPhotos) {
+            current.push('');
+          }
+
+          let nextSlot = 0;
+          validBase64.forEach((b64) => {
+            let target = current.findIndex((img, i) => !img && i >= nextSlot);
+            if (target === -1) {
+              target = nextSlot;
             }
-            while (current.length < maxPhotos) {
-              current.push('');
+            if (target < maxPhotos) {
+              current[target] = b64;
+              nextSlot = target + 1;
             }
-            // Find first empty slot or fallback to index
-            let targetSlot = current.findIndex((img) => !img);
-            if (targetSlot === -1 || targetSlot >= maxPhotos) {
-              targetSlot = index;
-            }
-            if (targetSlot < maxPhotos) {
-              current[targetSlot] = base64;
-            }
-            return {
-              ...prev,
-              images: current.slice(0, maxPhotos),
-            };
           });
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = '';
+
+          return {
+            ...prev,
+            images: current.slice(0, maxPhotos),
+          };
+        });
+      }
+    } catch (err) {
+      console.warn('Batch image upload warning:', err);
+    } finally {
+      // Chỉ reset sau khi đã nạp và nén xong toàn bộ
+      e.target.value = '';
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -556,14 +621,15 @@ export default function Studio() {
   };
 
   // Specific slot image upload for template slot
-  const handleSlotImageUpload = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlotImageUpload = async (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     soundFx.playPinClick();
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const base64 = event.target.result as string;
+
+    try {
+      const base64 = await compressImageFile(file);
+      if (base64) {
+        soundFx.playHeartPop();
         setConfig((prev) => {
           const photoConfig = getTemplatePhotoConfig(template.effectType);
           const current = [...(prev.images || [])];
@@ -577,9 +643,12 @@ export default function Studio() {
           return { ...prev, images: current.slice(0, photoConfig.maxPhotos) };
         });
       }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    } catch (err) {
+      console.warn('Slot image upload warning:', err);
+    } finally {
+      // Chỉ reset value sau khi đã hoàn tất xử lý ảnh
+      e.target.value = '';
+    }
   };
 
   const handleRemoveSlotImage = (slotIndex: number) => {

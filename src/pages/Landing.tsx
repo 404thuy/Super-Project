@@ -602,7 +602,7 @@ export default function Landing() {
       {/* ========================================================
           TEMPLATE CATALOG SECTION (With Live Category Filter & Realistic Stats)
           ======================================================== */}
-      <section className="relative z-10 py-8 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80 pb-28 sm:pb-24">
+      <section className="relative z-10 py-8 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80 pb-28 sm:pb-24 overflow-hidden w-full">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8 space-y-2 sm:space-y-3 px-2">
@@ -618,8 +618,8 @@ export default function Landing() {
         </div>
 
         {/* Category Filter Pills (Cuộn mượt mà không bị lệch lề trên mobile, căn giữa trên desktop) */}
-        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-5 sm:mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto">
+        <div className="w-full overflow-x-auto no-scrollbar pb-3 pt-1 mb-5 sm:mb-10">
+          <div className="flex items-center gap-2 w-max sm:w-fit sm:mx-auto px-1 sm:px-0">
             {[
               { id: 'all', label: 'Tất cả mẫu', count: TEMPLATES.length, icon: '✨' },
               { id: '20-10', label: '20/10 & 8/3', count: TEMPLATES.filter((t) => t.category === '20-10').length, icon: '🌹' },
@@ -652,8 +652,8 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Templates Grid - Cân đối, chuẩn tỉ lệ trên điện thoại */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        {/* Templates Grid - Căn đều 2 bên mép màn hình */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full">
           {filteredTemplates.map((tmpl) => {
             const stats = getTemplateLiveStats(tmpl.id);
             const isLiked = likedTemplateIds.includes(tmpl.id);
@@ -661,7 +661,7 @@ export default function Landing() {
             return (
               <div
                 key={tmpl.id}
-                className="group w-full max-w-md sm:max-w-none mx-auto bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col justify-between"
+                className="group w-full mx-auto bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col justify-between"
               >
                 {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
                 <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
