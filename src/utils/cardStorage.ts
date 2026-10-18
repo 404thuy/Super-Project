@@ -410,7 +410,9 @@ export function encodeCardData(
       /%([0-9A-F]{2})/g,
       (_, p1) => String.fromCharCode(parseInt(p1, 16))
     );
-    return btoa(utf8Bytes);
+    // Mã hóa Base64 URL-safe (thay + bằng -, / bằng _, bỏ padding =)
+    const rawBase64 = btoa(utf8Bytes);
+    return rawBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   } catch (err) {
     console.error('Error encoding card data:', err);
     return '';
@@ -437,7 +439,13 @@ export function decodeCardData(
       }
     }
 
-    const cleanEncoded = encodedOrId.replace(/^c_/, '');
+    let cleanEncoded = encodedOrId.replace(/^c_/, '');
+    // Chuyển đổi ngược Base64 URL-safe về Base64 chuẩn
+    cleanEncoded = cleanEncoded.replace(/-/g, '+').replace(/_/g, '/');
+    while (cleanEncoded.length % 4 !== 0) {
+      cleanEncoded += '=';
+    }
+
     const binaryStr = atob(cleanEncoded);
     const jsonStr = decodeURIComponent(
       binaryStr

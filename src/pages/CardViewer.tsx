@@ -30,7 +30,8 @@ import { useAuth } from '../context/AuthContext';
 import { getSongById, getSongCoverUrl } from '../data/vietnameseMusic';
 
 export default function CardViewer() {
-  const { cardId } = useParams<{ cardId: string }>();
+  const params = useParams();
+  const cardId = params['*'] ? (params.cardId ? `${params.cardId}/${params['*']}` : params['*']) : params.cardId;
   const { user, openAuthModal } = useAuth();
   const [replayKey, setReplayKey] = useState(0);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted);

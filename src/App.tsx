@@ -37,7 +37,9 @@ function App() {
               }
             />
             <Route path="/studio/:templateId" element={<Studio />} />
+            <Route path="/card/:cardId/*" element={<CardViewer />} />
             <Route path="/card/:cardId" element={<CardViewer />} />
+            <Route path="/card/*" element={<CardViewer />} />
             <Route
               path="/history"
               element={
