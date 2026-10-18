@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { soundFx } from '../utils/soundEffects';
 
 export default function Navbar() {
   const location = useLocation();
@@ -142,40 +143,66 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Sleek Mobile Bottom Navigation Bar: Only Trang chủ, Mẫu thiệp, Lịch sử */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-2xl border-t border-slate-200/80 px-6 py-2 shadow-2xl flex items-center justify-around">
-        <Link
-          to="/"
-          className={`flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all ${
-            location.pathname === '/' ? 'text-rose-600 font-bold' : 'text-slate-500 font-medium hover:text-slate-800'
-          }`}
-        >
-          <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-rose-500' : ''}`} />
-          <span className="text-[10px]">Trang chủ</span>
-        </Link>
+      {/* Floating Frosted Glass Mobile Bottom Navigation Capsule (Theo phong cách Image 2) */}
+      <div className="md:hidden fixed bottom-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
+        <nav className="pointer-events-auto w-full max-w-xs sm:max-w-sm bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_10px_35px_rgba(0,0,0,0.14)] rounded-full p-1.5 flex items-center justify-between ring-1 ring-black/5">
+          {/* Trang chủ */}
+          <Link
+            to="/"
+            onClick={() => soundFx.playPinClick()}
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+              location.pathname === '/'
+                ? 'bg-rose-100/90 text-rose-600 font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+            }`}
+          >
+            <Heart
+              className={`w-5 h-5 transition-transform ${
+                location.pathname === '/' ? 'fill-rose-500 scale-105' : ''
+              }`}
+            />
+            <span className="text-[10px] leading-tight mt-0.5">Trang chủ</span>
+          </Link>
 
-        <Link
-          to="/templates"
-          className={`flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all ${
-            location.pathname === '/templates' ? 'text-purple-600 font-bold' : 'text-slate-500 font-medium hover:text-slate-800'
-          }`}
-        >
-          <Sparkles className="w-5 h-5" />
-          <span className="text-[10px]">Mẫu thiệp</span>
-        </Link>
+          {/* Mẫu thiệp */}
+          <Link
+            to="/templates"
+            onClick={() => soundFx.playPinClick()}
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+              location.pathname === '/templates'
+                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+            }`}
+          >
+            <Sparkles
+              className={`w-5 h-5 transition-transform ${
+                location.pathname === '/templates' ? 'scale-105' : ''
+              }`}
+            />
+            <span className="text-[10px] leading-tight mt-0.5">Mẫu thiệp</span>
+          </Link>
 
-        <Link
-          to="/history"
-          className={`flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all ${
-            location.pathname === '/history' || location.pathname === '/dashboard'
-              ? 'text-purple-600 font-bold'
-              : 'text-slate-500 font-medium hover:text-slate-800'
-          }`}
-        >
-          <History className="w-5 h-5" />
-          <span className="text-[10px]">Lịch sử</span>
-        </Link>
-      </nav>
+          {/* Lịch sử */}
+          <Link
+            to="/history"
+            onClick={() => soundFx.playPinClick()}
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+              location.pathname === '/history' || location.pathname === '/dashboard'
+                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+            }`}
+          >
+            <History
+              className={`w-5 h-5 transition-transform ${
+                location.pathname === '/history' || location.pathname === '/dashboard'
+                  ? 'scale-105'
+                  : ''
+              }`}
+            />
+            <span className="text-[10px] leading-tight mt-0.5">Lịch sử</span>
+          </Link>
+        </nav>
+      </div>
     </>
   );
 }

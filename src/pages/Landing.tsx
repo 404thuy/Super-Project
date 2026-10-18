@@ -1028,7 +1028,7 @@ export default function Landing() {
       {/* ========================================================
           POLISHED FOOTER
           ======================================================== */}
-      <footer className="relative z-10 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-200/60 text-slate-500">
+      <footer className="relative z-10 pt-10 pb-24 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-200/60 text-slate-500">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-rose-500 to-purple-600 flex items-center justify-center text-white">
