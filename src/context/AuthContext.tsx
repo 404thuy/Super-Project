@@ -50,7 +50,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // Khôi phục phiên làm việc từ Oracle 19c backend khi tải lại trang (F5)
+  // Helper đọc an toàn JSON từ response, tránh lỗi khi Vercel trả về index.html
+  async function safeJson(res: Response): Promise<any | null> {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return null;
+    }
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  // Khôi phục phiên làm việc (từ Oracle 19c backend hoặc từ Local Storage trên Vercel)
   useEffect(() => {
     let mounted = true;
 
@@ -64,30 +77,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Đọc thông tin user đang cache
+      const cachedStr = localStorage.getItem(USER_CACHE_KEY);
+      let cachedUser: User | null = null;
+      if (cachedStr) {
+        try {
+          cachedUser = JSON.parse(cachedStr);
+        } catch {}
+      }
+
+      // Nếu là token phiên local hoặc demo trên Vercel
+      if (token.startsWith('sess_local_') || token.startsWith('sess_demo_')) {
+        if (mounted && cachedUser) {
+          setUser(cachedUser);
+        }
+        if (mounted) setIsLoading(false);
+        return;
+      }
+
       try {
         const res = await fetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (mounted && data.success && data.user) {
+        const data = await safeJson(res);
+
+        if (mounted) {
+          if (res.ok && data?.success && data.user) {
             setUser(data.user);
             localStorage.setItem(USER_CACHE_KEY, JSON.stringify(data.user));
-          } else if (mounted) {
+          } else if (data && data.success === false) {
+            // Chỉ xóa token khi chính backend JSON phản hồi phiên đã hết hạn
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(USER_CACHE_KEY);
             setUser(null);
-          }
-        } else {
-          if (mounted) {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(USER_CACHE_KEY);
-            setUser(null);
+          } else if (cachedUser) {
+            // Trường hợp chạy trên Vercel (không có backend API), giữ nguyên user
+            setUser(cachedUser);
           }
         }
       } catch (err) {
         console.warn('Session verification notice:', err);
+        if (mounted && cachedUser) {
+          setUser(cachedUser);
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -116,6 +149,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanUser = username.trim().toLowerCase().replace(/\s+/g, '');
     const cleanName = displayName?.trim() || cleanUser;
 
+    const createLocalAccount = () => {
+      const localUser: User = {
+        id: 'usr_' + Math.random().toString(36).substring(2, 10),
+        username: cleanUser,
+        displayName: cleanName,
+        email: email?.trim() || '',
+        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`,
+        createdAt: new Date().toLocaleDateString('vi-VN'),
+      };
+
+      try {
+        const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
+        stored[cleanUser] = { user: localUser, password };
+        localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
+      } catch {}
+
+      setUser(localUser);
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(localUser));
+      localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
+      closeAuthModal();
+      return { success: true };
+    };
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -128,8 +184,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
+      const data = await safeJson(res);
+
+      // 1. Phản hồi thành công từ backend thật
+      if (res.ok && data?.success) {
         if (data.token) {
           localStorage.setItem(TOKEN_KEY, data.token);
         }
@@ -137,66 +195,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.user);
           localStorage.setItem(USER_CACHE_KEY, JSON.stringify(data.user));
         }
+        // Lưu dự phòng vào local accounts
+        try {
+          const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
+          stored[cleanUser] = { user: data.user, password };
+          localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
+        } catch {}
         closeAuthModal();
         return { success: true };
       }
 
+      // 2. Khi chạy trên Vercel không có backend API (data trả về null do nhận index.html)
+      // hoặc kết nối CSDL Oracle lỗi -> Tự động kích hoạt tài khoản ngay lập tức
+      if (!data) {
+        console.info('🚀 Kích hoạt tài khoản trên môi trường Cloud Vercel:', cleanUser);
+        return createLocalAccount();
+      }
+
       const errMsg = String(data.error || '');
-      // Nếu là lỗi CSDL Oracle (ORA-01017, logon denied, hoặc server cũ map nhầm thành "không chính xác" khi đăng ký)
       const isDbFault = 
         errMsg.includes('ORA-') || 
         errMsg.includes('logon denied') || 
         errMsg.includes('CSDL') || 
         errMsg.includes('không chính xác') ||
-        errMsg.includes('máy chủ');
+        errMsg.includes('máy chủ') ||
+        errMsg.includes('ECONNREFUSED');
 
       if (isDbFault) {
-        console.warn('⚠️ Server Oracle chưa sẵn sàng, tự động kích hoạt tài khoản Local để trải nghiệm mượt mà!');
-        const localUser: User = {
-          id: 'usr_' + Math.random().toString(36).substring(2, 10),
-          username: cleanUser,
-          displayName: cleanName,
-          email: email?.trim() || '',
-          avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`,
-          createdAt: new Date().toLocaleDateString('vi-VN'),
-        };
-
-        // Lưu tài khoản vào localStorage để đăng nhập lại được
-        try {
-          const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
-          stored[cleanUser] = { user: localUser, password };
-          localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
-        } catch {}
-
-        setUser(localUser);
-        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(localUser));
-        localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
-        closeAuthModal();
-        return { success: true };
+        return createLocalAccount();
       }
 
       return { success: false, error: data.error || 'Đăng ký tài khoản không thành công' };
     } catch (err) {
-      console.warn('Mất kết nối máy chủ, kích hoạt tài khoản trực tiếp:', err);
-      const localUser: User = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 10),
-        username: cleanUser,
-        displayName: cleanName,
-        email: email?.trim() || '',
-        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`,
-        createdAt: new Date().toLocaleDateString('vi-VN'),
-      };
-      try {
-        const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
-        stored[cleanUser] = { user: localUser, password };
-        localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
-      } catch {}
-
-      setUser(localUser);
-      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(localUser));
-      localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
-      closeAuthModal();
-      return { success: true };
+      console.info('Tự động lưu tài khoản vào bộ nhớ:', err);
+      return createLocalAccount();
     }
   };
 
@@ -210,17 +242,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 1. Kiểm tra trong danh sách tài khoản local đã đăng ký
     try {
       const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
-      if (stored[cleanUser] && stored[cleanUser].password === password) {
-        const u = stored[cleanUser].user;
-        setUser(u);
-        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
-        localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
-        closeAuthModal();
-        return { success: true };
+      if (stored[cleanUser]) {
+        if (stored[cleanUser].password === password) {
+          const u = stored[cleanUser].user;
+          setUser(u);
+          localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
+          localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
+          closeAuthModal();
+          return { success: true };
+        } else {
+          return { success: false, error: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!' };
+        }
       }
     } catch {}
 
-    // 2. Gọi API Backend
+    // 2. Tài khoản dùng thử nhanh
+    if (cleanUser === 'khach_trainghiem' || cleanUser.startsWith('khach_')) {
+      const demoUser: User = {
+        id: 'usr_demo_guest',
+        username: cleanUser,
+        displayName: 'Khách Trải Nghiệm',
+        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=khach_trainghiem`,
+        createdAt: new Date().toLocaleDateString('vi-VN'),
+      };
+      setUser(demoUser);
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(demoUser));
+      localStorage.setItem(TOKEN_KEY, 'sess_demo_' + Date.now());
+      closeAuthModal();
+      return { success: true };
+    }
+
+    // 3. Gọi API Backend (nếu chạy local hoặc có server)
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -231,8 +283,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
+      const data = await safeJson(res);
+      if (res.ok && data?.success) {
         if (data.token) {
           localStorage.setItem(TOKEN_KEY, data.token);
         }
@@ -244,25 +296,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
 
-      // Xử lý tài khoản dùng thử nhanh hoặc lỗi Oracle phía server
-      if (cleanUser === 'khach_trainghiem') {
-        const demoUser: User = {
-          id: 'usr_demo_guest',
-          username: cleanUser,
-          displayName: 'Khách Trải Nghiệm',
-          avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=khach_trainghiem`,
-          createdAt: new Date().toLocaleDateString('vi-VN'),
-        };
-        setUser(demoUser);
-        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(demoUser));
-        localStorage.setItem(TOKEN_KEY, 'sess_demo_' + Date.now());
-        closeAuthModal();
-        return { success: true };
+      if (data && data.error) {
+        return { success: false, error: data.error };
       }
 
-      return { success: false, error: data.error || 'Tên tài khoản hoặc mật khẩu không chính xác' };
+      // Khi chạy trên Vercel không có backend JSON
+      return { 
+        success: false, 
+        error: 'Tài khoản chưa được đăng ký. Bạn hãy chuyển sang tab "Đăng ký" để tạo tài khoản nhé!' 
+      };
     } catch (err) {
-      // Khi offline hoàn toàn, kiểm tra nếu user đã cache trong máy
       const cached = localStorage.getItem(USER_CACHE_KEY);
       if (cached) {
         try {
@@ -274,21 +317,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch {}
       }
-      return { success: false, error: 'Không thể kết nối máy chủ' };
+      return { 
+        success: false, 
+        error: 'Tài khoản chưa được đăng ký. Bạn hãy chuyển sang tab "Đăng ký" để tạo tài khoản nhé!' 
+      };
     }
   };
 
   // Đăng nhập nhanh tài khoản trải nghiệm (Dùng thử nhanh không bao giờ lỗi)
   const loginWithEmail = async (username: string = 'khach_trainghiem', name: string = 'Khách Trải Nghiệm') => {
     try {
-      // 1. Thử đăng nhập trước nếu tài khoản đã tồn tại
       const loginRes = await loginWithPassword(username, 'lovecard123');
       if (loginRes.success) {
         closeAuthModal();
         return;
       }
 
-      // 2. Nếu chưa có thì tự động tạo tài khoản mới
       const regRes = await registerUser(username, 'lovecard123', name);
       if (regRes.success) {
         closeAuthModal();
@@ -296,7 +340,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch {}
 
-    // 3. Tự động kích hoạt tài khoản khách trải nghiệm nội bộ nếu máy chủ gián đoạn
     const demoUser: User = {
       id: 'usr_demo_guest',
       username,
@@ -327,7 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch {}
 
-    // Gửi đồng bộ lên CSDL Oracle phía server
+    // Gửi đồng bộ lên CSDL Oracle phía server nếu có
     try {
       await fetch('/api/auth/profile', {
         method: 'PUT',
@@ -344,10 +387,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
-  // Đổi mật khẩu trong bảng DA.USERS
+  // Đổi mật khẩu
   const updatePassword = async (oldPassword: string, newPassword: string): Promise<AuthResponse> => {
     if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
 
+    // Cập nhật trong local accounts trước
+    try {
+      const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
+      if (user.username && stored[user.username]) {
+        if (stored[user.username].password !== oldPassword) {
+          return { success: false, error: 'Mật khẩu cũ không chính xác' };
+        }
+        stored[user.username].password = newPassword;
+        localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
+        return { success: true };
+      }
+    } catch {}
+
+    // Thử gửi lên server nếu có backend
     try {
       const res = await fetch('/api/auth/change-password', {
         method: 'PUT',
@@ -358,8 +415,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ oldPassword, newPassword }),
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
+      const data = await safeJson(res);
+      if (data && (!res.ok || !data.success)) {
         return { success: false, error: data.error || 'Mật khẩu cũ không chính xác' };
       }
 
@@ -370,7 +427,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Đăng xuất và xóa phiên trong DA.USER_SESSIONS
+  // Đăng xuất
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', {

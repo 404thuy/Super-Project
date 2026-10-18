@@ -42,7 +42,8 @@ export async function fetchLiveTemplateStats(): Promise<{
     const res = await fetch('/api/templates', {
       headers: getAuthHeaders(),
     });
-    if (res.ok) {
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    if (res.ok && isJson) {
       const data = await res.json();
       if (data.success) {
         localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(data.stats));
@@ -56,7 +57,7 @@ export async function fetchLiveTemplateStats(): Promise<{
       }
     }
   } catch (err) {
-    console.warn('Could not fetch template stats from backend:', err);
+    // Vercel static fallback
   }
 
   // Fallback cache
@@ -174,7 +175,8 @@ export function getLikedTemplates(userId: string | null): CardTemplate[] {
 export async function fetchCardById(id: string): Promise<CreatedCard | null> {
   try {
     const res = await fetch(`/api/cards/${encodeURIComponent(id)}`);
-    if (res.ok) {
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    if (res.ok && isJson) {
       const data = await res.json();
       if (data.success && data.card) {
         cacheCardLocally(data.card);
@@ -182,7 +184,7 @@ export async function fetchCardById(id: string): Promise<CreatedCard | null> {
       }
     }
   } catch (err) {
-    console.warn('Fetch card error from Oracle API:', err);
+    // Vercel static fallback
   }
 
   // Fallback to local cache if offline or direct template
@@ -204,7 +206,8 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
       body: JSON.stringify(card),
     });
 
-    if (res.ok) {
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    if (res.ok && isJson) {
       const data = await res.json();
       if (data.success && data.card) {
         cacheCardLocally(data.card);
@@ -212,7 +215,7 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
       }
     }
   } catch (err) {
-    console.error('Error saving card to Oracle API:', err);
+    // Vercel static fallback
   }
 
   return card;
@@ -228,7 +231,7 @@ export async function deleteCard(id: string): Promise<void> {
       headers: getAuthHeaders(),
     });
   } catch (err) {
-    console.error('Error deleting card from Oracle API:', err);
+    // Vercel static fallback
   }
 }
 
@@ -238,7 +241,8 @@ export async function fetchUserCards(): Promise<CreatedCard[]> {
     const res = await fetch('/api/users/me/cards', {
       headers: getAuthHeaders(),
     });
-    if (res.ok) {
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    if (res.ok && isJson) {
       const data = await res.json();
       if (data.success && Array.isArray(data.cards)) {
         localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(data.cards));
@@ -246,7 +250,7 @@ export async function fetchUserCards(): Promise<CreatedCard[]> {
       }
     }
   } catch (err) {
-    console.warn('Could not fetch user cards from backend:', err);
+    // Vercel static fallback
   }
 
   // Fallback to cached cards
