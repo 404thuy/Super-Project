@@ -239,38 +239,38 @@ export default function Landing() {
       {/* ========================================================
           HERO SECTION (High-Impact 2-Column Balanced Design)
           ======================================================== */}
-      <section className="relative z-10 pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-10 items-center">
+      <section className="relative z-10 pt-20 pb-12 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           
           {/* Left Column: Emotion, Hook & CTAs */}
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-8 text-center lg:text-left">
             
             {/* Festival Badge */}
             <motion.div
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full badge-festive shadow-sm"
+              className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full badge-festive shadow-sm"
             >
-              <span className="relative flex h-2.5 w-2.5">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600" />
+                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-rose-600" />
               </span>
-              <span className="text-xs sm:text-sm font-extrabold text-rose-700 tracking-wide flex items-center gap-1.5">
+              <span className="text-[11px] sm:text-sm font-extrabold text-rose-700 tracking-wide flex items-center gap-1.5">
                 <span>🌹 Chào Mừng 20/10 • Ngày Phụ Nữ Việt Nam</span>
               </span>
             </motion.div>
 
             {/* Headline */}
-            <div className="space-y-4">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.25]">
+            <div className="space-y-2 sm:space-y-4">
+              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.25]">
                 Gửi Lời Yêu Thương Qua{' '}
                 <span className="bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600 bg-clip-text text-transparent">
                   Thiệp Tương Tác
                 </span>{' '}
                 Sống Động
               </h1>
-              <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+              <p className="text-xs sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
                 Đừng để ngày 20/10 trôi qua với những bức ảnh tĩnh vô hồn. Tạo thiệp kỹ thuật số đầy cảm xúc với{' '}
                 <strong className="text-purple-700 font-bold">mật mã bí mật</strong>,{' '}
                 <strong className="text-indigo-600 font-bold">ngân hà 3D 360°</strong>,{' '}
@@ -280,41 +280,41 @@ export default function Landing() {
             </div>
 
             {/* Primary Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-1">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3.5 pt-1">
               <Link to="/templates" className="w-full sm:w-auto">
                 <button
                   onClick={() => soundFx.playHeartPop()}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white font-extrabold text-base shadow-xl shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
+                  className="w-full sm:w-auto px-5 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white font-extrabold text-xs sm:text-base shadow-xl shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 group"
                 >
-                  <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                   <span>Khám Phá Mẫu Thiệp 20/10</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
               <Link to="/studio/passcode-envelope" className="w-full sm:w-auto">
                 <button
                   onClick={() => soundFx.playPinClick()}
-                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-bold text-base border border-rose-200/80 shadow-sm hover:shadow-md hover:border-rose-300 transition-all flex items-center justify-center gap-2.5 active:scale-[0.98]"
+                  className="w-full sm:w-auto px-5 py-3 sm:px-7 sm:py-4 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-white text-slate-800 font-bold text-xs sm:text-base border border-rose-200/80 shadow-xs hover:shadow-md hover:border-rose-300 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
-                  <Lock className="w-4 h-4 text-rose-500" />
+                  <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500" />
                   <span>Tạo Thiệp Mật Mã Nhanh</span>
                 </button>
               </Link>
             </div>
 
-            {/* Trust & Real Features Ribbon - Perfectly Balanced & Centered */}
-            <div className="pt-4 border-t border-rose-100/80 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-xl mx-auto lg:mx-0">
-              <div className="bg-white/70 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-rose-100/70 shadow-sm flex flex-col justify-center items-center text-center min-h-[86px]">
-                <p className="text-sm sm:text-base lg:text-lg font-black text-rose-600 whitespace-nowrap">9 Mẫu Thiệp</p>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 whitespace-nowrap">Hiệu ứng 3D & Âm nhạc</p>
+            {/* Trust & Real Features Ribbon - Compact & Overflow-Free on Mobile */}
+            <div className="pt-3 sm:pt-4 border-t border-rose-100/80 grid grid-cols-3 gap-1.5 sm:gap-4 max-w-xl mx-auto lg:mx-0">
+              <div className="bg-white/75 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-rose-100/70 shadow-xs flex flex-col justify-center items-center text-center min-h-[60px] sm:min-h-[86px] overflow-hidden">
+                <p className="text-xs sm:text-base lg:text-lg font-black text-rose-600 truncate max-w-full">9 Mẫu Thiệp</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate max-w-full">Hiệu ứng 3D</p>
               </div>
-              <div className="bg-white/70 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-purple-100/70 shadow-sm flex flex-col justify-center items-center text-center min-h-[86px]">
-                <p className="text-sm sm:text-base lg:text-lg font-black text-purple-600 whitespace-nowrap">100% Miễn Phí</p>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 whitespace-nowrap">Bảo mật & Riêng tư</p>
+              <div className="bg-white/75 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-purple-100/70 shadow-xs flex flex-col justify-center items-center text-center min-h-[60px] sm:min-h-[86px] overflow-hidden">
+                <p className="text-xs sm:text-base lg:text-lg font-black text-purple-600 truncate max-w-full">100% Free</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate max-w-full">Bảo mật riêng tư</p>
               </div>
-              <div className="bg-white/70 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-indigo-100/70 shadow-sm flex flex-col justify-center items-center text-center min-h-[86px]">
-                <p className="text-sm sm:text-base lg:text-lg font-black text-indigo-600 whitespace-nowrap">Mã QR & Link</p>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 whitespace-nowrap">Chia sẻ trong 30 giây</p>
+              <div className="bg-white/75 backdrop-blur-md p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-indigo-100/70 shadow-xs flex flex-col justify-center items-center text-center min-h-[60px] sm:min-h-[86px] overflow-hidden">
+                <p className="text-xs sm:text-base lg:text-lg font-black text-indigo-600 truncate max-w-full">Mã QR & Link</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate max-w-full">Chia sẻ nhanh</p>
               </div>
             </div>
           </div>
@@ -326,12 +326,12 @@ export default function Landing() {
               {/* Outer Card Box */}
               <div className="relative">
                 {/* Top Corner Floating Tag */}
-                <div className="absolute -top-3.5 right-4 z-20 bg-gradient-to-r from-rose-500 to-pink-600 text-white px-3.5 py-1 rounded-full text-xs font-bold shadow-lg shadow-rose-500/30 flex items-center gap-1.5 animate-bounce">
+                <div className="absolute -top-3 right-2 sm:right-4 z-20 bg-gradient-to-r from-rose-500 to-pink-600 text-white px-2.5 py-0.5 sm:px-3.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-lg shadow-rose-500/30 flex items-center gap-1.5 animate-bounce">
                   <span>✨ Trải nghiệm tương tác ngay!</span>
                 </div>
 
                 {/* Main Glassmorphism Lab Container */}
-                <div className="bg-white/90 backdrop-blur-2xl rounded-3xl p-5 sm:p-7 border border-rose-200/70 shadow-2xl shadow-rose-500/10">
+                <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-rose-200/70 shadow-2xl shadow-rose-500/10">
                   
                   {/* Mode Selector Tabs */}
                   <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-2xl mb-5">

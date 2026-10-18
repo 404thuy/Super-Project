@@ -19,20 +19,20 @@ export default function Navbar() {
   return (
     <>
       {/* Top Header for Desktop & Mobile Header Bar */}
-      <header className="fixed top-0 left-0 right-0 z-40 px-3 sm:px-8 pt-3 sm:pt-4">
+      <header className="fixed top-0 left-0 right-0 z-40 px-2.5 sm:px-8 pt-2 sm:pt-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl px-4 sm:px-6 py-2.5 sm:py-3 shadow-lg shadow-purple-500/5 flex items-center justify-between transition-all">
+          <div className="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-xl sm:rounded-2xl px-3 sm:px-6 py-1.5 sm:py-3 shadow-md shadow-purple-500/5 flex items-center justify-between transition-all">
             {/* Brand Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
-                <Heart className="w-5 h-5 text-white fill-white" />
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-rose-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  <span className="font-extrabold text-base sm:text-xl tracking-tight bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                     LoveCard
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 uppercase">
                     20/10
                   </span>
                 </div>
@@ -143,63 +143,63 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Floating Frosted Glass Mobile Bottom Navigation Capsule (Theo phong cách Image 2) */}
-      <div className="md:hidden fixed bottom-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
-        <nav className="pointer-events-auto w-full max-w-xs sm:max-w-sm bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_10px_35px_rgba(0,0,0,0.14)] rounded-full p-1.5 flex items-center justify-between ring-1 ring-black/5">
+      {/* Floating Frosted Glass Mobile Bottom Navigation Capsule (Slim, Sleek & Compact) */}
+      <div className="md:hidden fixed bottom-2.5 inset-x-0 z-40 px-3 pointer-events-none flex justify-center">
+        <nav className="pointer-events-auto w-full max-w-[260px] bg-white/85 backdrop-blur-2xl border border-white/70 shadow-[0_4px_20px_rgba(0,0,0,0.10)] rounded-full p-1 flex items-center justify-between ring-1 ring-black/5">
           {/* Trang chủ */}
           <Link
             to="/"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
               location.pathname === '/'
-                ? 'bg-rose-100/90 text-rose-600 font-bold shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+                ? 'bg-rose-100/90 text-rose-600 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium'
             }`}
           >
             <Heart
-              className={`w-5 h-5 transition-transform ${
+              className={`w-4 h-4 transition-transform ${
                 location.pathname === '/' ? 'fill-rose-500 scale-105' : ''
               }`}
             />
-            <span className="text-[10px] leading-tight mt-0.5">Trang chủ</span>
+            <span className="text-[9px] leading-none mt-0.5">Trang chủ</span>
           </Link>
 
           {/* Mẫu thiệp */}
           <Link
             to="/templates"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
               location.pathname === '/templates'
-                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium'
             }`}
           >
             <Sparkles
-              className={`w-5 h-5 transition-transform ${
+              className={`w-4 h-4 transition-transform ${
                 location.pathname === '/templates' ? 'scale-105' : ''
               }`}
             />
-            <span className="text-[10px] leading-tight mt-0.5">Mẫu thiệp</span>
+            <span className="text-[9px] leading-none mt-0.5">Mẫu thiệp</span>
           </Link>
 
           {/* Lịch sử */}
           <Link
             to="/history"
             onClick={() => soundFx.playPinClick()}
-            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 active:scale-95 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-full transition-all duration-200 active:scale-95 ${
               location.pathname === '/history' || location.pathname === '/dashboard'
-                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-100/50'
+                ? 'bg-purple-100/90 text-purple-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 font-medium'
             }`}
           >
             <History
-              className={`w-5 h-5 transition-transform ${
+              className={`w-4 h-4 transition-transform ${
                 location.pathname === '/history' || location.pathname === '/dashboard'
                   ? 'scale-105'
                   : ''
               }`}
             />
-            <span className="text-[10px] leading-tight mt-0.5">Lịch sử</span>
+            <span className="text-[9px] leading-none mt-0.5">Lịch sử</span>
           </Link>
         </nav>
       </div>

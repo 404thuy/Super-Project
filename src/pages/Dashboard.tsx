@@ -129,7 +129,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-24 sm:pt-28 pb-28 sm:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-20 sm:pb-24 px-3 sm:px-6 lg:px-8">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -142,39 +142,39 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto space-y-6 sm:space-y-8">
+      <div className="relative z-10 max-w-6xl mx-auto space-y-4 sm:space-y-8">
         {/* Header Title */}
         <div>
-          <span className="text-xs font-bold tracking-widest text-purple-600 uppercase px-3 py-1 rounded-full bg-purple-100 flex items-center gap-1.5 w-fit">
-            <History className="w-3.5 h-3.5" />
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-purple-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-purple-100 flex items-center gap-1.5 w-fit">
+            <History className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>Lịch Sử Hoạt Động</span>
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-2">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1.5 sm:mt-2">
             Lịch Sử{' '}
             <span className="bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent">
               Tài Khoản
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-[11px] sm:text-sm text-slate-500 mt-0.5 sm:mt-1">
             Lưu giữ riêng biệt các thiệp đã tạo và những mẫu thiệp bạn đã thả tim yêu thích.
           </p>
         </div>
 
         {/* Clean Tab Switcher: Thiệp Đã Dùng vs Mẫu Đã Thích */}
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => {
               soundFx.playPinClick();
               setActiveTab('cards');
             }}
-            className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
               activeTab === 'cards'
                 ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <History className="w-4 h-4" />
+            <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Thiệp đã dùng ({cards.length})</span>
           </button>
 
@@ -184,14 +184,14 @@ export default function Dashboard() {
               soundFx.playPinClick();
               setActiveTab('liked');
             }}
-            className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
               activeTab === 'liked'
                 ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
             <Heart
-              className={`w-4 h-4 ${activeTab === 'liked' ? 'fill-white' : 'text-rose-500'}`}
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === 'liked' ? 'fill-white' : 'text-rose-500'}`}
             />
             <span>Mẫu đã thả tim ({likedTemplates.length})</span>
           </button>
@@ -267,13 +267,13 @@ export default function Dashboard() {
                         </div>
 
                         {/* Card Content Details */}
-                        <div className="p-4 sm:p-5 space-y-3">
+                        <div className="p-3.5 sm:p-5 space-y-2">
                           <div>
                             <h3 className="font-extrabold text-slate-900 text-sm sm:text-base line-clamp-1">
                               {card.title || template.titleVi}
                             </h3>
 
-                            <div className="text-xs text-slate-600 space-y-1 mt-1.5">
+                            <div className="text-xs text-slate-600 space-y-1 mt-1">
                               <p>
                                 <span className="text-slate-400">Gửi đến:</span>{' '}
                                 <span className="font-bold text-rose-600">
@@ -292,41 +292,11 @@ export default function Dashboard() {
                               </p>
                             </div>
                           </div>
-
-                          {/* Khung theo dõi tương tác riêng biệt của người nhận thiệp này */}
-                          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between text-xs">
-                            <div>
-                              <span className="text-[11px] font-bold text-slate-600 block">
-                                Theo dõi người nhận
-                              </span>
-                              <span className="text-[10px] text-slate-400">Tương tác khi mở thiệp</span>
-                            </div>
-                            <div className="flex items-center gap-2 font-bold text-xs">
-                              <span
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100"
-                                title="Số lần người nhận mở liên kết thiệp này"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-purple-500" />
-                                <span>{card.viewsCount || 0} xem</span>
-                              </span>
-                              <span
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100"
-                                title="Người nhận thả tim cho thiệp này"
-                              >
-                                <Heart
-                                  className={`w-3.5 h-3.5 ${
-                                    (card.heartsCount || 0) > 0 ? 'fill-rose-500 text-rose-500' : 'text-slate-400'
-                                  }`}
-                                />
-                                <span>{card.heartsCount || 0} tim</span>
-                              </span>
-                            </div>
-                          </div>
                         </div>
                       </div>
 
                       {/* Action Bar */}
-                      <div className="p-4 pt-0 border-t border-slate-100 flex items-center justify-between gap-2 mt-2">
+                      <div className="p-3.5 pt-0 border-t border-slate-100 flex items-center justify-between gap-2 mt-1">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleCopyLink(card)}

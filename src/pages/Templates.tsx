@@ -74,7 +74,7 @@ export default function Templates() {
       : TEMPLATES.filter((t) => t.category === category);
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-24 sm:pt-28 pb-28 sm:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-20 sm:pb-24 px-3 sm:px-6 lg:px-8">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -87,30 +87,30 @@ export default function Templates() {
         />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto space-y-8 sm:space-y-10">
+      <div className="relative z-10 max-w-6xl mx-auto space-y-4 sm:space-y-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-[11px] font-bold tracking-widest text-rose-600 uppercase px-3 py-1 rounded-full bg-rose-100">
+        <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-rose-600 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-rose-100">
             Kho Mẫu Thiệp 20/10
           </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
             Chọn Mẫu Thiệp Gửi Người Thương
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600">
+          <p className="text-[11px] sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Chạm vào thiệp bạn thích để bắt đầu viết lời chúc, hoặc thả tim để lưu vào danh sách lịch sử.
           </p>
         </div>
 
-        {/* Category Filter Pills (Horizontal scroll on mobile) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar justify-start sm:justify-center">
+        {/* Category Filter Pills (Horizontal scroll on mobile without visible scrollbar) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2 no-scrollbar justify-start sm:justify-center">
           {CATEGORY_TABS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setCategory(tab.value)}
-              className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+              className={`whitespace-nowrap px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
                 category === tab.value
                   ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-sm'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-xs'
               }`}
             >
               <span>{tab.icon}</span>
