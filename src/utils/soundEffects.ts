@@ -81,22 +81,24 @@ class SoundEngine {
     this.unlockListenersAttached = true;
 
     const unlock = () => {
-      // 1. Resume AudioContext nếu đang bị suspended
+      // 1. Khởi tạo và resume AudioContext ngay trong user gesture
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       } else if (!this.ctx) {
         this.getContext();
       }
 
-      // 2. Tự động phát tiếp bài hát nếu trước đó bị browser chặn autoplay
+      // 2. Mở khóa và tự động phát bài hát nếu trước đó bị browser chặn autoplay
       if (this.pendingAutoplayAudio && this.isMusicPlaying) {
         const audio = this.pendingAutoplayAudio;
         this.pendingAutoplayAudio = null;
         audio.play().catch(() => {});
+      } else if (this.activeCustomAudio && this.isMusicPlaying && this.activeCustomAudio.paused) {
+        this.activeCustomAudio.play().catch(() => {});
       }
     };
 
-    ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'].forEach((evt) => {
+    ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click'].forEach((evt) => {
       window.addEventListener(evt, unlock, { capture: true, passive: true });
     });
   }
@@ -456,24 +458,26 @@ class SoundEngine {
     return null;
   }
 
-  // Tải trước toàn bộ kho nhạc cục bộ vào RAM để phát ngay lập tức 0ms không độ trễ
+  // Tải trước nhẹ nhàng (không spam nạp 47 file cùng lúc tránh tràn bộ nhớ và MediaCodec trên di động)
   public preloadAllMusic() {
-    if (typeof window === 'undefined') return;
-    VIETNAMESE_MUSIC_LIBRARY.forEach((song) => {
-      if (song.audioUrl && !this.audioPool.has(song.audioUrl)) {
-        try {
-          const audio = new Audio();
-          audio.preload = 'auto';
-          audio.src = song.audioUrl;
-          // KHÔNG đặt loop=true ở đây — chúng ta tự quản lý vòng lặp qua attachLoopHandler
-          // để tránh xung đột khi cần seek về mốc custom thay vì đầu bài
-          audio.loop = false;
-          audio.volume = 0.85;
-          audio.load();
-          this.audioPool.set(song.audioUrl, audio);
-        } catch {}
-      }
-    });
+    // Để tối ưu trải nghiệm trên điện thoại di động (iOS Safari & Android Chrome),
+    // việc stream file âm thanh diễn ra tức thì khi người dùng bấm chọn hoặc phát thử.
+  }
+
+  private getOrCreateCustomAudio(): HTMLAudioElement {
+    if (!this.activeCustomAudio) {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.autoplay = false;
+      // Thuộc tính quan trọng cho iOS Safari & Android Web
+      (audio as any).playsInline = true;
+      audio.setAttribute('playsinline', 'true');
+      audio.setAttribute('webkit-playsinline', 'true');
+      audio.volume = 0.85;
+      audio.muted = this.isMuted;
+      this.activeCustomAudio = audio;
+    }
+    return this.activeCustomAudio;
   }
 
   public playNativeAudio(url: string, startSeconds: number = 0, endSeconds?: number) {
@@ -483,11 +487,12 @@ class SoundEngine {
       this.activeRangeStart = cleanStart;
       this.activeRangeEnd = cleanEnd;
 
+      const audio = this.getOrCreateCustomAudio();
+      audio.muted = this.isMuted;
+      audio.volume = 0.85;
+
       // 1. Nếu đang phát đúng URL này rồi, chỉ cần seek mượt mà không reload hay pause
-      if (this.activeCustomAudio && this.activeAudioUrl === url) {
-        const audio = this.activeCustomAudio;
-        audio.muted = this.isMuted;
-        audio.volume = 0.85;
+      if (this.activeAudioUrl === url && audio.src) {
         this.attachLoopHandler(audio);
 
         const doSeek = () => {
@@ -520,42 +525,27 @@ class SoundEngine {
         return;
       }
 
-      // 2. Chuyển sang bài khác: tạm dừng an toàn bài cũ
-      if (this.activeCustomAudio) {
-        const oldAudio = this.activeCustomAudio;
-        oldAudio.ontimeupdate = null;
-        oldAudio.onended = null;
-        try {
-          oldAudio.pause();
-          oldAudio.currentTime = 0;
-        } catch {}
-      }
+      // 2. Chuyển sang bài khác: reset nguồn phát an toàn
+      audio.ontimeupdate = null;
+      audio.onended = null;
+      try {
+        audio.pause();
+      } catch {}
 
-      // 3. Lấy audio đã được nạp sẵn trong RAM (hoặc tạo mới nếu chưa có)
-      let audio = this.audioPool.get(url);
-      if (!audio) {
-        audio = new Audio();
-        audio.preload = 'auto';
-        audio.src = url;
-        audio.loop = false;
-        this.audioPool.set(url, audio);
-      } else {
-        // Đảm bảo loop=false vì chúng ta quản lý thủ công
-        audio.loop = false;
-      }
-
-      this.activeCustomAudio = audio;
       this.activeAudioUrl = url;
+      audio.src = url;
+      audio.load();
+      this.attachLoopHandler(audio);
 
-      // Cấu hình volume và đảm bảo audio.currentTime được đặt đúng vị trí ngay khi sẵn sàng
-      audio.muted = this.isMuted;
-      audio.volume = 0.85;
-
+      let hasSeeked = false;
       const setStartTime = () => {
-        try {
-          audio.currentTime = cleanStart;
-        } catch (err) {
-          console.warn('Set startTime error:', err);
+        if (!hasSeeked && cleanStart > 0) {
+          hasSeeked = true;
+          try {
+            audio.currentTime = cleanStart;
+          } catch (err) {
+            console.warn('Set startTime error:', err);
+          }
         }
       };
 
@@ -566,14 +556,12 @@ class SoundEngine {
         audio.addEventListener('canplay', setStartTime, { once: true });
       }
 
-      this.attachLoopHandler(audio);
-
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         this.playPromise = playPromise;
         playPromise.then(() => {
           this.pendingAutoplayAudio = null;
-          // Phòng trường hợp trình duyệt tự reset currentTime về 0 khi bắt đầu phát
+          // Đồng bộ lại thời gian bắt đầu sau khi stream đã sẵn sàng
           if (cleanStart > 0 && Math.abs(audio.currentTime - cleanStart) > 1.0) {
             try {
               audio.currentTime = cleanStart;
@@ -581,7 +569,7 @@ class SoundEngine {
           }
         }).catch((err) => {
           if (err.name === 'NotAllowedError') {
-            // Trình duyệt chặn autoplay khi mới vào trang: lưu lại để chạm lần đầu là phát ngay
+            // Trình duyệt di động chặn autoplay khi chưa chạm: lưu lại để chạm lần đầu là phát ngay
             this.pendingAutoplayAudio = audio;
           } else if (err.name !== 'AbortError') {
             console.warn('Native audio playback error:', err);
@@ -762,7 +750,7 @@ class SoundEngine {
     this.currentMusicPreset = selected;
     this.isMusicPlaying = true;
 
-    // 1. Nếu người dùng tự tải file MP3 từ máy hoặc có link custom
+    // 1. Nếu người dùng tự tải file MP3 từ máy hoặc có link custom/online
     if (customUrl) {
       const ytMatch = customUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
       if (ytMatch && ytMatch[1]) {
@@ -771,45 +759,7 @@ class SoundEngine {
         return;
       }
 
-      // Kiểm tra nếu là iTunes preview URL (30 giây) → tìm video YouTube để phát trọn bài
-      if (
-        customUrl.includes('audio-ssl.itunes.apple.com') ||
-        customUrl.includes('audio.itunes.apple.com') ||
-        customUrl.includes('is1-ssl.mzstatic.com') ||
-        customUrl.includes('mzstatic.com')
-      ) {
-        try {
-          let searchTerms = '';
-          if (song) {
-            searchTerms = `${song.title} ${song.artist}`;
-          } else if (presetId && this.onlineSongMetadata.has(presetId)) {
-            const meta = this.onlineSongMetadata.get(presetId)!;
-            searchTerms = `${meta.title} ${meta.artist}`;
-          } else if (customUrl && this.onlineSongMetadata.has(customUrl)) {
-            const meta = this.onlineSongMetadata.get(customUrl)!;
-            searchTerms = `${meta.title} ${meta.artist}`;
-          } else if (presetId && presetId !== 'custom-mp3') {
-            const s = getSongById(presetId);
-            if (s) searchTerms = `${s.title} ${s.artist}`;
-          }
-          if (searchTerms) {
-            const ytRes = await fetch(`/api/youtube-search?q=${encodeURIComponent(searchTerms)}`);
-            const ytData = await ytRes.json();
-            if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
-            if (ytData.success && ytData.youtubeId) {
-              this.playYouTube(ytData.youtubeId, effectiveStartSeconds);
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn('Auto resolve full track error:', err);
-        }
-
-        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
-        this.playNativeAudio(customUrl, effectiveStartSeconds, endSeconds);
-        return;
-      }
-
+      // Phát trực tiếp toàn bộ bài hát/audio stream qua HTML5 audio chuẩn (Hỗ trợ 100% mobile iOS & Android)
       if (customUrl.trim().length > 0) {
         if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         this.playNativeAudio(customUrl, effectiveStartSeconds, endSeconds);
@@ -817,7 +767,7 @@ class SoundEngine {
       }
     }
 
-    // 2. Bài hát từ Kho nhạc hoặc Preset MP3 cục bộ: Ưu TIÊN PHÁT STREAM NATIVE AUDIO (Tốc độ tức thì < 50ms, không trễ)
+    // 2. Bài hát từ Kho nhạc hoặc Preset MP3 cục bộ: ƯU TIÊN PHÁT STREAM NATIVE AUDIO
     if (song?.audioUrl) {
       if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
       this.playNativeAudio(song.audioUrl, effectiveStartSeconds, endSeconds);
@@ -836,22 +786,14 @@ class SoundEngine {
         const instantUrl = await this.fetchInstantAudioStream(song.title, song.artist);
         if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         if (instantUrl && this.currentMusicPreset === selected) {
-          const isItunesPreview = instantUrl.includes('mzstatic.com') || instantUrl.includes('itunes.apple.com');
-          if (!isItunesPreview) {
-            this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
-            return;
-          }
-          if (!song.youtubeId) {
-            this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
-            return;
-          }
+          this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
+          return;
         }
       } catch (err) {
         console.warn('Fetch instant audio error:', err);
       }
 
       if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
-      // Dự phòng 1: YouTube Background Embed nếu bài hát có youtubeId (phát FULL bài)
       if (song.youtubeId) {
         this.playYouTube(song.youtubeId, effectiveStartSeconds);
         return;

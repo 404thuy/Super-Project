@@ -75,7 +75,7 @@ export default function MusicLibraryModal({
     }
   }, [isOpen]);
 
-  // Online search with debouncing
+  // Online search with debouncing & resilient fallback
   useEffect(() => {
     const q = searchQuery.trim();
     if (!q || q.length < 2) {
@@ -85,22 +85,31 @@ export default function MusicLibraryModal({
     }
 
     setIsSearchingOnline(true);
+    const controller = new AbortController();
+
     const timer = setTimeout(async () => {
       try {
         let items: SongItem[] = [];
 
-        // 1. Try local backend proxy first
+        // 1. Thử gọi backend proxy với timeout 2.0s để không bị treo
         try {
-          const res = await fetch(`/api/search-music?q=${encodeURIComponent(q)}`);
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const res = await fetch(`/api/search-music?q=${encodeURIComponent(q)}`, {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
           if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.results) && data.results.length > 0) {
-              items = data.results;
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+              const data = await res.json();
+              if (Array.isArray(data.results) && data.results.length > 0) {
+                items = data.results;
+              }
             }
           }
         } catch {}
 
-        // 2. Direct Apple Music / iTunes API fallback
+        // 2. Trực tiếp Apple Music / iTunes API (Cực nhanh <200ms, CORS mở, luôn sẵn sàng trên mobile và Vercel)
         if (items.length === 0) {
           const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=VN&media=music&limit=25`;
           const res = await fetch(itunesUrl);
@@ -135,6 +144,7 @@ export default function MusicLibraryModal({
               };
             });
         }
+
         items.forEach((it) => {
           if (it.id) soundFx.registerSongMetadata(it.id, it.title, it.artist);
           if (it.audioUrl) soundFx.registerSongMetadata(it.audioUrl, it.title, it.artist);
@@ -145,28 +155,30 @@ export default function MusicLibraryModal({
       } finally {
         setIsSearchingOnline(false);
       }
-    }, 350);
+    }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
-  // Filter local songs
+  // Filter local songs (Khi tìm kiếm, quét qua toàn bộ kho nhạc có sẵn để tìm bài trùng)
   const filteredSongs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return VIETNAMESE_MUSIC_LIBRARY.filter((song) => {
-      // Category filter
-      if (activeCategory !== 'all' && activeCategory !== 'upload' && activeCategory !== 'custom') {
-        if (song.category !== activeCategory) return false;
+      // Khi đang tìm kiếm theo từ khóa: quét toàn bộ kho nhạc không bị giới hạn bởi tab danh mục
+      if (!q) {
+        if (activeCategory !== 'all' && activeCategory !== 'upload' && activeCategory !== 'custom') {
+          if (song.category !== activeCategory) return false;
+        }
+        return true;
       }
-      // Search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesTitle = song.title.toLowerCase().includes(query);
-        const matchesArtist = song.artist.toLowerCase().includes(query);
-        const matchesLyric = song.chorusLyric.toLowerCase().includes(query);
-        const matchesTag = song.tag.toLowerCase().includes(query);
-        return matchesTitle || matchesArtist || matchesLyric || matchesTag;
-      }
-      return true;
+      const matchesTitle = song.title.toLowerCase().includes(q);
+      const matchesArtist = song.artist.toLowerCase().includes(q);
+      const matchesLyric = song.chorusLyric.toLowerCase().includes(q);
+      const matchesTag = song.tag.toLowerCase().includes(q);
+      return matchesTitle || matchesArtist || matchesLyric || matchesTag;
     });
   }, [activeCategory, searchQuery]);
 
@@ -710,20 +722,6 @@ export default function MusicLibraryModal({
               )}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-3.5 sm:px-7 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Bài có sẵn hỗ trợ nút "Điệp khúc" để mở thiệp là phát ngay đoạn cao trào</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition-colors cursor-pointer"
-          >
-            Đóng
-          </button>
         </div>
       </div>
     </div>
