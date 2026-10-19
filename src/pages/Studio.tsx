@@ -292,6 +292,25 @@ export function getTemplatePhotoConfig(effectType: string): TemplatePhotoConfig 
         ],
       };
 
+    case 'HOLD_TO_REVEAL':
+      return {
+        maxPhotos: 4,
+        title: 'Bộ Ảnh Hoàng Gia Sau Mật Thư',
+        desc: 'Đính kèm khung ảnh hoàng gia trang trọng bên trong bức mật thư giải mã',
+        icon: '⚜️',
+        badge: 'Ảnh Mật Thư Hoàng Gia',
+        themeGradient: 'from-amber-50/80 via-purple-50/40 to-indigo-50/50',
+        themeBorder: 'border-amber-300/80',
+        themeText: 'text-amber-950',
+        themeBadgeBg: 'bg-amber-100/90 text-amber-900 border-amber-300',
+        slots: [
+          { title: 'Ảnh Tiêu Điểm Hoàng Gia', desc: 'Khung ảnh lớn trang trọng bên trong mật thư', icon: '👑' },
+          { title: 'Ảnh Kỷ Niệm 02', desc: 'Khoảnh khắc ngọt ngào đính kèm', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm 03', desc: 'Khoảnh khắc ngọt ngào đính kèm', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm 04', desc: 'Khoảnh khắc ngọt ngào đính kèm', icon: '📸' },
+        ],
+      };
+
     default:
       return {
         maxPhotos: 4,
@@ -1178,6 +1197,8 @@ export default function Studio() {
               const isCrystal = template.effectType === 'CRYSTAL_CAROUSEL';
               const isCinema = template.effectType === 'CINEMA_FILM';
               const isPolaroid = template.effectType === 'POLAROID_SWIPE';
+              const isHoldToReveal = template.effectType === 'HOLD_TO_REVEAL';
+              const isHoldTextOnly = isHoldToReveal && config.holdRevealMode === 'text_only';
 
               const defaultCinemaCaptions = [
                 'Phân cảnh 1: Ngày định mệnh ta gặp nhau giữa thế gian muôn màu.',
@@ -1252,9 +1273,80 @@ export default function Studio() {
                         ? `${currentCinemaCount} cảnh (${uploadedCount} đã tải)`
                         : isPolaroid
                         ? `${currentPolaroidCount} ảnh (${uploadedCount} đã tải)`
+                        : isHoldToReveal
+                        ? isHoldTextOnly
+                          ? 'Mật thư thuần văn bản'
+                          : `${uploadedCount}/${maxPhotos} ảnh hoàng gia`
                         : `${uploadedCount}/${maxPhotos} ảnh`}
                     </span>
                   </div>
+
+                  {/* Lựa chọn Có ảnh / Không có ảnh (Chỉ chứa nội dung) cho Mẫu Nhấn Giữ */}
+                  {isHoldToReveal && (
+                    <div className="bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-amber-300 shadow-xs space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                          <span>⚜️</span>
+                          <span>Định dạng Mật Thư Hoàng Gia</span>
+                        </span>
+                        <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                          {isHoldTextOnly ? 'Chỉ chứa tâm thư' : 'Kèm ảnh kỷ niệm'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateConfig('holdRevealMode', 'with_photo')}
+                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            !isHoldTextOnly
+                              ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 shadow-md ring-2 ring-amber-400 font-extrabold'
+                              : 'bg-white text-slate-600 hover:bg-amber-50/60 border border-slate-200'
+                          }`}
+                        >
+                          <span className="text-sm">🖼️</span>
+                          <span>Có ảnh kỷ niệm</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateConfig('holdRevealMode', 'text_only')}
+                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            isHoldTextOnly
+                              ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 shadow-md ring-2 ring-amber-400 font-extrabold'
+                              : 'bg-white text-slate-600 hover:bg-amber-50/60 border border-slate-200'
+                          }`}
+                        >
+                          <span className="text-sm">📜</span>
+                          <span>Không ảnh (Chỉ nội dung)</span>
+                        </button>
+                      </div>
+
+                      <p className="text-[10px] text-amber-900/80 italic text-center">
+                        {isHoldTextOnly
+                          ? '✦ Mật thư sẽ tập trung trọn vẹn vào lời chúc với phong cách thư pháp hoàng gia cổ điển & con dấu sáp vàng.'
+                          : '✦ Mật thư sẽ hiển thị khung ảnh tiêu điểm & các ảnh kỷ niệm đính kèm cùng lời chúc.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {isHoldTextOnly ? (
+                    <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300 text-center space-y-2">
+                      <div className="text-3xl">📜⚜️</div>
+                      <p className="text-xs font-extrabold text-amber-950">Chế độ Mật Thư Thuần Văn Bản Đang Bật</p>
+                      <p className="text-[11px] text-amber-900/80 leading-relaxed max-w-sm mx-auto">
+                        Khung ảnh đã được ẩn đi. Sau khi người nhận nhấn giữ đủ 100% năng lượng, bức mật thư sẽ xuất hiện lộng lẫy với hoa văn hoàng gia và lời chúc của bạn.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => updateConfig('holdRevealMode', 'with_photo')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                      >
+                        <span>🖼️ Thêm ảnh kỷ niệm vào mật thư</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
 
                   {/* Quick actions: Auto fill quotes / Polaroid & Cinema controls & Batch upload */}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1547,6 +1639,8 @@ export default function Studio() {
                       <span>✓</span>
                       <span>Đã gắn {uploadedCount}/{maxPhotos} ảnh kỷ niệm đúng vị trí thiết kế cho mẫu {template.titleVi}.</span>
                     </p>
+                  )}
+                    </>
                   )}
                 </div>
               );

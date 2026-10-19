@@ -62,6 +62,8 @@ export interface CardConfig {
   // Polaroid Customizations (Tiêu đề viết tay & Lời nhắn mặt sau cho từng ảnh)
   polaroidCaptions?: string[];
   polaroidNotes?: string[];
+  // Hold To Reveal Customizations (Có ảnh hoặc Chỉ hiển thị tâm thư)
+  holdRevealMode?: 'with_photo' | 'text_only';
 }
 
 export interface CreatedCard {
@@ -343,6 +345,7 @@ export const TEMPLATES: CardTemplate[] = [
       fontFamily: 'Be Vietnam Pro',
       musicPreset: 'anh-nang-cua-anh',
       images: [],
+      holdRevealMode: 'with_photo',
     },
   },
   {
