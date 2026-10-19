@@ -5,6 +5,7 @@ import {
   Heart,
   ArrowRight,
   Volume2,
+  VolumeX,
   Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -144,6 +145,10 @@ export default function CardViewer() {
       incrementTemplateView(template.id);
     }
 
+    // Reset trạng thái mute để thiệp luôn có âm thanh và SFX sống động
+    soundFx.setMuted(false);
+    setIsMuted(false);
+
     // Start background music preset if configured
     if (activeConfig.musicPreset || activeConfig.audioUrl) {
       soundFx.startBackgroundMusic(
@@ -156,6 +161,7 @@ export default function CardViewer() {
 
     return () => {
       soundFx.stopBackgroundMusic();
+      soundFx.setMuted(false);
     };
   }, [
     resolvedCardId,
@@ -193,51 +199,62 @@ export default function CardViewer() {
   return (
     <div className="relative min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between overflow-x-hidden">
       {/* Floating Ambient Controls Bar */}
-      <header className="fixed top-4 inset-x-4 sm:inset-x-8 z-40 flex items-center justify-between pointer-events-none max-w-6xl mx-auto">
+      <header className="fixed top-4 inset-x-4 sm:inset-x-8 z-40 flex items-center justify-between pointer-events-none max-w-6xl mx-auto gap-2">
         {isDemo ? (
           <Link
             to="/templates"
-            className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold transition-all shadow-lg active:scale-95"
+            className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold transition-all shadow-lg active:scale-95 shrink-0"
             title="Quay lại danh sách mẫu"
           >
             <span className="text-rose-400">✨</span>
-            <span>LoveCard 20/10</span>
+            <span className="hidden xs:inline">LoveCard 20/10</span>
           </Link>
         ) : (
-          <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold shadow-lg select-none">
+          <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-semibold shadow-lg select-none shrink-0">
             <span className="text-rose-400">✨</span>
-            <span>LoveCard 20/10</span>
+            <span className="hidden xs:inline">LoveCard 20/10</span>
           </div>
         )}
 
-        {/* Center Music Pill */}
+        {/* Center Music Pill: Hiển thị đẹp mắt trên cả Mobile lẫn Máy tính */}
         {(() => {
           const song = soundFx.getCurrentSong() || getSongById(activeConfig.musicPreset || '');
           if (!song && !activeConfig.musicPreset) return null;
           return (
             <div
               onClick={handleToggleMute}
-              className="pointer-events-auto hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-xl border border-white/15 text-white text-xs font-medium cursor-pointer transition-all shadow-lg select-none"
+              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full backdrop-blur-xl border transition-all shadow-lg select-none cursor-pointer max-w-[210px] sm:max-w-none ${
+                isMuted
+                  ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                  : 'bg-black/60 hover:bg-black/80 border-white/20 text-white'
+              }`}
               title={isMuted ? 'Bấm để bật nhạc' : 'Bấm để tắt âm'}
             >
+              {isMuted ? (
+                <VolumeX className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              )}
               <img
                 src={getSongCoverUrl(song)}
                 alt=""
-                className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/30"
+                className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/30 hidden xs:inline"
               />
-              <span className="font-bold text-rose-300 truncate max-w-[140px]">
-                {activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3 Tải Lên') : (song?.title || 'Giai điệu lãng mạn')}
+              <span className="font-bold text-[11px] sm:text-xs truncate max-w-[90px] sm:max-w-[140px]">
+                {activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3') : (song?.title || 'Giai điệu lãng mạn')}
               </span>
-              <span className="text-slate-400 text-[10px]">•</span>
-              <span className="text-slate-300 text-[11px] truncate max-w-[110px]">
+              <span className="text-slate-400 text-[10px] hidden sm:inline">•</span>
+              <span className="text-slate-300 text-[11px] truncate max-w-[100px] hidden sm:inline">
                 {activeConfig.audioUrl ? 'Bản Thu Gốc' : (song?.artist || 'LoveCard')}
               </span>
-              {!isMuted && (
-                <span className="flex items-end gap-0.5 h-2.5 ml-1">
+              {!isMuted ? (
+                <span className="flex items-end gap-0.5 h-2.5 ml-0.5 sm:ml-1 shrink-0">
                   <span className="w-0.5 h-full bg-rose-400 animate-bounce" />
                   <span className="w-0.5 h-1.5 bg-rose-400 animate-bounce [animation-delay:0.2s]" />
                   <span className="w-0.5 h-2 bg-rose-400 animate-bounce [animation-delay:0.4s]" />
                 </span>
+              ) : (
+                <span className="text-[10px] font-semibold text-rose-300 shrink-0">Tắt</span>
               )}
             </div>
           );

@@ -23,13 +23,27 @@ export const MUSIC_PRESETS = [
   },
 ];
 
+const PRESET_AUDIO_MAP: Record<string, string> = {
+  'romantic-piano': '/music/ban-tinh-ca-dau-tien.mp3',
+  'music-box': '/music/nhat-ky-cua-me.mp3',
+  'spring-acoustic': '/music/spring-acoustic.mp3',
+  'cosmic-ambient': '/music/cosmic-ambient.mp3',
+  'pop-acoustic': '/music/ngay-dau-tien.mp3',
+  'lofi-chill': '/music/giac-mo-tinh-co.mp3',
+  'vintage-vinyl': '/music/mot-nha.mp3',
+};
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  public isMuted: boolean = false;
+  public isMuted: boolean = false; // Music mute state
+  public isSfxMuted: boolean = false; // SFX mute state (hoàn toàn độc lập với nhạc nền)
   private masterGain: GainNode | null = null;
+  private sfxGain: GainNode | null = null;
   private musicGain: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private analyserDataArray: Uint8Array | null = null;
+  private pendingAutoplayAudio: HTMLAudioElement | null = null;
+  private unlockListenersAttached: boolean = false;
 
   // Background music scheduling
   private musicTimer: number | null = null;
@@ -54,12 +68,45 @@ class SoundEngine {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      // Tải trước vào RAM các bài hát MP3 cục bộ để người dùng bấm phát NGAY LẬP TỨC 0ms không trễ
       setTimeout(() => {
         this.preloadAllMusic();
+        this.setupGlobalUnlock();
       }, 50);
     }
   }
+
+  // Tự động mở khóa âm thanh ngay lần chạm đầu tiên của người dùng
+  public setupGlobalUnlock() {
+    if (typeof window === 'undefined' || this.unlockListenersAttached) return;
+    this.unlockListenersAttached = true;
+
+    const unlock = () => {
+      // 1. Resume AudioContext nếu đang bị suspended
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      } else if (!this.ctx) {
+        this.getContext();
+      }
+
+      // 2. Tự động phát tiếp bài hát nếu trước đó bị browser chặn autoplay
+      if (this.pendingAutoplayAudio && this.isMusicPlaying) {
+        const audio = this.pendingAutoplayAudio;
+        this.pendingAutoplayAudio = null;
+        audio.play().catch(() => {});
+      }
+    };
+
+    ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'].forEach((evt) => {
+      window.addEventListener(evt, unlock, { capture: true, passive: true });
+    });
+  }
+
+  public resumeAudioContext() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
   private getContext(): AudioContext | null {
     if (!this.ctx) {
       const AudioCtx =
@@ -68,13 +115,19 @@ class SoundEngine {
       if (AudioCtx) {
         this.ctx = new AudioCtx();
 
-        // Master gain
+        // Master gain: LUÔN CỐ ĐỊNH = 1.0 kết nối ra loa, không bao giờ ngắt masterGain
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        this.masterGain.connect(this.ctx.destination);
 
-        // Music subgain
+        // SFX Subgain: Nối vào masterGain, điều khiển riêng tiếng click, nút bấm, chime...
+        this.sfxGain = this.ctx.createGain();
+        this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : 1.0, this.ctx.currentTime);
+        this.sfxGain.connect(this.masterGain);
+
+        // Music Subgain: Nối vào masterGain, điều khiển riêng nhạc nền
         this.musicGain = this.ctx.createGain();
-        this.musicGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        this.musicGain.gain.setValueAtTime(this.isMuted ? 0 : 0.45, this.ctx.currentTime);
         this.musicGain.connect(this.masterGain);
 
         // Analyser for real-time equalizer
@@ -82,8 +135,6 @@ class SoundEngine {
         this.analyser.fftSize = 64;
         this.analyserDataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.musicGain.connect(this.analyser);
-
-        this.masterGain.connect(this.ctx.destination);
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -95,8 +146,8 @@ class SoundEngine {
   public setMuted(muted: boolean) {
     this.isMuted = muted;
     const ctx = this.getContext();
-    if (ctx && this.masterGain) {
-      this.masterGain.gain.setValueAtTime(muted ? 0 : 1, ctx.currentTime);
+    if (ctx && this.musicGain) {
+      this.musicGain.gain.setValueAtTime(muted ? 0 : 0.45, ctx.currentTime);
     }
     if (this.activeCustomAudio) {
       this.activeCustomAudio.muted = muted;
@@ -106,6 +157,14 @@ class SoundEngine {
         const cmd = muted ? 'mute' : 'unMute';
         this.ytIframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd }), '*');
       } catch {}
+    }
+  }
+
+  public setSfxMuted(muted: boolean) {
+    this.isSfxMuted = muted;
+    const ctx = this.getContext();
+    if (ctx && this.sfxGain) {
+      this.sfxGain.gain.setValueAtTime(muted ? 0 : 1.0, ctx.currentTime);
     }
   }
 
@@ -120,21 +179,23 @@ class SoundEngine {
 
   // Soft keyboard/PIN click
   public playPinClick() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800 + Math.random() * 200, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
 
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       osc.start();
       osc.stop(ctx.currentTime + 0.05);
     } catch {}
@@ -142,12 +203,13 @@ class SoundEngine {
 
   // Mechanical music box winding ratchet sound
   public playMusicBoxWinding() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const now = ctx.currentTime;
-      // 3 crisp ratchet gear ticks with metallic ring
       [0, 0.055, 0.115].forEach((offset, idx) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -159,7 +221,7 @@ class SoundEngine {
         gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.045);
 
         osc.connect(gain);
-        gain.connect(this.masterGain!);
+        gain.connect(destGain);
         osc.start(now + offset);
         osc.stop(now + offset + 0.05);
       });
@@ -168,10 +230,12 @@ class SoundEngine {
 
   // Wax seal break sound
   public playWaxSealBreak() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const bufferSize = ctx.sampleRate * 0.15;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -192,17 +256,19 @@ class SoundEngine {
 
       noise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       noise.start();
     } catch {}
   }
 
   // Paper swoosh / envelope unfold
   public playPaperSwoosh() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const bufferSize = ctx.sampleRate * 0.3;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -225,17 +291,19 @@ class SoundEngine {
 
       noise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       noise.start();
     } catch {}
   }
 
   // Triumphant magical fanfare/chime
   public playSuccessChime() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]; // C5, E5, G5, C6, E6
       notes.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
@@ -244,11 +312,11 @@ class SoundEngine {
         osc.frequency.value = freq;
 
         const startTime = ctx.currentTime + idx * 0.08;
-        gain.gain.setValueAtTime(0.15, startTime);
+        gain.gain.setValueAtTime(0.18, startTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.8);
 
         osc.connect(gain);
-        gain.connect(this.masterGain!);
+        gain.connect(destGain);
         osc.start(startTime);
         osc.stop(startTime + 0.85);
       });
@@ -257,21 +325,23 @@ class SoundEngine {
 
   // Sweet romantic pop sound when hearting a template
   public playHeartPop() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(440, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
 
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       osc.start();
       osc.stop(ctx.currentTime + 0.22);
     } catch {}
@@ -279,19 +349,21 @@ class SoundEngine {
 
   // Scratch friction texture sound
   public playScratchFriction() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(350 + Math.random() * 200, ctx.currentTime);
-      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       osc.start();
       osc.stop(ctx.currentTime + 0.04);
     } catch {}
@@ -299,10 +371,12 @@ class SoundEngine {
 
   // Vinyl needle drop crackle
   public playVinylNeedleDrop() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -312,7 +386,7 @@ class SoundEngine {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       osc.start();
       osc.stop(ctx.currentTime + 0.1);
     } catch {}
@@ -320,21 +394,23 @@ class SoundEngine {
 
   // Shooting star celestial twinkle
   public playShootingStar() {
-    if (this.isMuted) return;
+    if (this.isSfxMuted) return;
     const ctx = this.getContext();
-    if (!ctx || !this.masterGain) return;
+    const destGain = this.sfxGain || this.masterGain;
+    if (!ctx || !destGain) return;
     try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(1400, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(2800, ctx.currentTime + 0.25);
 
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(destGain);
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
     } catch {}
@@ -430,8 +506,12 @@ class SoundEngine {
           const p = audio.play();
           if (p !== undefined) {
             this.playPromise = p;
-            p.catch((err) => {
-              if (err.name !== 'AbortError') {
+            p.then(() => {
+              this.pendingAutoplayAudio = null;
+            }).catch((err) => {
+              if (err.name === 'NotAllowedError') {
+                this.pendingAutoplayAudio = audio;
+              } else if (err.name !== 'AbortError') {
                 console.warn('Native audio playback error:', err);
               }
             });
@@ -492,6 +572,7 @@ class SoundEngine {
       if (playPromise !== undefined) {
         this.playPromise = playPromise;
         playPromise.then(() => {
+          this.pendingAutoplayAudio = null;
           // Phòng trường hợp trình duyệt tự reset currentTime về 0 khi bắt đầu phát
           if (cleanStart > 0 && Math.abs(audio.currentTime - cleanStart) > 1.0) {
             try {
@@ -499,7 +580,10 @@ class SoundEngine {
             } catch {}
           }
         }).catch((err) => {
-          if (err.name !== 'AbortError') {
+          if (err.name === 'NotAllowedError') {
+            // Trình duyệt chặn autoplay khi mới vào trang: lưu lại để chạm lần đầu là phát ngay
+            this.pendingAutoplayAudio = audio;
+          } else if (err.name !== 'AbortError') {
             console.warn('Native audio playback error:', err);
           }
         });
@@ -658,7 +742,8 @@ class SoundEngine {
         ? startSeconds
         : 0;
 
-    const targetUrl = customUrl || song?.audioUrl;
+    const localPresetUrl = PRESET_AUDIO_MAP[selected];
+    const targetUrl = customUrl || song?.audioUrl || localPresetUrl;
 
     // Nếu đang phát đúng bài này và URL khớp, không stop và reload lại! Chỉ seek và cập nhật khoảng phát
     if (
@@ -732,26 +817,30 @@ class SoundEngine {
       }
     }
 
-    // 2. Bài hát từ Kho nhạc: Ưu TIÊN PHÁT STREAM NATIVE AUDIO (Tốc độ tức thì < 50ms, không trễ)
-    if (song) {
-      if (song.audioUrl) {
-        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
-        this.playNativeAudio(song.audioUrl, effectiveStartSeconds, endSeconds);
-        return;
-      }
+    // 2. Bài hát từ Kho nhạc hoặc Preset MP3 cục bộ: Ưu TIÊN PHÁT STREAM NATIVE AUDIO (Tốc độ tức thì < 50ms, không trễ)
+    if (song?.audioUrl) {
+      if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
+      this.playNativeAudio(song.audioUrl, effectiveStartSeconds, endSeconds);
+      return;
+    }
 
+    if (localPresetUrl) {
+      if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
+      this.playNativeAudio(localPresetUrl, effectiveStartSeconds, endSeconds);
+      return;
+    }
+
+    if (song) {
       // Lấy bản thu âm ca sĩ gốc tức thì qua Apple Audio CDN
       try {
         const instantUrl = await this.fetchInstantAudioStream(song.title, song.artist);
         if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         if (instantUrl && this.currentMusicPreset === selected) {
-          // Kiểm tra nếu là iTunes preview (chỉ 30s) → ưu tiên YouTube nếu có
           const isItunesPreview = instantUrl.includes('mzstatic.com') || instantUrl.includes('itunes.apple.com');
           if (!isItunesPreview) {
             this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
             return;
           }
-          // iTunes preview → dự phòng YouTube
           if (!song.youtubeId) {
             this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
             return;

@@ -778,6 +778,8 @@ export const VIETNAMESE_MUSIC_LIBRARY: SongItem[] = [
     icon: '🎹',
     color: 'from-rose-600 to-pink-700',
     synthPreset: 'romantic-piano',
+    audioUrl: '/music/ban-tinh-ca-dau-tien.mp3',
+    hasVocals: false,
   },
   {
     id: 'music-box',
@@ -791,6 +793,8 @@ export const VIETNAMESE_MUSIC_LIBRARY: SongItem[] = [
     icon: '🔔',
     color: 'from-amber-400 to-yellow-600',
     synthPreset: 'music-box',
+    audioUrl: '/music/nhat-ky-cua-me.mp3',
+    hasVocals: false,
   },
   {
     id: 'spring-acoustic',
@@ -804,6 +808,8 @@ export const VIETNAMESE_MUSIC_LIBRARY: SongItem[] = [
     icon: '🎸',
     color: 'from-emerald-500 to-teal-700',
     synthPreset: 'spring-acoustic',
+    audioUrl: '/music/spring-acoustic.mp3',
+    hasVocals: false,
   },
   {
     id: 'cosmic-ambient',
@@ -817,6 +823,8 @@ export const VIETNAMESE_MUSIC_LIBRARY: SongItem[] = [
     icon: '🌌',
     color: 'from-purple-600 to-indigo-900',
     synthPreset: 'cosmic-ambient',
+    audioUrl: '/music/cosmic-ambient.mp3',
+    hasVocals: false,
   },
 ];
 
