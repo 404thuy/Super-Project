@@ -68,10 +68,10 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
 
   const userImages = config.images || [];
 
-  // Initialize petals
+  // Initialize petals (Tối ưu số lượng cánh hoa cho 60 FPS mượt mà)
   const initPetals = useCallback((width: number, height: number) => {
     const petals: Petal[] = [];
-    const count = window.innerWidth < 768 ? 40 : 70;
+    const count = typeof window !== 'undefined' && window.innerWidth < 768 ? 22 : 38;
     for (let i = 0; i < count; i++) {
       const palette = PETAL_PALETTE[Math.floor(Math.random() * PETAL_PALETTE.length)];
       petals.push({
@@ -174,7 +174,16 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
     window.addEventListener('resize', resize);
 
     let time = 0;
-    const animate = () => {
+    let lastFrameTime = performance.now();
+    const fpsInterval = 1000 / 60; // Cố định 60 FPS max, chống quá tải trên màn hình 120Hz/144Hz
+
+    const animate = (currentTime: number) => {
+      animationRef.current = requestAnimationFrame(animate);
+
+      const elapsed = currentTime - lastFrameTime;
+      if (elapsed < fpsInterval) return;
+      lastFrameTime = currentTime - (elapsed % fpsInterval);
+
       time++;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -182,7 +191,7 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
       windVector.current.y *= 0.95;
       vortexAngleRef.current += 0.02;
 
-      // Draw accumulated floor petals
+      // Draw accumulated floor petals (Tối ưu tối đa 24 cánh hoa sàn)
       floorPetalsRef.current.forEach((fp) => {
         draw3DPetal(
           ctx,
@@ -221,7 +230,7 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
 
         // Settle into floor petals when reaching bottom
         if (petal.y > canvas.height - 15) {
-          if (floorPetalsRef.current.length < 55) {
+          if (floorPetalsRef.current.length < 24) {
             floorPetalsRef.current.push({
               x: petal.x,
               y: canvas.height - 8 - Math.random() * 24,
@@ -235,7 +244,7 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
             });
           } else {
             const oldest = floorPetalsRef.current[0];
-            oldest.opacity -= 0.02;
+            oldest.opacity -= 0.03;
             if (oldest.opacity <= 0) {
               floorPetalsRef.current.shift();
             }
@@ -270,11 +279,9 @@ export default function BlossomPetalRainFX({ config, mode }: Props) {
         drawRipple(ctx, r);
         return true;
       });
-
-      animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       cancelAnimationFrame(animationRef.current);

@@ -316,11 +316,14 @@ export default function CardViewer() {
           isDemo ? 'pt-14 pb-16 sm:pt-20 sm:pb-28' : 'pt-14 pb-4 sm:pt-16 sm:pb-6'
         }`}
       >
-        <div className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative border border-white/10 bg-slate-900/50 backdrop-blur-sm ${
-          isDemo
-            ? 'h-[calc(100dvh-7.5rem)] sm:h-[84vh] min-h-[460px] sm:min-h-[580px] max-h-[860px]'
-            : 'h-[calc(100dvh-4.5rem)] sm:h-[88vh] min-h-[480px] sm:min-h-[600px] max-h-[900px]'
-        }`}>
+        <div
+          className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative border border-white/10 bg-slate-950 transform-gpu ${
+            isDemo
+              ? 'h-[calc(100dvh-7.5rem)] sm:h-[84vh] min-h-[460px] sm:min-h-[580px] max-h-[860px]'
+              : 'h-[calc(100dvh-4.5rem)] sm:h-[88vh] min-h-[480px] sm:min-h-[600px] max-h-[900px]'
+          }`}
+          style={{ contain: 'layout paint' }}
+        >
           <EffectRenderer
             effectType={template.effectType}
             config={activeConfig}

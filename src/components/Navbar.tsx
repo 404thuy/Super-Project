@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings, Database } from 'lucide-react';
+import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { soundFx } from '../utils/soundEffects';
 
 export default function Navbar() {
   const location = useLocation();
-  const { user, openAuthModal, openSettingsModal, openDbModal, logout } = useAuth();
+  const { user, openAuthModal, openSettingsModal, logout } = useAuth();
   const [profileDropdown, setProfileDropdown] = useState(false);
 
   const navLinks = [
@@ -113,17 +113,6 @@ export default function Navbar() {
                           >
                             <Settings className="w-4 h-4 text-purple-600" />
                             <span>Cài đặt tài khoản</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setProfileDropdown(false);
-                              openDbModal();
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-                          >
-                            <Database className="w-4 h-4 text-emerald-600" />
-                            <span>Cơ sở dữ liệu Cloud</span>
                           </button>
                           <button
                             onClick={() => {

@@ -527,7 +527,7 @@ function GalacticCoreStar({ recipientName }: { recipientName: string }) {
 
       {/* Core Tag */}
       <Html position={[0, -1.65, 0]} center>
-        <div className="px-4 py-1.5 rounded-full bg-slate-950/90 backdrop-blur-md border border-rose-400/60 text-xs font-black text-rose-200 shadow-[0_0_25px_rgba(251,113,133,0.5)] pointer-events-none whitespace-nowrap flex items-center gap-2">
+        <div className="px-4 py-1.5 rounded-full bg-slate-950/95 border border-rose-400/60 text-xs font-black text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.4)] pointer-events-none whitespace-nowrap flex items-center gap-2">
           <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
           <span>Tâm Vũ Trụ: {recipientName || 'Người Thương'}</span>
         </div>
@@ -689,7 +689,7 @@ function VolumetricMemoryCrystal({
             >
               {/* ===== FRONT FACE (Photo + Crystal Bevel Border) ===== */}
               <div
-                className="absolute inset-0 rounded-3xl p-3 bg-gradient-to-br from-purple-900/90 via-slate-900/95 to-rose-950/90 border-2 border-purple-400/60 backdrop-blur-xl flex flex-col justify-between overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+                className="absolute inset-0 rounded-3xl p-3 bg-gradient-to-br from-purple-950/95 via-slate-950/98 to-rose-950/95 border-2 border-purple-400/60 flex flex-col justify-between overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.8)]"
                 style={{
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
@@ -736,7 +736,7 @@ function VolumetricMemoryCrystal({
 
               {/* ===== BACK FACE (Engraved Love Quote on Frosted Crystal Glass) ===== */}
               <div
-                className="absolute inset-0 rounded-3xl p-3.5 bg-gradient-to-br from-indigo-950/95 via-purple-950/90 to-slate-900/95 border-2 border-rose-400/60 backdrop-blur-xl flex flex-col justify-between text-center overflow-hidden shadow-[0_0_30px_rgba(244,63,94,0.35)]"
+                className="absolute inset-0 rounded-3xl p-3.5 bg-gradient-to-br from-indigo-950/98 via-purple-950/95 to-slate-950/98 border-2 border-rose-400/60 flex flex-col justify-between text-center overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.8)]"
                 style={{
                   transform: 'rotateY(180deg)',
                   backfaceVisibility: 'hidden',
@@ -949,10 +949,10 @@ function HighPrecisionStarNode({
           <Html position={[0, -0.72, 0]} center>
             <button
               onClick={onClick}
-              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-md border text-[11px] font-bold shadow-2xl hover:scale-110 active:scale-95 transition-all select-none whitespace-nowrap ${
+              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold shadow-xl hover:scale-110 active:scale-95 transition-all select-none whitespace-nowrap ${
                 isLit
-                  ? 'bg-amber-950/85 border-amber-400 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.6)]'
-                  : 'bg-slate-900/90 border-white/20 text-white hover:border-rose-400'
+                  ? 'bg-amber-950/95 border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.5)]'
+                  : 'bg-slate-950/90 border-white/20 text-white hover:border-rose-400'
               }`}
             >
               <span>{icon}</span>
@@ -1240,7 +1240,13 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
       <div className="absolute inset-0">
         <Canvas
           camera={{ position: [0, 3, 11], fov: 60 }}
-          dpr={Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)}
+          dpr={isMobile ? 1 : [1, 1.25]}
+          gl={{
+            powerPreference: 'high-performance',
+            antialias: false,
+            stencil: false,
+            depth: true,
+          }}
         >
           <ambientLight intensity={0.5} />
           <pointLight position={[15, 15, 15]} intensity={1.6} color="#C084FC" />
@@ -1261,9 +1267,9 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
           {/* Constellation Starlight Network with Traveling Photons */}
           <ConstellationWeb points={constellationPoints} />
 
-          {/* Deep Space Stars & Two-Arm Spiral Dust */}
-          <RealisticDeepSpaceField count={graphicsQuality === 'high' ? 3600 : 1200} />
-          <CosmicSpiralArms count={graphicsQuality === 'high' ? 1400 : 500} />
+          {/* Deep Space Stars & Two-Arm Spiral Dust (Tối ưu số lượng đỉnh cho 60 FPS) */}
+          <RealisticDeepSpaceField count={graphicsQuality === 'high' ? 1600 : 600} />
+          <CosmicSpiralArms count={graphicsQuality === 'high' ? 650 : 250} />
           <ShootingStar />
 
           {/* Camera Smooth Lerp Rig */}

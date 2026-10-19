@@ -189,42 +189,40 @@ export default function LanternFestivalFX({ config }: Props) {
         />
       ))}
 
-      {/* Floating Distant Starry Lanterns in Horizon */}
-      {Array.from({ length: 22 }).map((_, i) => (
+      {/* Floating Distant Starry Lanterns in Horizon (Tối ưu 8 đèn lồng nền thanh thoát) */}
+      {Array.from({ length: 8 }).map((_, i) => (
         <motion.div
           key={`distant-lantern-${i}`}
           className="absolute rounded-full pointer-events-none"
           style={{
-            left: `${4 + ((i * 17) % 92)}%`,
-            top: `${8 + ((i * 23) % 78)}%`,
-            width: `${6 + (i % 4) * 3}px`,
-            height: `${9 + (i % 4) * 4}px`,
+            left: `${6 + ((i * 24) % 88)}%`,
+            top: `${10 + ((i * 29) % 75)}%`,
+            width: `${6 + (i % 3) * 3}px`,
+            height: `${9 + (i % 3) * 4}px`,
             background: 'radial-gradient(circle at 50% 40%, #fef08a 25%, #ea580c 85%, #9a3412 100%)',
-            boxShadow: '0 0 16px rgba(251, 146, 60, 0.75)',
           }}
           animate={{
-            y: [-15, -70, -15],
-            x: [0, i % 2 === 0 ? 14 : -14, 0],
-            opacity: [0.3, 0.95, 0.3],
-            scale: [0.85, 1.25, 0.85],
+            y: [-10, -50, -10],
+            x: [0, i % 2 === 0 ? 10 : -10, 0],
+            opacity: [0.35, 0.9, 0.35],
           }}
           transition={{
-            duration: 6 + (i % 6) * 1.4,
+            duration: 5 + (i % 4) * 1.5,
             repeat: Infinity,
             ease: 'easeInOut',
-            delay: (i % 5) * 0.4,
+            delay: (i % 3) * 0.5,
           }}
         />
       ))}
 
-      {/* Companion Fleet of Floating Lanterns (Unleashed upon Release) */}
+      {/* Companion Fleet of Floating Lanterns (Tối ưu 7 đèn lồng đồng hành) */}
       <AnimatePresence>
         {isReleased &&
-          Array.from({ length: 16 }).map((_, i) => {
-            const startX = 6 + i * 6 + (i % 3) * 3;
-            const sizeW = 20 + (i % 5) * 7;
+          Array.from({ length: 7 }).map((_, i) => {
+            const startX = 10 + i * 12;
+            const sizeW = 20 + (i % 4) * 6;
             const sizeH = sizeW * 1.38;
-            const delay = 0.2 + i * 0.22;
+            const delay = 0.2 + i * 0.25;
             return (
               <motion.div
                 key={`companion-${i}`}
@@ -233,11 +231,10 @@ export default function LanternFestivalFX({ config }: Props) {
                   y: -950,
                   opacity: [0, 0.95, 1, 0.85, 0],
                   scale: [0.5, 0.85, 0.6, 0.3],
-                  x: [0, i % 2 === 0 ? 35 : -35, 0],
-                  rotateY: [0, 360],
+                  x: [0, i % 2 === 0 ? 25 : -25, 0],
                 }}
                 transition={{
-                  duration: 6.5 + (i % 4) * 1.2,
+                  duration: 6.5 + (i % 3) * 1.2,
                   delay,
                   ease: 'easeInOut',
                 }}
@@ -245,7 +242,7 @@ export default function LanternFestivalFX({ config }: Props) {
                 style={{ left: `${startX}%`, bottom: '4%' }}
               >
                 <div
-                  className="rounded-t-[32px] rounded-b-[20px] border border-amber-300/80 shadow-[0_0_35px_rgba(251,146,60,0.85)] relative overflow-hidden"
+                  className="rounded-t-[32px] rounded-b-[20px] border border-amber-300/80 shadow-[0_0_20px_rgba(251,146,60,0.6)] relative overflow-hidden"
                   style={{
                     width: `${sizeW}px`,
                     height: `${sizeH}px`,

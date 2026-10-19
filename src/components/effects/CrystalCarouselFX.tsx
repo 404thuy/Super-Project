@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import { Sparkles, ChevronLeft, ChevronRight, Play, Pause, RotateCw, Maximize2, X, Eye } from 'lucide-react';
 import type { CardConfig } from '../../types';
 import { soundFx } from '../../utils/soundEffects';
@@ -426,7 +426,7 @@ function SculptedDiamondHeart() {
 }
 
 export default function CrystalCarouselFX({ config }: Props) {
-  const [carouselAngle, setCarouselAngle] = useState(0);
+  const carouselAngleMotion = useMotionValue(0);
   const [isPlayingBox, setIsPlayingBox] = useState(false);
   const [isAutoSpinning, setIsAutoSpinning] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
@@ -469,26 +469,32 @@ export default function CrystalCarouselFX({ config }: Props) {
     });
   }, [userImages, customQuotes, defaultQuotes]);
 
-  // Auto-spin timer
+  // Smooth Auto-spin via Framer Motion direct GPU compositor animation (NO React re-renders!)
   useEffect(() => {
     if (!isPlayingBox && !isAutoSpinning) return;
-    const interval = setInterval(() => {
-      setCarouselAngle((prev) => prev + (isPlayingBox ? 0.65 : 0.35));
-    }, 30);
-    return () => clearInterval(interval);
-  }, [isPlayingBox, isAutoSpinning]);
+    const currentAngle = carouselAngleMotion.get();
+    const duration = isPlayingBox ? 16 : 28;
+    const controls = animate(carouselAngleMotion, currentAngle + 360, {
+      duration,
+      repeat: Infinity,
+      ease: 'linear',
+    });
+    return () => {
+      controls.stop();
+    };
+  }, [isPlayingBox, isAutoSpinning, carouselAngleMotion]);
 
   // Drag handlers
   const handlePointerDown = (e: React.PointerEvent) => {
     isDragging.current = true;
     dragStartX.current = e.clientX;
-    dragStartAngle.current = carouselAngle;
+    dragStartAngle.current = carouselAngleMotion.get();
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current) return;
     const deltaX = e.clientX - dragStartX.current;
-    setCarouselAngle(dragStartAngle.current + deltaX * 0.65);
+    carouselAngleMotion.set(dragStartAngle.current + deltaX * 0.65);
   };
 
   const handlePointerUp = () => {
@@ -497,12 +503,18 @@ export default function CrystalCarouselFX({ config }: Props) {
 
   const handleRotateLeft = () => {
     soundFx.playPinClick();
-    setCarouselAngle((prev) => prev - 60);
+    animate(carouselAngleMotion, carouselAngleMotion.get() - 60, {
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1],
+    });
   };
 
   const handleRotateRight = () => {
     soundFx.playPinClick();
-    setCarouselAngle((prev) => prev + 60);
+    animate(carouselAngleMotion, carouselAngleMotion.get() + 60, {
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1],
+    });
   };
 
   const handleTogglePlayBox = () => {
@@ -516,28 +528,30 @@ export default function CrystalCarouselFX({ config }: Props) {
         soundFx.startBackgroundMusic(config.musicPreset || 'music-box', config.audioUrl);
       }, 180);
       setIsPlayingBox(true);
-      setCarouselAngle((prev) => prev + 180);
     }
   };
 
   const handleShakeGlobe = () => {
     soundFx.playSuccessChime();
     setIsShaking(true);
-    setCarouselAngle((prev) => prev + 360);
+    animate(carouselAngleMotion, carouselAngleMotion.get() + 360, {
+      duration: 2.2,
+      ease: 'easeInOut',
+    });
     setTimeout(() => {
       setIsShaking(false);
     }, 2800);
   };
 
-  // Weather particles generation
+  // Weather particles generation (Tối ưu 14 hạt nhẹ nhàng)
   const particles = useMemo(() => {
-    return Array.from({ length: 36 }).map((_, i) => ({
+    return Array.from({ length: 14 }).map((_, i) => ({
       id: i,
-      left: `${5 + ((i * 17) % 90)}%`,
-      top: `${8 + ((i * 23) % 84)}%`,
-      size: 4 + (i % 4) * 2,
-      delay: (i % 6) * 0.4,
-      duration: 3.2 + (i % 5) * 1.1,
+      left: `${6 + ((i * 19) % 86)}%`,
+      top: `${8 + ((i * 23) % 80)}%`,
+      size: 4 + (i % 3) * 2,
+      delay: (i % 5) * 0.4,
+      duration: 3.5 + (i % 4) * 1.2,
       symbol:
         weatherType === 'snow'
           ? ['❄', '·', '⋆', '✦'][i % 4]
@@ -623,7 +637,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                 : {}
             }
             transition={{ duration: 0.8 }}
-            className={`relative w-[260px] sm:w-[305px] h-[245px] sm:h-[280px] rounded-t-[130px] sm:rounded-t-[152px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2px] border-b-0 border-white/60 shadow-[0_0_50px_rgba(0,0,0,0.85),inset_0_2px_8px_rgba(255,255,255,0.7),inset_0_0_30px_rgba(255,255,255,0.18),0_0_45px_${theme.glowHex}35] backdrop-blur-xs overflow-hidden flex flex-col items-center justify-between p-1.5 sm:p-2`}
+            className={`relative w-[260px] sm:w-[305px] h-[245px] sm:h-[280px] rounded-t-[130px] sm:rounded-t-[152px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2px] border-b-0 border-white/60 shadow-[0_0_50px_rgba(0,0,0,0.85),inset_0_2px_8px_rgba(255,255,255,0.7),inset_0_0_30px_rgba(255,255,255,0.18),0_0_45px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-1.5 sm:p-2`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
           >
@@ -728,16 +742,13 @@ export default function CrystalCarouselFX({ config }: Props) {
               className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
               style={{ perspective: '1100px' }}
             >
-              {/* The Unified 3D Coordinate System */}
+              {/* The Unified 3D Coordinate System (Driven directly by GPU Compositor) */}
               <motion.div
-                animate={{ rotateY: carouselAngle }}
-                transition={
-                  isDragging.current
-                    ? { duration: 0 }
-                    : { duration: 0.85, ease: 'easeOut' }
-                }
+                style={{
+                  rotateY: carouselAngleMotion,
+                  transformStyle: 'preserve-3d',
+                }}
                 className="relative w-22 sm:w-26 h-32 sm:h-40 flex items-center justify-center"
-                style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* ── 1. CENTERPIECE AT (0,0,0) INSIDE 3D SPACE ── */}
                 <div
@@ -793,31 +804,19 @@ export default function CrystalCarouselFX({ config }: Props) {
                 {/* ── 2. THE 6 GILDED CRYSTAL CAROUSEL PANELS ── */}
                 {panels.map((panel, idx) => {
                   const angle = idx * 60; // 360 / 6 = 60 deg
-
-                  // Calculate angle relative to viewer front
-                  const currentRelAngle = ((carouselAngle + angle) % 360 + 540) % 360 - 180;
-                  const isFacingFront = Math.abs(currentRelAngle) < 90;
-                  const depthScale = focusCenterpiece
-                    ? (isFacingFront ? 0.75 : 0.6)
-                    : (isFacingFront ? 1 : 0.88);
-                  const depthOpacity = focusCenterpiece
-                    ? (isFacingFront ? 0.4 : 0.2)
-                    : (isFacingFront ? 1 : 0.7);
-
-                  // Radius of carousel orbit
                   const orbitRadius = focusCenterpiece ? 130 : 108;
+                  const depthScale = focusCenterpiece ? 0.72 : 1;
+                  const depthOpacity = focusCenterpiece ? 0.35 : 1;
 
                   return (
                     <div
                       key={panel.id}
-                      className="absolute inset-0 preserve-3d"
+                      className="absolute inset-0"
                       style={{
-                        transform: `rotateY(${angle}deg) translateZ(${orbitRadius}px)`,
+                        transform: `rotateY(${angle}deg) translateZ(${orbitRadius}px) scale(${depthScale})`,
                         transformStyle: 'preserve-3d',
-                        zIndex: isFacingFront ? 20 : 5,
                         opacity: depthOpacity,
-                        scale: depthScale,
-                        transition: 'opacity 0.4s ease, scale 0.4s ease, transform 0.6s ease',
+                        transition: 'opacity 0.4s ease, transform 0.4s ease',
                       }}
                     >
                       {/* FRONT FACE: Gilded Vintage Crystal Slide */}
