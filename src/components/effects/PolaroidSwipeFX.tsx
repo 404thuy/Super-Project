@@ -10,6 +10,13 @@ interface Props {
   mode: 'studio' | 'recipient';
 }
 
+const DEFAULT_POLAROID_PHOTOS = [
+  'https://images.unsplash.com/photo-1490750967868-88df5691cc37?w=800&auto=format&fit=crop&q=80', // Bó hoa rực rỡ nắng ban mai
+  'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80', // Tách latte art trái tim ngọt ngào
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80', // Hoàng hôn biển hoàng kim
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80', // Hoa hồng pha lê lung linh
+];
+
 function buildCards(config: CardConfig) {
   const userImages = config.images || [];
 
@@ -18,28 +25,28 @@ function buildCards(config: CardConfig) {
       stamp: '№ 01 • PREMIER SOUVENIR',
       caption: 'Khoảnh Khắc Ban Đầu',
       text: 'Những ngày đầu tiên gặp gỡ, nụ cười của em đã thắp sáng cả một góc trời bình yên...',
-      img: userImages[0] || null,
+      img: userImages[0] || DEFAULT_POLAROID_PHOTOS[0],
       tapeColor: 'from-amber-200/90 to-amber-300/80',
     },
     {
       stamp: '№ 02 • LUMIÈRE ÉTERNELLE',
       caption: 'Kỷ Niệm Tỏa Nắng',
       text: 'Mỗi khoảnh khắc có em đồng hành đều biến những điều giản đơn nhất thành kỳ tích ngọt ngào.',
-      img: userImages[1] || null,
+      img: userImages[1] || DEFAULT_POLAROID_PHOTOS[1],
       tapeColor: 'from-rose-200/90 to-pink-300/80',
     },
     {
       stamp: '№ 03 • DOUCE MÉMOIRE',
       caption: 'Ánh Sao Trong Mắt',
       text: 'Dù ngoài kia có bao biến chuyển, em vẫn luôn là đóa hoa kiều diễm và dịu dàng nhất.',
-      img: userImages[2] || null,
+      img: userImages[2] || DEFAULT_POLAROID_PHOTOS[2],
       tapeColor: 'from-teal-200/90 to-emerald-300/80',
     },
     {
       stamp: '№ 04 • LETTRE DU CŒUR',
       caption: 'Tâm Thư Yêu Thương',
       text: config.mainText,
-      img: userImages[3] || null,
+      img: userImages[3] || DEFAULT_POLAROID_PHOTOS[3],
       tapeColor: 'from-amber-300/90 to-yellow-400/80',
       isFinal: true,
     },

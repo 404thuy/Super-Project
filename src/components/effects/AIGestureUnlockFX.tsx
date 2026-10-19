@@ -40,9 +40,9 @@ export default function AIGestureUnlockFX({ config, mode }: Props) {
     'AI đã nhận ra nụ cười đẹp nhất thế giới rồi đó! 🤖💗\nNgày 20/10, chúc em luôn tỏa sáng, hạnh phúc ngập tràn và mãi giữ nụ cười rạng rỡ tựa ngàn ánh sao nhé!';
 
   const fallbackPhotos = [
-    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80', // Hoa hồng pha lê phát sáng
+    'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=800&auto=format&fit=crop&q=80', // Hộp quà ánh nến lung linh
+    'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80', // Trái tim tinh thể ngàn sao
   ];
 
   const photosToDisplay = userImages.length > 0 ? userImages : fallbackPhotos;
