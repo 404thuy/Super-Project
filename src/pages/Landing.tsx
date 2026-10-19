@@ -602,7 +602,7 @@ export default function Landing() {
       {/* ========================================================
           TEMPLATE CATALOG SECTION (With Live Category Filter & Realistic Stats)
           ======================================================== */}
-      <section className="relative z-10 py-8 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80 pb-28 sm:pb-24 overflow-hidden w-full">
+      <section className="relative z-10 py-6 sm:py-20 px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-rose-100/80 pb-28 sm:pb-24 overflow-hidden w-full">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8 space-y-2 sm:space-y-3 px-2">
@@ -652,7 +652,7 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Templates Grid - Căn đều 2 bên mép màn hình */}
+        {/* Templates Grid - Hiển thị FULL bề ngang trên di động, thoáng đạt, không bị cắt góc */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full">
           {filteredTemplates.map((tmpl) => {
             const stats = getTemplateLiveStats(tmpl.id);
@@ -663,8 +663,8 @@ export default function Landing() {
                 key={tmpl.id}
                 className="group w-full mx-auto bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200/80 flex flex-col justify-between"
               >
-                {/* Hero Image Section: Compact 16:9 on mobile (max-h-48), rich 4:3 on desktop */}
-                <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
+                {/* Hero Image Section: Tỉ lệ 4:3 cao ráo trên mobile, hiển thị trọn vẹn 100% hình ảnh không bao giờ bị cắt góc */}
+                <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-slate-900">
                   <Link to={`/studio/${tmpl.id}`} className="block w-full h-full">
                     <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
                       <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
@@ -715,8 +715,8 @@ export default function Landing() {
                     </button>
                   </div>
 
-                  {/* Live Stats Pill ở góc dưới trái của ảnh */}
-                  <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none">
+                  {/* Live Stats Pill ở góc dưới trái - Gọn gàng, kính mờ siêu thanh thoát */}
+                  <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/45 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none z-10 border border-white/10">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3 text-purple-300" />
                       <span>{formatStat(stats.views)}</span>

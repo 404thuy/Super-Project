@@ -37,21 +37,21 @@ function injectCSS() {
 function PasscodeEnvelopeThumb() {
   injectCSS();
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center"
+    <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center p-2"
       style={{ background: 'linear-gradient(145deg,#1a0010 0%,#3b0024 40%,#6d1040 80%,#2d0018 100%)' }}>
       {/* Star field */}
-      {[...Array(22)].map((_, i) => (
+      {[...Array(24)].map((_, i) => (
         <div key={i} className="absolute rounded-full bg-white"
-          style={{ width: 1 + (i % 3) * 0.5, height: 1 + (i % 3) * 0.5, left: `${(i * 23 + 7) % 96}%`, top: `${(i * 17 + 5) % 92}%`, opacity: 0.15 + (i % 5) * 0.12, animation: `tth-blink ${2 + (i % 4) * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.18}s` }} />
+          style={{ width: 1 + (i % 3) * 0.5, height: 1 + (i % 3) * 0.5, left: `${(i * 23 + 7) % 96}%`, top: `${(i * 17 + 5) % 92}%`, opacity: 0.2 + (i % 5) * 0.12, animation: `tth-blink ${2 + (i % 4) * 0.7}s ease-in-out infinite`, animationDelay: `${i * 0.18}s` }} />
       ))}
-      {/* Envelope body */}
-      <div className="relative flex flex-col items-center" style={{ animation: 'tth-float 4s ease-in-out infinite' }}>
+      {/* Envelope body - Căn giữa chuẩn, không bao giờ bị khuất mép */}
+      <div className="relative flex flex-col items-center scale-90 sm:scale-95" style={{ animation: 'tth-float 4s ease-in-out infinite' }}>
         {/* Envelope */}
         <div className="relative w-28 h-20 rounded-xl shadow-2xl"
           style={{ background: 'linear-gradient(160deg,#fff0f6 0%,#ffd6e7 50%,#ffc0d9 100%)', boxShadow: '0 8px 32px rgba(219,39,119,0.45), 0 0 0 1px rgba(251,113,133,0.3)' }}>
           {/* Envelope flap top triangle */}
           <div className="absolute top-0 left-0 right-0 h-10 overflow-hidden rounded-t-xl">
-            <div style={{ width: 0, height: 0, borderLeft: '56px solid transparent', borderRight: '56px solid transparent', borderTop: '40px solid rgba(251,113,133,0.35)', position: 'absolute', top: 0, left: 0 }} />
+            <div style={{ width: 0, height: 0, borderLeft: '56px solid transparent', borderRight: '56px solid transparent', borderTop: '38px solid rgba(251,113,133,0.35)', position: 'absolute', top: 0, left: 0 }} />
           </div>
           {/* Bottom left/right triangles */}
           <div className="absolute bottom-0 left-0 right-0 flex justify-between">
@@ -59,23 +59,23 @@ function PasscodeEnvelopeThumb() {
             <div style={{ width: 0, height: 0, borderRight: '42px solid rgba(244,63,94,0.18)', borderTop: '36px solid transparent' }} />
           </div>
           {/* Wax seal */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg"
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-lg"
             style={{ background: 'linear-gradient(135deg,#be123c,#9f1239)', boxShadow: '0 4px 12px rgba(190,18,60,0.6), 0 0 0 2px rgba(255,255,255,0.2)' }}>
             💌
           </div>
           {/* PIN dots row */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-2">
             {[0,1,2,3].map(i => (
               <div key={i} className="w-2.5 h-2.5 rounded-full border-2"
                 style={{ borderColor: '#fb7185', background: i < 2 ? 'linear-gradient(135deg,#fb7185,#e11d48)' : 'transparent', boxShadow: i < 2 ? '0 0 6px rgba(251,113,133,0.8)' : 'none' }} />
             ))}
           </div>
         </div>
-        <p className="mt-3 text-pink-300 font-bold tracking-wide" style={{ fontSize: 9, textShadow: '0 0 8px rgba(251,113,133,0.8)' }}>Nhập mật mã để mở ✨</p>
+        <p className="mt-2 text-pink-200 font-bold tracking-wide" style={{ fontSize: 9, textShadow: '0 0 8px rgba(251,113,133,0.8)' }}>Nhập mật mã để mở ✨</p>
       </div>
       {/* Floating hearts */}
-      {['20%','75%','45%'].map((l, i) => (
-        <div key={i} className="absolute text-pink-400" style={{ left: l, top: `${20 + i * 25}%`, fontSize: 10 + i * 3, opacity: 0.5 + i * 0.15, animation: `tth-float ${3 + i}s ease-in-out infinite`, animationDelay: `${i * 0.8}s` }}>
+      {['15%','80%','48%'].map((l, i) => (
+        <div key={i} className="absolute text-pink-400" style={{ left: l, top: `${15 + i * 26}%`, fontSize: 11 + i * 3, opacity: 0.6 + i * 0.15, animation: `tth-float ${3 + i}s ease-in-out infinite`, animationDelay: `${i * 0.8}s` }}>
           {['💕','🌹','✨'][i]}
         </div>
       ))}
@@ -107,8 +107,8 @@ function GalaxyThumb() {
             style={{ width: 44, background: `linear-gradient(90deg,rgba(167,139,250,0.8),transparent)`, transform: `rotate(${deg}deg)`, marginTop: -0.5 }} />
         ))}
       </div>
-      {/* Crystal memory cubes */}
-      {[{l:'18%',t:'22%',em:'🔮'},{l:'68%',t:'18%',em:'💎'},{l:'28%',t:'68%',em:'⭐'},{l:'74%',t:'64%',em:'🌟'}].map(({l,t,em},i)=>(
+      {/* Crystal memory cubes - Bố trí thoáng, không bị đè góc */}
+      {[{l:'20%',t:'22%',em:'🔮'},{l:'70%',t:'20%',em:'💎'},{l:'30%',t:'60%',em:'⭐'},{l:'72%',t:'58%',em:'🌟'}].map(({l,t,em},i)=>(
         <div key={i} className="absolute w-7 h-7 rounded-lg flex items-center justify-center"
           style={{ left:l, top:t, fontSize:13, background:'rgba(139,92,246,0.2)', backdropFilter:'blur(6px)', border:'1px solid rgba(196,181,253,0.35)', boxShadow:'0 0 10px rgba(139,92,246,0.3)', animation:`tth-float ${3+i*0.7}s ease-in-out infinite`, animationDelay:`${i*0.5}s` }}>
           {em}
@@ -121,22 +121,22 @@ function GalaxyThumb() {
   );
 }
 
-/* ─── 3. Blossom Petal Rain ─────────────────────────────────────────────── */
+/* ─── 3. Blossom Petal Rain (Đã tối ưu: Tuyệt đối không bị cắt góc, không có hộp thừa) ── */
 function BlossomThumb() {
   injectCSS();
   const petals = [
-    {l:'8%',t:'-5%',d:'0s',s:18},{l:'25%',t:'-10%',d:'0.4s',s:14},{l:'45%',t:'-3%',d:'0.8s',s:20},
-    {l:'62%',t:'-8%',d:'0.3s',s:16},{l:'78%',t:'-5%',d:'1.1s',s:12},{l:'90%',t:'-10%',d:'0.6s',s:18},
-    {l:'15%',t:'30%',d:'1.5s',s:14},{l:'55%',t:'40%',d:'0.9s',s:16},{l:'82%',t:'25%',d:'1.8s',s:12},
+    {l:'10%',t:'-5%',d:'0s',s:20},{l:'28%',t:'-10%',d:'0.4s',s:16},{l:'50%',t:'-3%',d:'0.8s',s:22},
+    {l:'68%',t:'-8%',d:'0.3s',s:18},{l:'82%',t:'-5%',d:'1.1s',s:14},{l:'92%',t:'-10%',d:'0.6s',s:18},
+    {l:'18%',t:'35%',d:'1.5s',s:16},{l:'60%',t:'45%',d:'0.9s',s:18},{l:'85%',t:'30%',d:'1.8s',s:14},
   ];
   return (
-    <div className="w-full h-full relative overflow-hidden"
+    <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center"
       style={{ background: 'linear-gradient(160deg,#fff1f8 0%,#fce7f3 30%,#fbcfe8 65%,#fda4af 100%)' }}>
       {/* Soft vignette bottom */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 100%,rgba(253,164,175,0.5) 0%,transparent 65%)' }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 100%,rgba(253,164,175,0.4) 0%,transparent 70%)' }} />
       {/* Water shimmer at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-14 rounded-b-xl"
-        style={{ background: 'linear-gradient(180deg,transparent,rgba(186,230,253,0.3))', backdropFilter: 'blur(2px)' }} />
+      <div className="absolute bottom-0 left-0 right-0 h-10"
+        style={{ background: 'linear-gradient(180deg,transparent,rgba(186,230,253,0.25))', backdropFilter: 'blur(2px)' }} />
       {/* Falling petals */}
       {petals.map((p, i) => (
         <div key={i} className="absolute"
@@ -144,15 +144,17 @@ function BlossomThumb() {
           {i%3===0?'🌸':i%3===1?'🌺':'🌷'}
         </div>
       ))}
-      {/* Glass card frame */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-28 rounded-2xl overflow-hidden shadow-xl"
-        style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(244,114,182,0.35)', boxShadow: '0 8px 24px rgba(244,114,182,0.25)' }}>
-        <div className="p-2 text-center">
-          <p style={{ fontSize: 7, fontWeight: 800, color: '#be185d', letterSpacing: '0.08em' }}>✿ GỬI EM 20/10 ✿</p>
-          <div className="flex gap-1 justify-center mt-1">
-            {[0,1,2].map(i=><div key={i} className="w-5 h-4 rounded bg-pink-100 border border-pink-200" />)}
-          </div>
+      {/* Center Bloom Title: Đẹp, thanh thoát, nằm ngay chính giữa không bao giờ bị che góc */}
+      <div className="relative z-10 flex flex-col items-center justify-center p-3 text-center">
+        <div className="w-12 h-12 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center text-2xl shadow-lg border border-pink-200/60 mb-2">
+          🌸
         </div>
+        <p className="font-extrabold text-pink-700 tracking-wide text-xs drop-shadow-xs">
+          Mưa Hoa & Tình Yêu
+        </p>
+        <p className="text-[10px] text-pink-500 font-medium mt-0.5">
+          Cánh hoa bồng bềnh 20/10 ✨
+        </p>
       </div>
     </div>
   );

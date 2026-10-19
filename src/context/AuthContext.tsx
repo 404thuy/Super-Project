@@ -229,26 +229,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const createLocalAccount = () => {
-      const localUser: User = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 10),
-        username: cleanUser,
-        displayName: cleanName,
-        email: email?.trim() || '',
-        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`,
-        createdAt: new Date().toLocaleDateString('vi-VN'),
-      };
-
       try {
         const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
+        if (stored[cleanUser]) {
+          return {
+            success: false,
+            error: 'Tên tài khoản này đã có người đăng ký. Vui lòng chọn tên khác hoặc chuyển sang Đăng nhập!',
+          };
+        }
+        const localUser: User = {
+          id: 'usr_' + Math.random().toString(36).substring(2, 10),
+          username: cleanUser,
+          displayName: cleanName,
+          email: email?.trim() || '',
+          avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`,
+          createdAt: new Date().toLocaleDateString('vi-VN'),
+        };
+
         stored[cleanUser] = { user: localUser, password };
         localStorage.setItem('lovecard_local_accounts', JSON.stringify(stored));
-      } catch {}
 
-      setUser(localUser);
-      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(localUser));
-      localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
-      closeAuthModal();
-      return { success: true };
+        setUser(localUser);
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(localUser));
+        localStorage.setItem(TOKEN_KEY, 'sess_local_' + Date.now());
+        closeAuthModal();
+        return { success: true };
+      } catch {
+        return { success: false, error: 'Không thể tạo tài khoản lúc này. Vui lòng thử lại!' };
+      }
     };
 
     try {
@@ -412,26 +420,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      // Khi chạy trên Vercel Cloud (không có Node backend):
-      // Nếu tài khoản này chưa từng được tạo, tự động khởi tạo tài khoản ngay cho người dùng!
-      if (password.length >= 6) {
-        const regRes = await registerUser(cleanUser, password, cleanUser);
-        if (regRes.success) {
-          return { success: true };
-        }
-      }
-
       return { 
         success: false, 
         error: 'Tài khoản chưa được đăng ký. Bạn hãy chuyển sang tab "Đăng ký" để tạo tài khoản nhé!' 
       };
     } catch (err) {
-      if (password.length >= 6) {
-        const regRes = await registerUser(cleanUser, password, cleanUser);
-        if (regRes.success) {
-          return { success: true };
-        }
-      }
       return { 
         success: false, 
         error: 'Tài khoản chưa được đăng ký. Bạn hãy chuyển sang tab "Đăng ký" để tạo tài khoản nhé!' 

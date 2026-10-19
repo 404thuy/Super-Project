@@ -76,7 +76,7 @@ export default function Templates() {
       : TEMPLATES.filter((t) => t.category === category);
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-28 sm:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-28 sm:pb-24 px-2 sm:px-6 lg:px-8">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -123,7 +123,7 @@ export default function Templates() {
           </div>
         </div>
 
-        {/* Clean, Non-cluttered Template Cards Grid */}
+        {/* Clean, Non-cluttered Template Cards Grid - Full màn hình di động, không khuất góc */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
           {filteredTemplates.map((tmpl) => {
             const isLiked = likedTemplateIds.includes(tmpl.id);
@@ -139,8 +139,8 @@ export default function Templates() {
                   onClick={() => navigate(`/studio/${tmpl.id}`)}
                   className="block relative cursor-pointer"
                 >
-                  {/* Hero Preview Section: live CSS/SVG render of the actual effect */}
-                  <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
+                  {/* Hero Preview Section: Tỉ lệ 4:3 cao thoáng, live CSS/SVG render trọn vẹn */}
+                  <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-slate-900">
                     <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
                       <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
                     </div>
