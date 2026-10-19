@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipBack, Heart, Music, Disc3, Image as ImageIcon, Volume2, Sparkles } from 'lucide-react';
+import { Play, Pause, SkipBack, Heart, Music, Disc3, Image as ImageIcon, Volume2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CardConfig } from '../../types';
 import { soundFx } from '../../utils/soundEffects';
 
@@ -96,13 +96,12 @@ export default function VinylPlayerFX({ config }: Props) {
 
   const handlePlay = () => {
     setIsPlaying(true);
+    setShowLyrics(true);
+    if (currentCharIndex >= messageText.length) {
+      setCurrentCharIndex(0);
+    }
     soundFx.playVinylNeedleDrop();
     soundFx.startBackgroundMusic(config.musicPreset || 'romantic-piano', config.audioUrl);
-
-    setTimeout(() => {
-      setShowLyrics(true);
-      soundFx.playSuccessChime();
-    }, 1000);
   };
 
   const handlePause = () => {
@@ -310,34 +309,70 @@ export default function VinylPlayerFX({ config }: Props) {
                 )}
               </div>
 
-              {/* 3D Angled Album Photo Frame */}
-              <div
-                onClick={() => {
-                  soundFx.playPaperSwoosh();
-                  setActiveAlbumPhoto((prev) => (prev + 1) % Math.max(albumSleeveImages.length, 1));
-                }}
-                className="relative aspect-square rounded-2xl overflow-hidden bg-black/60 border-2 border-amber-400/80 cursor-pointer shadow-xl group"
-              >
-                {albumSleeveImages.length > 0 ? (
-                  <img
-                    src={albumSleeveImages[activeAlbumPhoto]}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-950 via-stone-900 to-black text-amber-300/70">
-                    <ImageIcon className="w-10 h-10 mb-2 opacity-50 text-amber-400" />
-                    <p className="text-xs font-bold font-serif">Album Tình Ca 20/10</p>
-                    <p className="text-[10px] text-amber-400/60 mt-1">Dành tặng {config.recipientName}</p>
-                  </div>
-                )}
+              {/* 3D Angled Album Photo Frame with Multi-Photo Carousel */}
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-black/60 border-2 border-amber-400/80 shadow-xl group">
+                <div
+                  onClick={() => {
+                    if (albumSleeveImages.length > 1) {
+                      soundFx.playPaperSwoosh();
+                      setActiveAlbumPhoto((prev) => (prev + 1) % albumSleeveImages.length);
+                    }
+                  }}
+                  className="w-full h-full cursor-pointer"
+                >
+                  {albumSleeveImages.length > 0 ? (
+                    <img
+                      src={albumSleeveImages[activeAlbumPhoto]}
+                      alt=""
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-950 via-stone-900 to-black text-amber-300/70">
+                      <ImageIcon className="w-10 h-10 mb-2 opacity-50 text-amber-400" />
+                      <p className="text-xs font-bold font-serif">Album Tình Ca 20/10</p>
+                      <p className="text-[10px] text-amber-400/60 mt-1">Dành tặng {config.recipientName}</p>
+                    </div>
+                  )}
+                </div>
 
-                {/* Flip Photo Pill */}
+                {/* Left/Right Navigation Controls for Multi-Photos */}
                 {albumSleeveImages.length > 1 && (
-                  <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-amber-300 flex items-center gap-1 shadow border border-amber-400/40">
-                    <span>Nhấp lật ảnh</span>
-                    <span>→</span>
-                  </div>
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundFx.playPaperSwoosh();
+                        setActiveAlbumPhoto((prev) => (prev - 1 + albumSleeveImages.length) % albumSleeveImages.length);
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 border border-amber-400/50 backdrop-blur-md shadow-md transition-all active:scale-90"
+                      title="Ảnh trước"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundFx.playPaperSwoosh();
+                        setActiveAlbumPhoto((prev) => (prev + 1) % albumSleeveImages.length);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-amber-300 border border-amber-400/50 backdrop-blur-md shadow-md transition-all active:scale-90"
+                      title="Ảnh tiếp theo"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <div className="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-none">
+                      {albumSleeveImages.map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={`h-1.5 rounded-full transition-all ${
+                            idx === activeAlbumPhoto ? 'w-4 bg-amber-400' : 'w-1.5 bg-white/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
 

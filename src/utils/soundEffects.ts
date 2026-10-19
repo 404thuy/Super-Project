@@ -41,6 +41,7 @@ class SoundEngine {
   private ytIframe: HTMLIFrameElement | null = null;
   private currentMusicPreset: string | null = null;
   private isMusicPlaying: boolean = false;
+  private playbackSessionId: number = 0;
   private streamCache: Map<string, string> = new Map();
   private audioPool: Map<string, HTMLAudioElement> = new Map();
   private onlineSongMetadata: Map<string, { title: string; artist: string }> = new Map();
@@ -672,6 +673,7 @@ class SoundEngine {
     }
 
     this.stopBackgroundMusic();
+    const sessionId = ++this.playbackSessionId;
     this.currentMusicPreset = selected;
     this.isMusicPlaying = true;
 
@@ -679,6 +681,7 @@ class SoundEngine {
     if (customUrl) {
       const ytMatch = customUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
       if (ytMatch && ytMatch[1]) {
+        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         this.playYouTube(ytMatch[1], effectiveStartSeconds);
         return;
       }
@@ -707,7 +710,8 @@ class SoundEngine {
           if (searchTerms) {
             const ytRes = await fetch(`/api/youtube-search?q=${encodeURIComponent(searchTerms)}`);
             const ytData = await ytRes.json();
-            if (ytData.success && ytData.youtubeId && this.isMusicPlaying) {
+            if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
+            if (ytData.success && ytData.youtubeId) {
               this.playYouTube(ytData.youtubeId, effectiveStartSeconds);
               return;
             }
@@ -716,11 +720,13 @@ class SoundEngine {
           console.warn('Auto resolve full track error:', err);
         }
 
+        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         this.playNativeAudio(customUrl, effectiveStartSeconds, endSeconds);
         return;
       }
 
       if (customUrl.trim().length > 0) {
+        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         this.playNativeAudio(customUrl, effectiveStartSeconds, endSeconds);
         return;
       }
@@ -729,6 +735,7 @@ class SoundEngine {
     // 2. Bài hát từ Kho nhạc: Ưu TIÊN PHÁT STREAM NATIVE AUDIO (Tốc độ tức thì < 50ms, không trễ)
     if (song) {
       if (song.audioUrl) {
+        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
         this.playNativeAudio(song.audioUrl, effectiveStartSeconds, endSeconds);
         return;
       }
@@ -736,7 +743,8 @@ class SoundEngine {
       // Lấy bản thu âm ca sĩ gốc tức thì qua Apple Audio CDN
       try {
         const instantUrl = await this.fetchInstantAudioStream(song.title, song.artist);
-        if (instantUrl && this.isMusicPlaying && this.currentMusicPreset === selected) {
+        if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
+        if (instantUrl && this.currentMusicPreset === selected) {
           // Kiểm tra nếu là iTunes preview (chỉ 30s) → ưu tiên YouTube nếu có
           const isItunesPreview = instantUrl.includes('mzstatic.com') || instantUrl.includes('itunes.apple.com');
           if (!isItunesPreview) {
@@ -745,7 +753,6 @@ class SoundEngine {
           }
           // iTunes preview → dự phòng YouTube
           if (!song.youtubeId) {
-            // Vẫn dùng preview nếu không có YouTube (hiển thị các bài có nhạc nhưng ngắn)
             this.playNativeAudio(instantUrl, effectiveStartSeconds, endSeconds);
             return;
           }
@@ -754,6 +761,7 @@ class SoundEngine {
         console.warn('Fetch instant audio error:', err);
       }
 
+      if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
       // Dự phòng 1: YouTube Background Embed nếu bài hát có youtubeId (phát FULL bài)
       if (song.youtubeId) {
         this.playYouTube(song.youtubeId, effectiveStartSeconds);
@@ -761,6 +769,7 @@ class SoundEngine {
       }
     }
 
+    if (this.playbackSessionId !== sessionId || !this.isMusicPlaying) return;
     // 3. Dự phòng 2: Bộ hòa âm synthesizer
     this.startSongScore(selected);
   }
@@ -879,6 +888,7 @@ class SoundEngine {
   }
 
   public stopBackgroundMusic() {
+    this.playbackSessionId++;
     this.isMusicPlaying = false;
     this.stopYouTube();
     if (this.musicTimer) {

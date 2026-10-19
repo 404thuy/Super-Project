@@ -176,15 +176,15 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
     const currentVol = Math.round(db);
     setVolume(currentVol);
 
-    // Ngưỡng phát hiện hơi thổi thông minh:
-    // Thổi vào mic tạo tiếng rít gió đều (> 28) hoặc âm lượng tức thời (> 42)
-    if (currentVol > 28) {
+    // Ngưỡng phát hiện hơi thổi chuẩn (đã giảm nhạy 50% so với trước để không bị kích hoạt bởi tiếng ồn):
+    // Đòi hỏi hơi thổi có lực (> 55) và duy trì liên tục trong ~8-10 frames, hoặc luồng gió cực mạnh (> 82)
+    if (currentVol >= 55) {
       blowStreakRef.current += 1;
     } else {
-      blowStreakRef.current = Math.max(0, blowStreakRef.current - 1);
+      blowStreakRef.current = Math.max(0, blowStreakRef.current - 2);
     }
 
-    if ((blowStreakRef.current >= 2 || currentVol > 42) && (phaseRef.current === 'listening' || phaseRef.current === 'requesting')) {
+    if ((blowStreakRef.current >= 8 || currentVol >= 82) && (phaseRef.current === 'listening' || phaseRef.current === 'requesting')) {
       scatterSeeds();
       return;
     }

@@ -5,12 +5,8 @@ import {
   Heart,
   ArrowRight,
   Volume2,
-  VolumeX,
-  RotateCcw,
-  Camera,
   Sparkles,
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import confetti from 'canvas-confetti';
 import { TEMPLATES, type CardConfig } from '../types';
 import EffectRenderer from '../components/effects/EffectRenderer';
@@ -170,18 +166,6 @@ export default function CardViewer() {
     activeConfig.audioEndTime,
   ]);
 
-  // Handle Mute/Unmute toggle
-  const handleToggleMute = () => {
-    const nextMuted = soundFx.toggleMute();
-    setIsMuted(nextMuted);
-  };
-
-  // Handle Replay Effect
-  const handleReplay = () => {
-    soundFx.playPaperSwoosh();
-    setReplayKey((prev) => prev + 1);
-  };
-
   // Handle Recipient Heart Reaction (Drops hearts with delightful confetti; syncs to account or guest storage)
   const handleHeartReaction = async () => {
     soundFx.playHeartPop();
@@ -200,29 +184,10 @@ export default function CardViewer() {
     }
   };
 
-  // Handle Capture & Download Screenshot
-  const handleCaptureCard = async () => {
-    if (!cardContainerRef.current) return;
-    setIsCapturing(true);
-    soundFx.playSuccessChime();
-
-    try {
-      const canvas = await html2canvas(cardContainerRef.current, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: null,
-      });
-
-      const image = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `LoveCard-${activeConfig.recipientName || '20-10'}.png`;
-      link.click();
-    } catch (err) {
-      console.error('Lỗi khi chụp màn hình thiệp:', err);
-    } finally {
-      setIsCapturing(false);
-    }
+  // Handle Mute/Unmute toggle for music pill
+  const handleToggleMute = () => {
+    const nextMuted = soundFx.toggleMute();
+    setIsMuted(nextMuted);
   };
 
   return (
@@ -277,41 +242,6 @@ export default function CardViewer() {
             </div>
           );
         })()}
-
-        {/* Right utility buttons */}
-        <div className="pointer-events-auto flex items-center gap-2">
-          {/* Replay Effect */}
-          <button
-            onClick={handleReplay}
-            title="Xem lại từ đầu"
-            className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-white transition-all shadow-lg active:scale-95"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-
-          {/* Sound Mute/Unmute */}
-          <button
-            onClick={handleToggleMute}
-            title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-            className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-white transition-all shadow-lg active:scale-95"
-          >
-            {isMuted ? (
-              <VolumeX className="w-4 h-4 text-rose-400" />
-            ) : (
-              <Volume2 className="w-4 h-4 text-emerald-400" />
-            )}
-          </button>
-
-          {/* Capture screenshot */}
-          <button
-            onClick={handleCaptureCard}
-            disabled={isCapturing}
-            title="Lưu ảnh kỷ niệm"
-            className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/15 text-white transition-all shadow-lg active:scale-95 disabled:opacity-50"
-          >
-            <Camera className="w-4 h-4 text-amber-400" />
-          </button>
-        </div>
       </header>
 
       {/* Main Interactive Stage Area */}

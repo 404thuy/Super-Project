@@ -113,23 +113,27 @@ export default function AIGestureUnlockFX({ config, mode }: Props) {
       }
 
       const avgLum = totalLum / (totalSamples / 2);
-      const isFacePresent = avgLum > 25 && skinPixels > 10;
+      const skinRatio = skinPixels / (totalSamples / 2);
+      // Chỉ nhận diện là có mặt khi khuôn mặt đủ sáng và chiếm ít nhất 8% diện tích vùng trung tâm
+      const isFacePresent = avgLum > 35 && skinRatio > 0.08;
       setFaceDetected(isFacePresent);
 
       if (isFacePresent) {
-        // Tăng tiến trình nụ cười mượt mà khi phát hiện người trước camera
-        progressRef.current = Math.min(100, progressRef.current + 0.85 + Math.random() * 0.6);
+        // Tốc độ quét chậm rãi, chuyên nghiệp: tăng 0.22 - 0.35% mỗi frame (khoảng 4 - 5s để quét trọn vẹn)
+        progressRef.current = Math.min(100, progressRef.current + 0.22 + Math.random() * 0.12);
         const currentProg = Math.round(progressRef.current);
         setScanProgress(currentProg);
-        setSmileScore(Math.min(99, Math.round(55 + (currentProg / 100) * 44 + Math.sin(Date.now() / 200) * 3)));
-        setRadianceScore(Math.min(99, Math.round(85 + (currentProg / 100) * 14)));
+        setSmileScore(Math.min(99, Math.round(65 + (currentProg / 100) * 34 + Math.sin(Date.now() / 250) * 2)));
+        setRadianceScore(Math.min(99, Math.round(80 + (currentProg / 100) * 19)));
 
-        if (currentProg < 35) {
-          setScanMessage('Đang nhận diện đường nét khuôn mặt...');
-        } else if (currentProg < 70) {
-          setScanMessage('Đang đo độ rạng rỡ nụ cười 20/10...');
-        } else if (currentProg < 98) {
-          setScanMessage('Nụ cười thiên thần đạt 99% ✨');
+        if (currentProg < 25) {
+          setScanMessage('AI đang định vị tọa độ khuôn mặt...');
+        } else if (currentProg < 55) {
+          setScanMessage('Phát hiện nụ cười • Đang phân tích góc môi...');
+        } else if (currentProg < 85) {
+          setScanMessage('Đo chỉ số hạnh phúc & độ rạng rỡ 20/10...');
+        } else if (currentProg < 99) {
+          setScanMessage('Nụ cười tuyệt mỹ đạt 99.9% ✨ Chuẩn bị mở thư!');
         } else {
           setScanMessage('Xác thực nụ cười thành công! 🎉');
         }
@@ -139,14 +143,16 @@ export default function AIGestureUnlockFX({ config, mode }: Props) {
           return;
         }
       } else {
-        // Nếu không có người thì giảm nhẹ tiến trình
-        progressRef.current = Math.max(10, progressRef.current - 0.2);
+        // Chưa có mặt hoặc quay đi: giảm dần tiến trình về 0%
+        progressRef.current = Math.max(0, progressRef.current - 0.4);
         setScanProgress(Math.round(progressRef.current));
-        setScanMessage('Vui lòng đưa khuôn mặt vào khung quét...');
+        setSmileScore(0);
+        setRadianceScore(0);
+        setScanMessage('Vui lòng hướng khuôn mặt vào giữa khung quét...');
       }
     } catch (_e) {
-      // Fallback nếu browser bảo mật canvas
-      progressRef.current = Math.min(100, progressRef.current + 1.2);
+      // Fallback an toàn nếu trình duyệt chặn getImageData (bảo mật canvas)
+      progressRef.current = Math.min(100, progressRef.current + 0.25);
       setScanProgress(Math.round(progressRef.current));
       if (progressRef.current >= 100) {
         triggerReveal();
@@ -161,12 +167,17 @@ export default function AIGestureUnlockFX({ config, mode }: Props) {
     phaseRef.current = 'requesting';
     setPhase('requesting');
     setCamError(null);
-    progressRef.current = 15;
-    setScanProgress(15);
+    progressRef.current = 0;
+    setScanProgress(0);
+    setFaceDetected(false);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        video: {
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
         audio: false,
       });
       streamRef.current = stream;
@@ -233,14 +244,18 @@ export default function AIGestureUnlockFX({ config, mode }: Props) {
             {/* ─── CYBERPUNK HIGH-TECH VIEWFINDER (CHUẨN FORM MẪU) ─── */}
             <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden p-2 bg-gradient-to-br from-fuchsia-600/40 via-purple-900/60 to-slate-950 border border-fuchsia-500/50 shadow-[0_0_35px_rgba(192,38,211,0.35),0_15px_35px_rgba(0,0,0,0.8)]">
               <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black/95 border border-fuchsia-900/60 flex items-center justify-center">
-                {/* Real Camera Video Feed */}
+                {/* Real Camera Video Feed (Khóa chặt trong khung, chống tràn hoặc fullscreen trên mobile) */}
                 <video
                   ref={videoRef}
-                  className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${
+                  autoPlay
+                  playsInline
+                  muted
+                  controls={false}
+                  disablePictureInPicture
+                  className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 pointer-events-none ${
                     phase === 'scanning' ? 'opacity-90' : 'opacity-0'
                   }`}
-                  muted
-                  playsInline
+                  style={{ pointerEvents: 'none' }}
                 />
                 <canvas ref={canvasRef} className="hidden" />
 

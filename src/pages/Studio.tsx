@@ -117,11 +117,11 @@ export function getTemplatePhotoConfig(effectType: string): TemplatePhotoConfig 
 
     case 'VINYL_PLAYER':
       return {
-        maxPhotos: 3,
-        title: '3 Vị Trí Ảnh Đĩa Than & Vỏ Album Vintage',
-        desc: '1 ảnh in giữa tâm đĩa than xoay tròn + 2 ảnh kỷ niệm kẹp vỏ bìa album retro',
+        maxPhotos: 8,
+        title: 'Bộ Ảnh Đĩa Than & Album Vintage (Tối đa 8 ảnh)',
+        desc: '1 ảnh in giữa tâm đĩa than xoay tròn + 1 ảnh bìa album + các ảnh kỷ niệm kẹp trong album',
         icon: '📻',
-        badge: 'Đĩa Than & Bìa Album',
+        badge: 'Đĩa Than & Album Đa Ảnh',
         themeGradient: 'from-stone-50/80 via-amber-50/40 to-orange-50/60',
         themeBorder: 'border-amber-200/90',
         themeText: 'text-amber-900',
@@ -129,7 +129,12 @@ export function getTemplatePhotoConfig(effectType: string): TemplatePhotoConfig 
         slots: [
           { title: 'Tâm Đĩa Than Vinyl (Tròn)', desc: 'Ảnh in giữa tâm đĩa than xoay cùng kim máy hát', icon: '💿' },
           { title: 'Vỏ Bìa Album Vintage (Vuông)', desc: 'Ảnh đại diện bìa đĩa retro hoài niệm', icon: '🖼️' },
-          { title: 'Ảnh Kỷ Niệm Kẹp Trong Album', desc: 'Ảnh tặng đính kèm gửi gắm người thương', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 01', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 02', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 03', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 04', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 05', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
+          { title: 'Ảnh Kỷ Niệm Album 06', desc: 'Ảnh kỷ niệm kẹp lật trong album', icon: '📸' },
         ],
       };
 
