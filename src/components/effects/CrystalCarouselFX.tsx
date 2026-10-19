@@ -298,14 +298,14 @@ function CurvedStudioGlassReflection() {
     <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-t-[142px] sm:rounded-t-[168px]">
       {/* Studio Softbox Dual Light Bars curved along the spherical surface */}
       <svg
-        viewBox="0 0 340 310"
+        viewBox="0 0 340 385"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-full object-cover"
       >
         <defs>
           {/* Main softbox curved gradient */}
-          <linearGradient id="softboxMain" x1="40" y1="20" x2="110" y2="260" gradientUnits="userSpaceOnUse">
+          <linearGradient id="softboxMain" x1="40" y1="20" x2="110" y2="330" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
             <stop offset="25%" stopColor="#ffffff" stopOpacity="0.45" />
             <stop offset="60%" stopColor="#ffffff" stopOpacity="0.12" />
@@ -313,7 +313,7 @@ function CurvedStudioGlassReflection() {
           </linearGradient>
 
           {/* Secondary parallel softbox bar */}
-          <linearGradient id="softboxSecondary" x1="65" y1="25" x2="125" y2="240" gradientUnits="userSpaceOnUse">
+          <linearGradient id="softboxSecondary" x1="65" y1="25" x2="125" y2="310" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
             <stop offset="35%" stopColor="#ffffff" stopOpacity="0.2" />
             <stop offset="70%" stopColor="#ffffff" stopOpacity="0.05" />
@@ -321,7 +321,7 @@ function CurvedStudioGlassReflection() {
           </linearGradient>
 
           {/* Opposing bounce rim light */}
-          <linearGradient id="bounceRim" x1="310" y1="35" x2="270" y2="260" gradientUnits="userSpaceOnUse">
+          <linearGradient id="bounceRim" x1="310" y1="35" x2="270" y2="330" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
             <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.2" />
             <stop offset="75%" stopColor="#7dd3fc" stopOpacity="0.08" />
@@ -338,7 +338,7 @@ function CurvedStudioGlassReflection() {
           </linearGradient>
 
           {/* Prismatic rainbow fringe filter */}
-          <linearGradient id="rainbowFringe" x1="10" y1="10" x2="40" y2="180" gradientUnits="userSpaceOnUse">
+          <linearGradient id="rainbowFringe" x1="10" y1="10" x2="40" y2="240" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.45" />
             <stop offset="50%" stopColor="#f472b6" stopOpacity="0.35" />
             <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.25" />
@@ -356,7 +356,7 @@ function CurvedStudioGlassReflection() {
 
         {/* 2. Prismatic outer dispersion fringe */}
         <path
-          d="M22 135 C20 85 45 35 95 12"
+          d="M22 170 C20 100 45 40 95 12"
           stroke="url(#rainbowFringe)"
           strokeWidth="2.5"
           strokeLinecap="round"
@@ -365,21 +365,21 @@ function CurvedStudioGlassReflection() {
 
         {/* 3. Primary Wide Curved Studio Softbox Window Reflection */}
         <path
-          d="M60 22 C38 48 28 85 28 135 C28 185 36 225 45 255 C40 225 34 185 35 135 C36 90 46 55 68 28 Z"
+          d="M60 22 C38 55 28 115 28 185 C28 250 36 295 45 335 C40 295 34 250 35 185 C36 120 46 65 68 28 Z"
           fill="url(#softboxMain)"
           className="filter blur-[0.8px]"
         />
 
         {/* 4. Secondary Parallel Studio Light Bar */}
         <path
-          d="M78 28 C62 55 52 92 52 140 C52 185 58 220 66 248 C61 220 57 185 58 140 C59 96 68 62 84 34 Z"
+          d="M78 28 C62 62 52 120 52 188 C52 245 58 290 66 328 C61 290 57 245 58 188 C59 125 68 70 84 34 Z"
           fill="url(#softboxSecondary)"
           className="filter blur-[0.6px]"
         />
 
         {/* 5. Opposing Right-Side Rim Bounce Refraction */}
         <path
-          d="M280 28 C302 55 312 92 312 142 C312 188 306 225 296 255 C302 225 307 188 306 142 C305 96 295 60 274 34 Z"
+          d="M280 28 C302 62 312 120 312 188 C312 248 306 295 296 335 C302 295 307 248 306 188 C305 125 295 70 274 34 Z"
           fill="url(#bounceRim)"
           className="filter blur-[0.8px]"
         />
@@ -907,7 +907,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                 : {}
             }
             transition={{ duration: 0.8 }}
-            className={`relative w-[285px] sm:w-[335px] h-[270px] sm:h-[310px] rounded-t-[142px] sm:rounded-t-[168px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2.5px] border-b-0 border-white/75 shadow-[0_22px_50px_rgba(0,0,0,0.92),inset_0_2px_16px_rgba(255,255,255,0.95),inset_8px_0_24px_rgba(255,255,255,0.35),inset_-8px_0_24px_rgba(255,255,255,0.25),0_0_55px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-2 sm:p-2.5`}
+            className={`relative w-[285px] sm:w-[335px] h-[340px] sm:h-[385px] rounded-t-[142px] sm:rounded-t-[168px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2.5px] border-b-0 border-white/75 shadow-[0_22px_50px_rgba(0,0,0,0.92),inset_0_2px_16px_rgba(255,255,255,0.95),inset_8px_0_24px_rgba(255,255,255,0.35),inset_-8px_0_24px_rgba(255,255,255,0.25),0_0_55px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-2 sm:p-2.5`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
           >
@@ -921,15 +921,15 @@ export default function CrystalCarouselFX({ config }: Props) {
             <canvas
               ref={weatherCanvasRef}
               width={340}
-              height={320}
+              height={390}
               className="absolute inset-0 w-full h-full pointer-events-none z-20"
             />
 
             {/* 4. Internal Warm Stage LED Uplight Spotlight (Đèn hắt đáy từ mâm máy lên) */}
-            <div className="absolute bottom-0 inset-x-0 h-36 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.38)_0%,rgba(56,189,248,0.15)_45%,transparent_75%)] pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-40 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.38)_0%,rgba(56,189,248,0.15)_45%,transparent_75%)] pointer-events-none" />
 
             {/* 5. Frosted base mist at bottom of the globe */}
-            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-white/28 via-white/10 to-transparent pointer-events-none backdrop-blur-[1px]" />
+            <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white/28 via-white/10 to-transparent pointer-events-none backdrop-blur-[1px]" />
 
             {/* 6. GỜ CHÂN KÍNH THỦY TINH ĐÚC DÀY 3D TIẾP XÚC BỆ ĐỒNG (Glass Meniscus Lip) */}
             <div className="absolute bottom-0 inset-x-0 h-2.5 bg-gradient-to-r from-white/35 via-white/85 via-50% to-white/35 pointer-events-none shadow-[0_-1px_4px_rgba(255,255,255,0.6),0_2px_4px_rgba(0,0,0,0.8)] z-35 border-t border-white/60" />
@@ -946,13 +946,13 @@ export default function CrystalCarouselFX({ config }: Props) {
                   }}
                   initial={{ y: 0, opacity: 0, scale: 0.5 }}
                   animate={{
-                    y: -240,
+                    y: -300,
                     opacity: [0, 1, 1, 0],
                     scale: [0.6, 1.4, 1],
                     x: [0, (i % 2 === 0 ? 1 : -1) * 28, 0],
                   }}
                   transition={{
-                    duration: 3.2 + i * 0.35,
+                    duration: 3.5 + i * 0.35,
                     repeat: Infinity,
                     delay: i * 0.45,
                     ease: 'easeOut',
@@ -964,8 +964,8 @@ export default function CrystalCarouselFX({ config }: Props) {
 
             {/* ─── 3D CAROUSEL STAGE WITH REALISTIC DEPTH & CENTERPIECE ─── */}
             <div
-              className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10"
-              style={{ perspective: '1100px' }}
+              className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 pt-6 pb-4"
+              style={{ perspective: '1200px' }}
             >
               {/* The Unified 3D Coordinate System (Driven directly by GPU Compositor with X-tilt and Y-rotation) */}
               <motion.div
@@ -974,7 +974,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                   rotateX: carouselTiltMotion,
                   transformStyle: 'preserve-3d',
                 }}
-                className="relative w-24 sm:w-28 h-36 sm:h-44 flex items-center justify-center"
+                className="relative w-20 sm:w-22 h-32 sm:h-36 flex items-center justify-center"
               >
                 {/* ── 1. CENTERPIECE AT (0,0,0) INSIDE 3D SPACE ── */}
                 <div
@@ -988,7 +988,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                   <motion.div
                     animate={{ rotate: -360 }}
                     transition={{ duration: 35, repeat: Infinity, ease: 'linear' }}
-                    className="absolute bottom-2 w-36 h-36 rounded-full border-2 border-amber-300/80 bg-gradient-to-b from-amber-300/35 via-yellow-400/20 to-transparent flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.45)]"
+                    className="absolute -bottom-2 w-36 h-36 rounded-full border-2 border-amber-300/80 bg-gradient-to-b from-amber-300/35 via-yellow-400/20 to-transparent flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.45)]"
                     style={{ transform: 'rotateX(75deg)' }}
                   >
                     <div className="w-full h-full rounded-full border border-dashed border-amber-300/60 flex items-center justify-center">
@@ -1030,7 +1030,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                 {/* ── 2. THE 6 GILDED CRYSTAL CAROUSEL PANELS ── */}
                 {panels.map((panel, idx) => {
                   const angle = idx * 60; // 360 / 6 = 60 deg
-                  const orbitRadius = focusCenterpiece ? 145 : 115;
+                  const orbitRadius = focusCenterpiece ? 150 : 124;
                   const depthScale = focusCenterpiece ? 0.72 : 1;
                   const depthOpacity = focusCenterpiece ? 0.22 : 1;
 
@@ -1051,8 +1051,9 @@ export default function CrystalCarouselFX({ config }: Props) {
                           soundFx.playPinClick();
                           setSelectedItemIndex(panel.id);
                         }}
-                        className={`absolute inset-0 rounded-2xl p-1.5 bg-[#0a0f1d]/90 backdrop-blur-xs border-2 border-amber-300/90 shadow-[0_12px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/60 flex flex-col items-center justify-between cursor-pointer hover:border-white hover:scale-105 transition-all group overflow-hidden`}
+                        className={`absolute inset-0 rounded-2xl p-1.5 bg-[#0a0f1d] border-2 border-amber-300/90 shadow-[0_12px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/60 flex flex-col items-center justify-between cursor-pointer hover:border-white hover:scale-105 transition-all group overflow-hidden`}
                         style={{
+                          transform: 'translateZ(1.5px)',
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                         }}
@@ -1083,8 +1084,8 @@ export default function CrystalCarouselFX({ config }: Props) {
                         </div>
 
                         {/* Romantic Quote Plaque */}
-                        <div className="w-full bg-black/70 rounded-lg p-1 border border-amber-400/35 shadow-xs">
-                          <p className="text-[8px] sm:text-[9px] font-medium font-serif italic text-amber-100/95 text-center line-clamp-2 leading-tight">
+                        <div className="w-full bg-black/80 rounded-lg p-1 border border-amber-400/35 shadow-xs">
+                          <p className="text-[7.5px] sm:text-[8.5px] font-medium font-serif italic text-amber-100/95 text-center line-clamp-2 leading-tight">
                             "{panel.quote}"
                           </p>
                         </div>
@@ -1097,7 +1098,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                       <div
                         className="absolute inset-0 rounded-2xl p-2 bg-gradient-to-b from-[#151d36] via-[#090e1f] to-[#151d36] border-2 border-amber-400/85 shadow-[0_12px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/50 flex flex-col items-center justify-center text-center"
                         style={{
-                          transform: 'rotateY(180deg)',
+                          transform: 'rotateY(180deg) translateZ(1.5px)',
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                         }}
