@@ -1,6 +1,7 @@
 import type { CardConfig, CardTemplate, CreatedCard } from '../types';
 import { TEMPLATES } from '../types';
 import { supabase, isSupabaseReady } from './supabaseClient';
+import { BACKEND_URL, getTunnelHeaders } from './apiConfig';
 
 const TOKEN_KEY = 'lovecard_session_token';
 const CARDS_CACHE_KEY = 'lovecard_cards_cache_v2';
@@ -20,7 +21,7 @@ function getCurrentUserId(): string | null {
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return getTunnelHeaders(token ? { Authorization: `Bearer ${token}` } : {});
 }
 
 // Generate unique short ID for card
@@ -90,7 +91,7 @@ export async function fetchLiveTemplateStats(): Promise<{
 
   // 2. Oracle 19c local API fallback
   try {
-    const res = await fetch('/api/templates', {
+    const res = await fetch(`${BACKEND_URL}/api/templates`, {
       headers: getAuthHeaders(),
     });
     const isJson = res.headers.get('content-type')?.includes('application/json');
@@ -151,7 +152,10 @@ export async function incrementTemplateView(templateId: string): Promise<void> {
     } catch {}
   }
   try {
-    await fetch(`/api/templates/${encodeURIComponent(templateId)}/view`, { method: 'POST' });
+    await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/view`, {
+      method: 'POST',
+      headers: getTunnelHeaders(),
+    });
   } catch {}
 }
 
@@ -165,7 +169,10 @@ export async function incrementTemplateUse(templateId: string): Promise<void> {
     } catch {}
   }
   try {
-    await fetch(`/api/templates/${encodeURIComponent(templateId)}/use`, { method: 'POST' });
+    await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/use`, {
+      method: 'POST',
+      headers: getTunnelHeaders(),
+    });
   } catch {}
 }
 
@@ -249,7 +256,7 @@ export async function toggleTemplateHeart(
 
   // 2. Oracle 19c local API fallback
   try {
-    const res = await fetch(`/api/templates/${encodeURIComponent(templateId)}/like`, {
+    const res = await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/like`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -322,7 +329,9 @@ export async function fetchCardById(id: string): Promise<CreatedCard | null> {
 
   // 2. Oracle 19c local API fallback
   try {
-    const res = await fetch(`/api/cards/${encodeURIComponent(id)}`);
+    const res = await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}`, {
+      headers: getAuthHeaders(),
+    });
     const isJson = res.headers.get('content-type')?.includes('application/json');
     if (res.ok && isJson) {
       const data = await res.json();
@@ -371,7 +380,7 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
 
   // 2. Save to Oracle 19c local API fallback
   try {
-    const res = await fetch('/api/cards', {
+    const res = await fetch(`${BACKEND_URL}/api/cards`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -408,7 +417,7 @@ export async function deleteCard(id: string): Promise<void> {
   }
 
   try {
-    await fetch(`/api/cards/${encodeURIComponent(id)}`, {
+    await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -452,7 +461,7 @@ export async function fetchUserCards(): Promise<CreatedCard[]> {
 
   // 2. Fetch from Oracle 19c local API
   try {
-    const res = await fetch('/api/users/me/cards', {
+    const res = await fetch(`${BACKEND_URL}/api/users/me/cards`, {
       headers: getAuthHeaders(),
     });
     const isJson = res.headers.get('content-type')?.includes('application/json');
@@ -482,7 +491,10 @@ export async function incrementCardViews(id: string): Promise<number> {
     } catch {}
   }
   try {
-    await fetch(`/api/cards/${encodeURIComponent(id)}/view`, { method: 'POST' });
+    await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}/view`, {
+      method: 'POST',
+      headers: getTunnelHeaders(),
+    });
   } catch {}
   return 1;
 }
@@ -498,7 +510,10 @@ export async function incrementCardHearts(id: string): Promise<number> {
     } catch {}
   }
   try {
-    await fetch(`/api/cards/${encodeURIComponent(id)}/heart`, { method: 'POST' });
+    await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}/heart`, {
+      method: 'POST',
+      headers: getTunnelHeaders(),
+    });
   } catch {}
   return 1;
 }

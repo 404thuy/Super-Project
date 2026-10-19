@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User } from '../types';
 import { supabase, isSupabaseReady } from '../utils/supabaseClient';
+import { BACKEND_URL, getTunnelHeaders } from '../utils/apiConfig';
 
 interface AuthResponse {
   success: boolean;
@@ -126,8 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+          headers: getTunnelHeaders({ Authorization: `Bearer ${token}` }),
         });
 
         const data = await safeJson(res);
@@ -260,9 +261,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getTunnelHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           username: cleanUser,
           displayName: cleanName,
@@ -392,11 +393,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
     }
 
-    // 4. Gọi API Backend (nếu chạy local hoặc có server Node)
+    // 4. Gọi API Backend Oracle (qua tunnel hoặc localhost)
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getTunnelHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           username: cleanUser,
           password,
