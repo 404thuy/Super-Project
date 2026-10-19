@@ -59,6 +59,9 @@ export interface CardConfig {
   crystalBaseSubtitle?: string;
   // Cinema Filmstrip Customizations
   cinemaCaptions?: string[];
+  // Polaroid Customizations (Tiêu đề viết tay & Lời nhắn mặt sau cho từng ảnh)
+  polaroidCaptions?: string[];
+  polaroidNotes?: string[];
 }
 
 export interface CreatedCard {

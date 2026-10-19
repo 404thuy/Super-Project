@@ -180,15 +180,15 @@ export function getTemplatePhotoConfig(effectType: string): TemplatePhotoConfig 
 
     case 'POLAROID_SWIPE':
       return {
-        maxPhotos: 4,
-        title: '4 Trang Ảnh Kỷ Niệm Polaroid Vuốt Lật',
-        desc: 'Mỗi ảnh tương ứng 1 trang lật album theo thứ tự hành trình kỷ niệm ngọt ngào',
+        maxPhotos: 12,
+        title: 'Xấp Ảnh Kỷ Niệm Polaroid Xếp Chồng',
+        desc: 'Tùy chỉnh tiêu đề viết tay mặt trước & lời nhắn bưu thiếp mặt sau cho từng ảnh',
         icon: '📸',
-        badge: 'Album 4 Trang Vuốt',
+        badge: 'Xấp Polaroid Xếp Chồng',
         themeGradient: 'from-amber-50/80 via-rose-50/40 to-amber-100/50',
-        themeBorder: 'border-amber-200/90',
+        themeBorder: 'border-amber-300/90',
         themeText: 'text-amber-900',
-        themeBadgeBg: 'bg-amber-100/80 text-amber-900 border-amber-300',
+        themeBadgeBg: 'bg-amber-100/90 text-amber-900 border-amber-300',
         slots: [
           { title: 'Trang 01 • Khoảnh Khắc Ban Đầu', desc: 'Ảnh mở đầu album — phút giây đầu gặp gỡ', icon: '✨' },
           { title: 'Trang 02 • Kỷ Niệm Tỏa Nắng', desc: 'Ảnh rạng rỡ, nụ cười thắp sáng không gian', icon: '☀️' },
@@ -562,8 +562,9 @@ export default function Studio() {
 
     soundFx.playPinClick();
     const isCinema = template.effectType === 'CINEMA_FILM';
+    const isPolaroid = template.effectType === 'POLAROID_SWIPE';
     const photoConfig = getTemplatePhotoConfig(template.effectType);
-    const maxPhotos = isCinema ? 20 : photoConfig.maxPhotos;
+    const maxPhotos = isCinema ? 20 : isPolaroid ? 16 : photoConfig.maxPhotos;
     const fileList = Array.from(files).slice(0, maxPhotos);
 
     try {
@@ -576,7 +577,7 @@ export default function Studio() {
         soundFx.playHeartPop();
         setConfig((prev) => {
           const current = [...(prev.images || [])];
-          if (isCinema) {
+          if (isCinema || isPolaroid) {
             validBase64.forEach((b64, idx) => {
               if (idx < current.length) {
                 current[idx] = b64;
@@ -642,7 +643,7 @@ export default function Studio() {
             current.push('');
           }
           current[slotIndex] = base64;
-          if (template.effectType === 'CINEMA_FILM') {
+          if (template.effectType === 'CINEMA_FILM' || template.effectType === 'POLAROID_SWIPE') {
             return { ...prev, images: current };
           }
           return { ...prev, images: current.slice(0, photoConfig.maxPhotos) };
@@ -783,6 +784,125 @@ export default function Studio() {
       return { ...prev, cinemaCaptions: newCaptions };
     });
     setWishAppliedNotice('Đã tự động gợi ý kịch bản điện ảnh sâu lắng cho các phân cảnh!');
+    setTimeout(() => setWishAppliedNotice(null), 3000);
+  };
+
+  // Polaroid Handlers (Tùy chỉnh tiêu đề viết tay, lời nhắn bưu thiếp mặt sau & thêm/xóa ảnh)
+  const handlePolaroidCaptionChange = (slotIndex: number, caption: string) => {
+    setConfig((prev) => {
+      const defaultCaptions = [
+        'Ánh mắt đầu tiên...',
+        'Nắng ấm bên đời',
+        'Bầu trời dịu êm',
+        'Gửi trọn yêu thương ❤️',
+      ];
+      const captions = [...(prev.polaroidCaptions || defaultCaptions)];
+      while (captions.length <= slotIndex) {
+        captions.push(`Khoảnh khắc ${captions.length + 1}`);
+      }
+      captions[slotIndex] = caption;
+      return { ...prev, polaroidCaptions: captions };
+    });
+  };
+
+  const handlePolaroidNoteChange = (slotIndex: number, note: string) => {
+    setConfig((prev) => {
+      const defaultNotes = [
+        'Bức ảnh này lưu giữ khoảnh khắc nụ cười trong trẻo nhất của em. Mong em luôn giữ mãi nét tươi vui ấy!',
+        'Có những ngày mệt mỏi ngoài kia, chỉ cần nhìn thấy em là mọi lo toan dường như tan biến hết.',
+        'Cảm ơn em vì đã đến và vẽ thêm muôn ngàn sắc màu rực rỡ vào bức tranh cuộc đời anh.',
+        'Gửi người phụ nữ tuyệt vời nhất của anh: Hãy luôn hạnh phúc, bình yên và tỏa sáng rực rỡ mỗi ngày nhé!',
+      ];
+      const notes = [...(prev.polaroidNotes || defaultNotes)];
+      while (notes.length <= slotIndex) {
+        notes.push(`Gửi gắm kỷ niệm ngọt ngào tại bức ảnh thứ ${notes.length + 1}.`);
+      }
+      notes[slotIndex] = note;
+      return { ...prev, polaroidNotes: notes };
+    });
+  };
+
+  const handleAddPolaroidCard = () => {
+    soundFx.playPinClick();
+    setConfig((prev) => {
+      const defaultCaptions = [
+        'Ánh mắt đầu tiên...',
+        'Nắng ấm bên đời',
+        'Bầu trời dịu êm',
+        'Gửi trọn yêu thương ❤️',
+      ];
+      const defaultNotes = [
+        'Bức ảnh này lưu giữ khoảnh khắc nụ cười trong trẻo nhất của em.',
+        'Có những ngày mệt mỏi ngoài kia, chỉ cần nhìn thấy em là mọi lo toan dường như tan biến hết.',
+        'Cảm ơn em vì đã đến và vẽ thêm muôn ngàn sắc màu rực rỡ vào bức tranh cuộc đời anh.',
+        'Gửi người phụ nữ tuyệt vời nhất của anh: Hãy luôn hạnh phúc, bình yên nhé!',
+      ];
+      const currentImages = [...(prev.images || [])];
+      const currentCaptions = [...(prev.polaroidCaptions || defaultCaptions)];
+      const currentNotes = [...(prev.polaroidNotes || defaultNotes)];
+      const nextNum = Math.max(currentImages.length, currentCaptions.length, currentNotes.length) + 1;
+
+      currentImages.push('');
+      currentCaptions.push(`Kỷ niệm ngọt ngào ${nextNum}`);
+      currentNotes.push(`Tâm sự nhỏ gửi riêng em ở trang kỷ niệm thứ ${nextNum} 💌`);
+
+      return {
+        ...prev,
+        images: currentImages,
+        polaroidCaptions: currentCaptions,
+        polaroidNotes: currentNotes,
+      };
+    });
+  };
+
+  const handleRemovePolaroidCard = (slotIndex: number) => {
+    soundFx.playPinClick();
+    setConfig((prev) => {
+      const currentImages = [...(prev.images || [])];
+      const currentCaptions = [...(prev.polaroidCaptions || [])];
+      const currentNotes = [...(prev.polaroidNotes || [])];
+
+      return {
+        ...prev,
+        images: currentImages.filter((_, i) => i !== slotIndex),
+        polaroidCaptions: currentCaptions.filter((_, i) => i !== slotIndex),
+        polaroidNotes: currentNotes.filter((_, i) => i !== slotIndex),
+      };
+    });
+  };
+
+  const handleAutoFillPolaroidIdeas = () => {
+    soundFx.playSuccessChime();
+    const sweetTitles = [
+      'Ánh mắt đầu tiên...',
+      'Nắng ấm bên đời ✨',
+      'Bầu trời dịu êm 🌸',
+      'Nụ cười tỏa nắng ☀️',
+      'Khoảnh khắc an yên ☕',
+      'Đóa hoa kiều diễm 🌹',
+      'Hạnh phúc giản đơn 💫',
+      'Gửi trọn yêu thương ❤️',
+    ];
+    const sweetNotes = [
+      'Bức ảnh này lưu giữ khoảnh khắc nụ cười trong trẻo nhất của em. Mong em luôn giữ mãi nét tươi vui ấy! 💌',
+      'Có những ngày mệt mỏi ngoài kia, chỉ cần nhìn thấy em là mọi lo toan dường như tan biến hết.',
+      'Cảm ơn em vì đã đến và vẽ thêm muôn ngàn sắc màu rực rỡ vào bức tranh cuộc đời anh.',
+      'Dù ngoài kia có bao biến chuyển, em vẫn luôn là đóa hoa kiều diễm và ngọt ngào nhất.',
+      'Mỗi tách trà, mỗi bước chân cùng em đều là những ký ức anh muốn nâng niu mãi mãi.',
+      'Chúc em ngày 20/10 ngập tràn niềm vui, nhận được thật nhiều hoa và yêu thương trọn vẹn!',
+      'Cảm ơn vì đã luôn là ánh sáng ấm áp sưởi ấm những ngày đông giá lạnh.',
+      'Gửi người phụ nữ tuyệt vời nhất: Hãy luôn tỏa sáng và hạnh phúc trọn vẹn mỗi ngày nhé! 🌹',
+    ];
+
+    setConfig((prev) => {
+      const count = Math.max(prev.images?.length || 0, prev.polaroidCaptions?.length || 0, 4);
+      return {
+        ...prev,
+        polaroidCaptions: Array.from({ length: count }).map((_, i) => sweetTitles[i % sweetTitles.length]),
+        polaroidNotes: Array.from({ length: count }).map((_, i) => sweetNotes[i % sweetNotes.length]),
+      };
+    });
+    setWishAppliedNotice('Đã gợi ý tiêu đề viết tay & lời nhắn bưu thiếp cho toàn bộ xấp ảnh!');
     setTimeout(() => setWishAppliedNotice(null), 3000);
   };
 
@@ -1057,6 +1177,7 @@ export default function Studio() {
               const photoConfig = getTemplatePhotoConfig(template.effectType);
               const isCrystal = template.effectType === 'CRYSTAL_CAROUSEL';
               const isCinema = template.effectType === 'CINEMA_FILM';
+              const isPolaroid = template.effectType === 'POLAROID_SWIPE';
 
               const defaultCinemaCaptions = [
                 'Phân cảnh 1: Ngày định mệnh ta gặp nhau giữa thế gian muôn màu.',
@@ -1065,11 +1186,39 @@ export default function Studio() {
                 'Phân cảnh 4: Chúc bạn ngày 20/10 ngập tràn hạnh phúc và rạng rỡ! 🎬',
               ];
 
+              const defaultPolaroidCaptions = [
+                'Ánh mắt đầu tiên...',
+                'Nắng ấm bên đời',
+                'Bầu trời dịu êm',
+                'Gửi trọn yêu thương ❤️',
+              ];
+
+              const defaultPolaroidNotes = [
+                'Bức ảnh này lưu giữ khoảnh khắc nụ cười trong trẻo nhất của em. Mong em luôn giữ mãi nét tươi vui ấy!',
+                'Có những ngày mệt mỏi ngoài kia, chỉ cần nhìn thấy em là mọi lo toan dường như tan biến hết.',
+                'Cảm ơn em vì đã đến và vẽ thêm muôn ngàn sắc màu rực rỡ vào bức tranh cuộc đời anh.',
+                'Gửi người phụ nữ tuyệt vời nhất của anh: Hãy luôn hạnh phúc, bình yên và tỏa sáng rực rỡ mỗi ngày nhé!',
+              ];
+
               const currentCinemaCount = isCinema
                 ? Math.max(config.images?.length || 0, config.cinemaCaptions?.length || 0, 4)
                 : photoConfig.maxPhotos;
 
-              const maxPhotos = isCinema ? currentCinemaCount : photoConfig.maxPhotos;
+              const currentPolaroidCount = isPolaroid
+                ? Math.max(
+                    config.images?.length || 0,
+                    config.polaroidCaptions?.length || 0,
+                    config.polaroidNotes?.length || 0,
+                    4
+                  )
+                : photoConfig.maxPhotos;
+
+              const maxPhotos = isCinema
+                ? currentCinemaCount
+                : isPolaroid
+                ? currentPolaroidCount
+                : photoConfig.maxPhotos;
+
               const uploadedCount = (config.images || []).filter(Boolean).length;
 
               const activeSlots = isCinema
@@ -1077,6 +1226,12 @@ export default function Studio() {
                     title: `Phân Cảnh ${i + 1}`,
                     desc: `Thước phim thứ ${i + 1} của cuộn phim điện ảnh`,
                     icon: i % 4 === 0 ? '🎬' : i % 4 === 1 ? '✨' : i % 4 === 2 ? '🎞️' : '🌹',
+                  }))
+                : isPolaroid
+                ? Array.from({ length: currentPolaroidCount }).map((_, i) => ({
+                    title: `Thẻ Polaroid ${i + 1}`,
+                    desc: `Trang ảnh thứ ${i + 1} trong xấp ảnh xếp chồng`,
+                    icon: i % 4 === 0 ? '✨' : i % 4 === 1 ? '☀️' : i % 4 === 2 ? '💫' : '💌',
                   }))
                 : photoConfig.slots;
 
@@ -1093,11 +1248,15 @@ export default function Studio() {
                       </p>
                     </div>
                     <span className={`text-[11px] font-bold ${photoConfig.themeBadgeBg} px-2.5 py-0.5 rounded-full border shrink-0 shadow-2xs`}>
-                      {isCinema ? `${currentCinemaCount} cảnh (${uploadedCount} đã tải)` : `${uploadedCount}/${maxPhotos} ảnh`}
+                      {isCinema
+                        ? `${currentCinemaCount} cảnh (${uploadedCount} đã tải)`
+                        : isPolaroid
+                        ? `${currentPolaroidCount} ảnh (${uploadedCount} đã tải)`
+                        : `${uploadedCount}/${maxPhotos} ảnh`}
                     </span>
                   </div>
 
-                  {/* Quick actions: Auto fill quotes (if Crystal) / Cinema scene controls & Batch upload */}
+                  {/* Quick actions: Auto fill quotes / Polaroid & Cinema controls & Batch upload */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {isCrystal && (
                       <button
@@ -1132,13 +1291,35 @@ export default function Studio() {
                       </button>
                     )}
 
+                    {isPolaroid && (
+                      <button
+                        type="button"
+                        onClick={handleAddPolaroidCard}
+                        className="py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Thêm ảnh Polaroid</span>
+                      </button>
+                    )}
+
+                    {isPolaroid && (
+                      <button
+                        type="button"
+                        onClick={handleAutoFillPolaroidIdeas}
+                        className="py-1.5 px-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-300 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                        <span>🎲 Gợi ý lời chúc & tiêu đề</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-rose-300" />
-                      <span>{isCinema ? 'Tải nhanh nhiều ảnh' : `Tải nhanh ${maxPhotos} ảnh cùng lúc`}</span>
+                      <span>{isCinema || isPolaroid ? 'Tải nhanh nhiều ảnh' : `Tải nhanh ${maxPhotos} ảnh cùng lúc`}</span>
                     </button>
                     <input
                       ref={fileInputRef}
@@ -1151,7 +1332,7 @@ export default function Studio() {
                   </div>
 
                   {/* Individual Template-Specific Photo Slots */}
-                  <div className={`grid grid-cols-1 ${maxPhotos >= 3 ? 'sm:grid-cols-2' : ''} gap-2.5 max-h-[460px] overflow-y-auto pr-1`}>
+                  <div className={`grid grid-cols-1 ${maxPhotos >= 3 ? 'sm:grid-cols-2' : ''} gap-2.5 max-h-[500px] overflow-y-auto pr-1`}>
                     {activeSlots.map((slotInfo, idx) => {
                       const img = config.images?.[idx];
                       const isVinylCenter = template.effectType === 'VINYL_PLAYER' && idx === 0;
@@ -1166,6 +1347,12 @@ export default function Studio() {
                       const quote = isCrystal ? (config.crystalQuotes?.[idx] ?? defaultQuotes[idx]) : null;
                       const cinemaCaption = isCinema
                         ? (config.cinemaCaptions?.[idx] ?? defaultCinemaCaptions[idx % defaultCinemaCaptions.length])
+                        : null;
+                      const polaroidCaption = isPolaroid
+                        ? (config.polaroidCaptions?.[idx] ?? defaultPolaroidCaptions[idx % defaultPolaroidCaptions.length])
+                        : null;
+                      const polaroidNote = isPolaroid
+                        ? (config.polaroidNotes?.[idx] ?? defaultPolaroidNotes[idx % defaultPolaroidNotes.length])
                         : null;
 
                       return (
@@ -1235,6 +1422,16 @@ export default function Studio() {
                                       Xóa cảnh
                                     </button>
                                   )}
+                                  {isPolaroid && currentPolaroidCount > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemovePolaroidCard(idx)}
+                                      className="text-[10px] text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-1.5 py-0.5 rounded cursor-pointer transition-colors font-medium"
+                                      title="Xóa ảnh này khỏi xấp Polaroid"
+                                    >
+                                      Xóa thẻ
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                               <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5">
@@ -1277,6 +1474,45 @@ export default function Studio() {
                               />
                             </div>
                           )}
+
+                          {/* Editable Handwritten Title & Back Note (if Polaroid Swipe) */}
+                          {isPolaroid && (
+                            <div className="space-y-2 pt-2 border-t border-amber-200/70">
+                              <div>
+                                <div className="flex items-center justify-between text-[10px] text-amber-950 font-bold mb-0.5">
+                                  <span className="flex items-center gap-1">
+                                    <span>✍️</span>
+                                    <span>Tiêu đề viết tay mặt trước:</span>
+                                  </span>
+                                  <span className="text-[9px] text-amber-700 italic">Chữ viết tay bay bổng</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={polaroidCaption ?? ''}
+                                  onChange={(e) => handlePolaroidCaptionChange(idx, e.target.value)}
+                                  placeholder="Nhập tiêu đề viết tay..."
+                                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300/80 text-[11px] font-bold text-stone-800 focus:outline-none focus:border-amber-500 bg-amber-50/50"
+                                />
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between text-[10px] text-amber-950 font-bold mb-0.5">
+                                  <span className="flex items-center gap-1">
+                                    <span>💌</span>
+                                    <span>Lời nhắn bưu thiếp mặt sau:</span>
+                                  </span>
+                                  <span className="text-[9px] text-rose-700 italic">Hiện khi lật mặt sau</span>
+                                </div>
+                                <textarea
+                                  rows={2}
+                                  value={polaroidNote ?? ''}
+                                  onChange={(e) => handlePolaroidNoteChange(idx, e.target.value)}
+                                  placeholder="Nhập tâm sự gửi riêng ở mặt sau thẻ..."
+                                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300/80 text-[11px] focus:outline-none focus:border-amber-500 bg-amber-50/40 text-stone-700 resize-none leading-relaxed"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1291,6 +1527,18 @@ export default function Studio() {
                     >
                       <Plus className="w-4 h-4 text-amber-700" />
                       <span>+ Thêm Phân Cảnh Mới (Hiện có {currentCinemaCount} cảnh)</span>
+                    </button>
+                  )}
+
+                  {/* Add polaroid bottom button */}
+                  {isPolaroid && (
+                    <button
+                      type="button"
+                      onClick={handleAddPolaroidCard}
+                      className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-amber-400/80 hover:border-amber-500 bg-amber-50/70 hover:bg-amber-100/80 text-amber-950 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                    >
+                      <Plus className="w-4 h-4 text-amber-700" />
+                      <span>+ Thêm Tấm Ảnh Polaroid Mới (Hiện có {currentPolaroidCount} ảnh trong xấp)</span>
                     </button>
                   )}
 
