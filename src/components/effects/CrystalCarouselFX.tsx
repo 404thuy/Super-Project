@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import { Sparkles, ChevronLeft, ChevronRight, Play, Pause, RotateCw, Maximize2, X, Eye } from 'lucide-react';
 import type { CardConfig } from '../../types';
@@ -17,7 +17,7 @@ const THEMES = {
     glowColor: 'rgba(6, 182, 212, 0.45)',
     glowHex: '#06B6D4',
     accentColor: '#38BDF8',
-    domeBg: 'from-cyan-400/15 via-sky-500/10 to-transparent',
+    domeBg: 'from-cyan-400/20 via-sky-500/10 to-transparent',
     ambientBg: 'from-slate-950 via-cyan-950/70 to-slate-950',
     cardBorder: 'border-cyan-400/80',
     cardGlow: 'shadow-[0_0_30px_rgba(6,182,212,0.4)]',
@@ -32,7 +32,7 @@ const THEMES = {
     glowColor: 'rgba(168, 85, 247, 0.45)',
     glowHex: '#A855F7',
     accentColor: '#C084FC',
-    domeBg: 'from-purple-400/15 via-fuchsia-500/10 to-transparent',
+    domeBg: 'from-purple-400/20 via-fuchsia-500/10 to-transparent',
     ambientBg: 'from-slate-950 via-purple-950/70 to-slate-950',
     cardBorder: 'border-purple-400/80',
     cardGlow: 'shadow-[0_0_30px_rgba(168,85,247,0.4)]',
@@ -47,7 +47,7 @@ const THEMES = {
     glowColor: 'rgba(244, 63, 94, 0.45)',
     glowHex: '#F43F5E',
     accentColor: '#FB7185',
-    domeBg: 'from-rose-400/15 via-pink-500/10 to-transparent',
+    domeBg: 'from-rose-400/20 via-pink-500/10 to-transparent',
     ambientBg: 'from-slate-950 via-rose-950/70 to-slate-950',
     cardBorder: 'border-rose-400/80',
     cardGlow: 'shadow-[0_0_30px_rgba(244,63,94,0.4)]',
@@ -62,7 +62,7 @@ const THEMES = {
     glowColor: 'rgba(234, 179, 8, 0.45)',
     glowHex: '#EAB308',
     accentColor: '#FBBF24',
-    domeBg: 'from-amber-400/15 via-yellow-500/10 to-transparent',
+    domeBg: 'from-amber-400/20 via-yellow-500/10 to-transparent',
     ambientBg: 'from-stone-950 via-amber-950/70 to-stone-950',
     cardBorder: 'border-amber-400/80',
     cardGlow: 'shadow-[0_0_30px_rgba(234,179,8,0.4)]',
@@ -77,7 +77,7 @@ const THEMES = {
     glowColor: 'rgba(99, 102, 241, 0.45)',
     glowHex: '#6366F1',
     accentColor: '#818CF8',
-    domeBg: 'from-indigo-400/15 via-blue-500/10 to-transparent',
+    domeBg: 'from-indigo-400/20 via-blue-500/10 to-transparent',
     ambientBg: 'from-black via-indigo-950/70 to-slate-950',
     cardBorder: 'border-indigo-400/80',
     cardGlow: 'shadow-[0_0_30px_rgba(99,102,241,0.4)]',
@@ -87,6 +87,16 @@ const THEMES = {
     accentText: 'text-indigo-300',
   },
 };
+
+// 6 Default High-Resolution Romantic Crystal Memory Images (sắc nét, lãng mạn)
+const DEFAULT_MEMORY_IMAGES = [
+  'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80', // Nắm tay ngọt ngào
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80', // Hoa hồng pha lê lung linh
+  'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=600&auto=format&fit=crop&q=80', // Ánh đèn nến ấm áp
+  'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=600&auto=format&fit=crop&q=80', // Khoảnh khắc yêu thương
+  'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&auto=format&fit=crop&q=80', // Trái tim ánh sáng lấp lánh
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80', // Tinh thể pha lê lộng lẫy
+];
 
 /* ─── ORNATE BAROQUE CORNER BRACKET (HOA VĂN ĐỒNG ĐÚC GÓC BỆ) ─── */
 function BaroqueCorner({ className = '' }: { className?: string }) {
@@ -138,7 +148,7 @@ function ButterflyWindingKey({ isPlaying }: { isPlaying: boolean }) {
             }
             transition={
               isPlaying
-                ? { duration: 2.2, repeat: Infinity, ease: 'linear' }
+                ? { duration: 1.8, repeat: Infinity, ease: 'linear' }
                 : { duration: 0.35 }
             }
             className="relative z-10 flex items-center justify-center cursor-pointer drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]"
@@ -219,14 +229,14 @@ function BrassEngravedPlaque({
 
           {/* Engraved Typography */}
           <div className="text-center sm:text-left px-2">
-            <p className="text-[10px] sm:text-[11px] font-black font-serif text-amber-950 tracking-wider uppercase drop-shadow-[0_1px_0_rgba(255,255,255,0.85)] truncate">
+            <p className="text-[10.5px] sm:text-[11.5px] font-black font-serif text-amber-950 tracking-wider uppercase drop-shadow-[0_1px_0_rgba(255,255,255,0.85)] truncate">
               {title}
             </p>
             <div className="flex items-center gap-1 my-0.5 justify-center sm:justify-start">
-              <span className="text-[7px] text-amber-900/60 font-serif">❦</span>
+              <span className="text-[7.5px] text-amber-900/70 font-serif">❦</span>
               <div className="h-[0.8px] flex-1 max-w-[65px] bg-gradient-to-r from-amber-800/40 to-transparent" />
             </div>
-            <p className="text-[9px] sm:text-[10px] font-bold text-amber-900 font-serif italic truncate drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
+            <p className="text-[9.5px] sm:text-[10.5px] font-bold text-amber-900 font-serif italic truncate drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]">
               {subtitle}
             </p>
           </div>
@@ -282,20 +292,21 @@ function CrystalDomeFinial() {
   );
 }
 
-/* ─── HIGH-END SCULPTED CRYSTAL ROSE (ĐÓA HỒNG PHA LÊ SWAROVSKI) ─── */
-function SculptedCrystalRose() {
+/* ─── HIGH-END SCULPTED CRYSTAL ROSE (ĐÓA HỒNG PHA LÊ SWAROVSKI ĐA DIỆN 3D) ─── */
+function SculptedCrystalRose({ isFocus = false }: { isFocus?: boolean }) {
   return (
-    <div className="relative flex flex-col items-center">
+    <div className={`relative flex flex-col items-center transition-transform duration-700 ${isFocus ? 'scale-125 -translate-y-2' : ''}`}>
       {/* Radiant Petal Core Glow */}
-      <div className="absolute top-2 w-20 h-20 rounded-full bg-rose-500/40 blur-2xl pointer-events-none animate-pulse" />
+      <div className={`absolute top-2 w-28 h-28 rounded-full bg-rose-500/50 blur-2xl pointer-events-none transition-all duration-700 ${isFocus ? 'scale-150 opacity-90' : 'animate-pulse'}`} />
 
+      {/* Sparkling Crystal Facets SVG */}
       <svg
-        width="95"
-        height="125"
+        width="110"
+        height="140"
         viewBox="0 0 100 135"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="relative z-10 drop-shadow-[0_0_18px_rgba(244,63,94,0.8)] filter"
+        className="relative z-10 drop-shadow-[0_0_24px_rgba(244,63,94,0.95)] filter"
       >
         <defs>
           <radialGradient id="crGlow" cx="50%" cy="35%" r="50%">
@@ -332,56 +343,56 @@ function SculptedCrystalRose() {
         </defs>
 
         {/* Stem with faceted crystal cuts */}
-        <path d="M50 56 Q49 82 50 114" stroke="url(#crStem)" strokeWidth="4" strokeLinecap="round" />
-        <path d="M49 60 Q48.5 82 49 110" stroke="#ecfdf5" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        <path d="M50 56 Q49 82 50 114" stroke="url(#crStem)" strokeWidth="4.5" strokeLinecap="round" />
+        <path d="M49 60 Q48.5 82 49 110" stroke="#ecfdf5" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
 
         {/* Left Crystal Leaf */}
-        <path d="M49 76 C35 70 22 80 18 85 C27 92 41 87 49 82 Z" fill="url(#crLeafL)" stroke="#d1fae5" strokeWidth="1" />
-        <path d="M49 76 L25 85" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" opacity="0.75" />
+        <path d="M49 76 C35 70 22 80 18 85 C27 92 41 87 49 82 Z" fill="url(#crLeafL)" stroke="#d1fae5" strokeWidth="1.2" />
+        <path d="M49 76 L25 85" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
 
         {/* Right Crystal Leaf */}
-        <path d="M51 84 C65 79 78 88 82 93 C73 100 59 95 51 90 Z" fill="url(#crLeafL)" stroke="#d1fae5" strokeWidth="1" />
-        <path d="M51 84 L75 93" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" opacity="0.75" />
+        <path d="M51 84 C65 79 78 88 82 93 C73 100 59 95 51 90 Z" fill="url(#crLeafL)" stroke="#d1fae5" strokeWidth="1.2" />
+        <path d="M51 84 L75 93" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
 
         {/* Outer Rose Petals (Geometric Crystal Facets) */}
         <path
           d="M26 36 C22 49 34 63 50 65 C66 63 78 49 74 36 C69 25 58 30 50 33 C42 30 31 25 26 36 Z"
           fill="url(#crGlow)"
           stroke="#ffe4e6"
-          strokeWidth="1.2"
+          strokeWidth="1.5"
         />
 
         {/* Left Outer Facet */}
-        <path d="M28 35 C33 46 41 57 50 60 C43 51 36 43 28 35 Z" fill="url(#crFacetL)" stroke="#fff1f2" strokeWidth="0.8" />
+        <path d="M28 35 C33 46 41 57 50 60 C43 51 36 43 28 35 Z" fill="url(#crFacetL)" stroke="#fff1f2" strokeWidth="1" />
 
         {/* Right Outer Facet */}
-        <path d="M72 35 C67 46 59 57 50 60 C57 51 64 43 72 35 Z" fill="url(#crFacetR)" stroke="#fff1f2" strokeWidth="0.8" />
+        <path d="M72 35 C67 46 59 57 50 60 C57 51 64 43 72 35 Z" fill="url(#crFacetR)" stroke="#fff1f2" strokeWidth="1" />
 
         {/* Center Petal Whirl */}
-        <path d="M38 27 C38 16 62 16 62 27 C62 38 38 38 38 27 Z" fill="#ffe4e6" stroke="#f43f5e" strokeWidth="0.8" />
+        <path d="M38 27 C38 16 62 16 62 27 C62 38 38 38 38 27 Z" fill="#ffe4e6" stroke="#f43f5e" strokeWidth="1" />
         <path d="M42 25 C42 18 58 18 58 25 C58 32 42 32 42 25 Z" fill="#e11d48" />
         <path d="M46 23 C46 19 54 19 54 23 C54 27 46 27 46 23 Z" fill="#fff1f2" />
 
         {/* Diamond Glint Sparkles */}
-        <polygon points="50,15 52,19 56,20 52,21 50,25 48,21 44,20 48,19" fill="#ffffff" opacity="0.9" />
-        <polygon points="32,44 33,47 36,47 33,48 32,51 31,48 28,47 31,47" fill="#ffffff" opacity="0.8" />
-        <polygon points="68,42 69,45 72,45 69,46 68,49 67,46 64,45 67,45" fill="#ffffff" opacity="0.8" />
+        <polygon points="50,15 52,19 56,20 52,21 50,25 48,21 44,20 48,19" fill="#ffffff" opacity="0.95" />
+        <polygon points="32,44 33,47 36,47 33,48 32,51 31,48 28,47 31,47" fill="#ffffff" opacity="0.9" />
+        <polygon points="68,42 69,45 72,45 69,46 68,49 67,46 64,45 67,45" fill="#ffffff" opacity="0.9" />
 
         {/* Sculpted Golden Pedestal Base */}
-        <ellipse cx="50" cy="116" rx="28" ry="6" fill="url(#crPedestal)" stroke="#fef08a" strokeWidth="1" />
-        <ellipse cx="50" cy="122" rx="36" ry="8" fill="url(#crPedestal)" stroke="#fef08a" strokeWidth="1.2" />
-        <ellipse cx="50" cy="125" rx="42" ry="9" fill="#2e1003" stroke="#ca8a04" strokeWidth="0.8" opacity="0.5" />
+        <ellipse cx="50" cy="116" rx="28" ry="6" fill="url(#crPedestal)" stroke="#fef08a" strokeWidth="1.2" />
+        <ellipse cx="50" cy="122" rx="36" ry="8" fill="url(#crPedestal)" stroke="#fef08a" strokeWidth="1.4" />
+        <ellipse cx="50" cy="125" rx="42" ry="9" fill="#2e1003" stroke="#ca8a04" strokeWidth="1" opacity="0.6" />
       </svg>
     </div>
   );
 }
 
 /* ─── SCULPTED TWIN SWANS (ĐÔI THIÊN NGA PHA LÊ) ─── */
-function SculptedTwinSwans() {
+function SculptedTwinSwans({ isFocus = false }: { isFocus?: boolean }) {
   return (
-    <div className="relative flex flex-col items-center">
-      <div className="absolute top-4 w-24 h-24 rounded-full bg-cyan-400/30 blur-2xl pointer-events-none animate-pulse" />
-      <svg width="105" height="105" viewBox="0 0 120 120" fill="none" className="relative z-10 filter drop-shadow-[0_0_15px_rgba(56,189,248,0.8)]">
+    <div className={`relative flex flex-col items-center transition-transform duration-700 ${isFocus ? 'scale-125 -translate-y-2' : ''}`}>
+      <div className={`absolute top-4 w-28 h-28 rounded-full bg-cyan-400/40 blur-2xl pointer-events-none transition-all duration-700 ${isFocus ? 'scale-150 opacity-90' : 'animate-pulse'}`} />
+      <svg width="115" height="115" viewBox="0 0 120 120" fill="none" className="relative z-10 filter drop-shadow-[0_0_20px_rgba(56,189,248,0.9)]">
         <defs>
           <linearGradient id="swanGrad" x1="0" y1="20" x2="60" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#ffffff" />
@@ -389,23 +400,23 @@ function SculptedTwinSwans() {
             <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
         </defs>
-        <path d="M54 45 C48 30 34 26 26 36 C20 44 26 56 34 68 C42 80 52 86 54 88 C48 86 36 82 28 78 C20 74 16 66 18 56 C20 42 34 32 46 38 Z" fill="url(#swanGrad)" stroke="#e0f2fe" strokeWidth="1.2" />
-        <path d="M66 45 C72 30 86 26 94 36 C100 44 94 56 86 68 C78 80 68 86 66 88 C72 86 84 82 92 78 C100 74 104 66 102 56 C100 42 86 32 74 38 Z" fill="url(#swanGrad)" stroke="#e0f2fe" strokeWidth="1.2" />
+        <path d="M54 45 C48 30 34 26 26 36 C20 44 26 56 34 68 C42 80 52 86 54 88 C48 86 36 82 28 78 C20 74 16 66 18 56 C20 42 34 32 46 38 Z" fill="url(#swanGrad)" stroke="#e0f2fe" strokeWidth="1.4" />
+        <path d="M66 45 C72 30 86 26 94 36 C100 44 94 56 86 68 C78 80 68 86 66 88 C72 86 84 82 92 78 C100 74 104 66 102 56 C100 42 86 32 74 38 Z" fill="url(#swanGrad)" stroke="#e0f2fe" strokeWidth="1.4" />
         <path d="M54 44 L60 48 L56 50 Z" fill="#f97316" />
         <path d="M66 44 L60 48 L64 50 Z" fill="#f97316" />
-        <ellipse cx="60" cy="94" rx="45" ry="10" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.7" />
-        <ellipse cx="60" cy="98" rx="35" ry="7" fill="#0284c7" fillOpacity="0.2" stroke="#bae6fd" strokeWidth="0.8" />
+        <ellipse cx="60" cy="94" rx="45" ry="10" stroke="#38bdf8" strokeWidth="1.8" strokeDasharray="4 3" opacity="0.8" />
+        <ellipse cx="60" cy="98" rx="35" ry="7" fill="#0284c7" fillOpacity="0.25" stroke="#bae6fd" strokeWidth="1" />
       </svg>
     </div>
   );
 }
 
 /* ─── SCULPTED DIAMOND HEART (TRÁI TIM KIM CƯƠNG) ─── */
-function SculptedDiamondHeart() {
+function SculptedDiamondHeart({ isFocus = false }: { isFocus?: boolean }) {
   return (
-    <div className="relative flex flex-col items-center">
-      <div className="absolute top-2 w-24 h-24 rounded-full bg-pink-500/40 blur-2xl pointer-events-none animate-pulse" />
-      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" className="relative z-10 filter drop-shadow-[0_0_20px_rgba(244,114,182,0.9)]">
+    <div className={`relative flex flex-col items-center transition-transform duration-700 ${isFocus ? 'scale-125 -translate-y-2' : ''}`}>
+      <div className={`absolute top-2 w-28 h-28 rounded-full bg-pink-500/50 blur-2xl pointer-events-none transition-all duration-700 ${isFocus ? 'scale-150 opacity-90' : 'animate-pulse'}`} />
+      <svg width="110" height="110" viewBox="0 0 100 100" fill="none" className="relative z-10 filter drop-shadow-[0_0_24px_rgba(244,114,182,0.95)]">
         <defs>
           <linearGradient id="dhGrad" x1="10" y1="15" x2="90" y2="90" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#fff1f2" />
@@ -414,11 +425,11 @@ function SculptedDiamondHeart() {
             <stop offset="100%" stopColor="#831843" />
           </linearGradient>
         </defs>
-        <path d="M50 85 L20 48 C12 36 18 20 32 18 C40 17 46 22 50 28 C54 22 60 17 68 18 C82 20 88 36 80 48 Z" fill="url(#dhGrad)" stroke="#fbcfe8" strokeWidth="1.5" />
-        <polygon points="50,28 32,18 50,42" fill="#ffffff" opacity="0.4" />
-        <polygon points="50,28 68,18 50,42" fill="#f472b6" opacity="0.5" />
-        <polygon points="50,42 20,48 50,85" fill="#be185d" opacity="0.6" />
-        <polygon points="50,42 80,48 50,85" fill="#9d174d" opacity="0.7" />
+        <path d="M50 85 L20 48 C12 36 18 20 32 18 C40 17 46 22 50 28 C54 22 60 17 68 18 C82 20 88 36 80 48 Z" fill="url(#dhGrad)" stroke="#fbcfe8" strokeWidth="1.6" />
+        <polygon points="50,28 32,18 50,42" fill="#ffffff" opacity="0.5" />
+        <polygon points="50,28 68,18 50,42" fill="#f472b6" opacity="0.6" />
+        <polygon points="50,42 20,48 50,85" fill="#be185d" opacity="0.7" />
+        <polygon points="50,42 80,48 50,85" fill="#9d174d" opacity="0.8" />
         <polygon points="32,24 34,28 38,29 34,30 32,34 30,30 26,29 30,28" fill="#ffffff" />
       </svg>
     </div>
@@ -426,17 +437,28 @@ function SculptedDiamondHeart() {
 }
 
 export default function CrystalCarouselFX({ config }: Props) {
+  // 3D Rotation Motions: angle around Y-axis & tilt around X-axis for natural desk-view perspective
   const carouselAngleMotion = useMotionValue(0);
+  const carouselTiltMotion = useMotionValue(12); // Nghiêng nhẹ 12 độ tạo chiều sâu 3D sang trọng
+
   const [isPlayingBox, setIsPlayingBox] = useState(false);
   const [isAutoSpinning, setIsAutoSpinning] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [focusCenterpiece, setFocusCenterpiece] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
 
-  // Drag interaction state
+  // Canvas ref for dynamic 60fps snow / blizzard particle physics
+  const weatherCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Drag interaction state with momentum velocity tracking
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
   const dragStartAngle = useRef(0);
+  const dragStartTilt = useRef(12);
+  const lastX = useRef(0);
+  const lastTime = useRef(0);
+  const velocityX = useRef(0);
 
   const activeThemeKey = (config.crystalTheme || 'cyan') as keyof typeof THEMES;
   const theme = THEMES[activeThemeKey] || THEMES.cyan;
@@ -459,17 +481,19 @@ export default function CrystalCarouselFX({ config }: Props) {
   // 6 Carousel Panels with front & back
   const panels = useMemo(() => {
     return Array.from({ length: 6 }).map((_, i) => {
-      const hasImage = userImages.length > 0 && userImages[i % userImages.length];
+      const hasUserImage = userImages.length > 0 && userImages[i % userImages.length];
+      const fallbackImage = DEFAULT_MEMORY_IMAGES[i % DEFAULT_MEMORY_IMAGES.length];
       return {
         id: i,
         indexStr: `0${i + 1}`,
-        image: hasImage || undefined,
+        image: hasUserImage || fallbackImage,
+        isCustom: !!hasUserImage,
         quote: customQuotes[i] || defaultQuotes[i % defaultQuotes.length],
       };
     });
   }, [userImages, customQuotes, defaultQuotes]);
 
-  // Smooth Auto-spin via Framer Motion direct GPU compositor animation (NO React re-renders!)
+  // Smooth Auto-spin via Framer Motion direct GPU compositor animation
   useEffect(() => {
     if (!isPlayingBox && !isAutoSpinning) return;
     const currentAngle = carouselAngleMotion.get();
@@ -484,21 +508,175 @@ export default function CrystalCarouselFX({ config }: Props) {
     };
   }, [isPlayingBox, isAutoSpinning, carouselAngleMotion]);
 
-  // Drag handlers
+  // Dynamic 60fps Snow / Blizzard Particle Engine on Canvas
+  useEffect(() => {
+    const canvas = weatherCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Generate 42 3D particles with depth, spin and inertia
+    const particleCount = 42;
+    const pts = Array.from({ length: particleCount }).map(() => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      z: 0.3 + Math.random() * 0.7, // depth scale
+      size: 1.5 + Math.random() * 3.5,
+      speedY: 0.6 + Math.random() * 1.4,
+      speedX: (Math.random() - 0.5) * 0.8,
+      angle: Math.random() * Math.PI * 2,
+      spinSpeed: (Math.random() - 0.5) * 0.04,
+      opacity: 0.3 + Math.random() * 0.65,
+    }));
+
+    let blizzardTime = 0;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Intensity increases dramatically when isShaking is active
+      const isBlizzard = isShaking;
+      if (isBlizzard) {
+        blizzardTime += 0.06;
+      } else {
+        blizzardTime = Math.max(0, blizzardTime - 0.03);
+      }
+
+      pts.forEach((p) => {
+        if (isBlizzard || blizzardTime > 0) {
+          // Whirlwind vortex physics around the center of the globe
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const dx = p.x - centerX;
+          const dy = p.y - centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const angle = Math.atan2(dy, dx);
+          
+          // Tangential whirlwind spin velocity + upward lift
+          const spinForce = (4.5 + p.z * 3.5) * Math.min(1, blizzardTime + 0.5);
+          p.x += -Math.sin(angle) * spinForce + (Math.random() - 0.5) * 2;
+          p.y += Math.cos(angle) * (spinForce * 0.6) - (2.5 * p.z);
+
+          // Keep inside dome bounds
+          if (dist > width * 0.48) {
+            p.x = centerX + Math.cos(angle) * (width * 0.45);
+            p.y = centerY + Math.sin(angle) * (height * 0.45);
+          }
+        } else {
+          // Gentle floating fall
+          p.y += p.speedY * p.z;
+          p.x += Math.sin(p.angle) * p.speedX;
+          p.angle += p.spinSpeed;
+
+          // Wrap around top/bottom
+          if (p.y > height - 8) {
+            p.y = 10;
+            p.x = Math.random() * width;
+          }
+          if (p.x < 5) p.x = width - 10;
+          if (p.x > width - 5) p.x = 10;
+        }
+
+        // Draw particle based on weather type
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.globalAlpha = p.opacity;
+
+        if (weatherType === 'petals') {
+          // Soft pink rose petal
+          ctx.fillStyle = '#fda4af';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, p.size * 1.4, p.size * 0.8, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (weatherType === 'hearts') {
+          // Tiny glowing pink heart
+          ctx.fillStyle = '#f472b6';
+          ctx.font = `${p.size * 2.8}px serif`;
+          ctx.fillText('♥', -p.size, p.size);
+        } else if (weatherType === 'notes') {
+          // Golden musical note
+          ctx.fillStyle = '#fef08a';
+          ctx.font = `${p.size * 2.6}px sans-serif`;
+          ctx.fillText('♪', -p.size, p.size);
+        } else if (weatherType === 'sparkles') {
+          // Golden 4-point sparkle star
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Crystal Ice Snow Flake: glowing radial white/cyan
+          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 1.5);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.5, '#e0f2fe');
+          grad.addColorStop(1, 'rgba(224, 242, 254, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      });
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animId);
+    };
+  }, [weatherType, isShaking]);
+
+  // Pointer & Drag handlers with Inertia Momentum Physics
   const handlePointerDown = (e: React.PointerEvent) => {
     isDragging.current = true;
     dragStartX.current = e.clientX;
+    dragStartY.current = e.clientY;
     dragStartAngle.current = carouselAngleMotion.get();
+    dragStartTilt.current = carouselTiltMotion.get();
+    lastX.current = e.clientX;
+    lastTime.current = performance.now();
+    velocityX.current = 0;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current) return;
     const deltaX = e.clientX - dragStartX.current;
+    const deltaY = e.clientY - dragStartY.current;
+
+    // Track velocity for inertia
+    const now = performance.now();
+    const dt = now - lastTime.current;
+    if (dt > 10) {
+      velocityX.current = (e.clientX - lastX.current) / dt;
+      lastX.current = e.clientX;
+      lastTime.current = now;
+    }
+
+    // Update 3D Angle and Tilt
     carouselAngleMotion.set(dragStartAngle.current + deltaX * 0.65);
+    const newTilt = Math.max(2, Math.min(26, dragStartTilt.current - deltaY * 0.15));
+    carouselTiltMotion.set(newTilt);
   };
 
   const handlePointerUp = () => {
+    if (!isDragging.current) return;
     isDragging.current = false;
+
+    // Apply smooth inertia fling if released while dragging fast
+    if (Math.abs(velocityX.current) > 0.25) {
+      const inertiaDelta = velocityX.current * 280;
+      animate(carouselAngleMotion, carouselAngleMotion.get() + inertiaDelta, {
+        duration: 1.1,
+        ease: [0.16, 1, 0.3, 1],
+      });
+    }
   };
 
   const handleRotateLeft = () => {
@@ -526,7 +704,7 @@ export default function CrystalCarouselFX({ config }: Props) {
       soundFx.playMusicBoxWinding();
       setTimeout(() => {
         soundFx.startBackgroundMusic(config.musicPreset || 'music-box', config.audioUrl);
-      }, 180);
+      }, 200);
       setIsPlayingBox(true);
     }
   };
@@ -535,35 +713,13 @@ export default function CrystalCarouselFX({ config }: Props) {
     soundFx.playSuccessChime();
     setIsShaking(true);
     animate(carouselAngleMotion, carouselAngleMotion.get() + 360, {
-      duration: 2.2,
+      duration: 2.4,
       ease: 'easeInOut',
     });
     setTimeout(() => {
       setIsShaking(false);
     }, 2800);
   };
-
-  // Weather particles generation (Tối ưu 14 hạt nhẹ nhàng)
-  const particles = useMemo(() => {
-    return Array.from({ length: 14 }).map((_, i) => ({
-      id: i,
-      left: `${6 + ((i * 19) % 86)}%`,
-      top: `${8 + ((i * 23) % 80)}%`,
-      size: 4 + (i % 3) * 2,
-      delay: (i % 5) * 0.4,
-      duration: 3.5 + (i % 4) * 1.2,
-      symbol:
-        weatherType === 'snow'
-          ? ['❄', '·', '⋆', '✦'][i % 4]
-          : weatherType === 'petals'
-          ? ['🌸', '🌺', '🍃', '💮'][i % 4]
-          : weatherType === 'hearts'
-          ? ['💖', '💕', '✨', '💗'][i % 4]
-          : weatherType === 'notes'
-          ? ['♪', '♫', '♬', '✨'][i % 4]
-          : ['✨', '⋆', '✦', '⭐'][i % 4],
-    }));
-  }, [weatherType]);
 
   return (
     <div
@@ -576,7 +732,7 @@ export default function CrystalCarouselFX({ config }: Props) {
 
       {/* Radial soft atmospheric glow behind the globe */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] sm:w-[500px] h-[360px] sm:h-[500px] rounded-full blur-[100px] pointer-events-none opacity-45 transition-all duration-700"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[550px] h-[380px] sm:h-[550px] rounded-full blur-[100px] pointer-events-none opacity-50 transition-all duration-700"
         style={{ background: theme.glowColor }}
       />
 
@@ -587,8 +743,8 @@ export default function CrystalCarouselFX({ config }: Props) {
         <div className="flex items-center gap-1.5 sm:gap-2 z-20">
           <button
             onClick={handleShakeGlobe}
-            className="px-2.5 sm:px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-white text-[10.5px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
-            title="Lắc quả cầu để khuấy động bão tuyết lấp lánh"
+            className="px-3 sm:px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 text-white text-[11px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer"
+            title="Lắc quả cầu để bùng nổ bão tuyết lấp lánh"
           >
             <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-spin" />
             <span>Lắc Quả Cầu</span>
@@ -596,23 +752,23 @@ export default function CrystalCarouselFX({ config }: Props) {
 
           <button
             onClick={() => setFocusCenterpiece(!focusCenterpiece)}
-            className={`px-2.5 sm:px-3 py-1 rounded-full border text-[10.5px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all ${
+            className={`px-3 sm:px-3.5 py-1.5 rounded-full border text-[11px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer ${
               focusCenterpiece
-                ? 'bg-rose-500/30 border-rose-400 text-rose-200 ring-2 ring-rose-400/30'
-                : 'bg-white/10 hover:bg-white/20 border-white/25 text-slate-200'
+                ? 'bg-rose-500/40 border-rose-400 text-rose-100 ring-2 ring-rose-400/50 shadow-[0_0_15px_rgba(244,63,94,0.5)]'
+                : 'bg-white/10 hover:bg-white/20 border-white/30 text-slate-100'
             }`}
             title="Tập trung ngắm đóa hoa pha lê trung tâm"
           >
             <Eye className="w-3.5 h-3.5 text-rose-400" />
-            <span>{focusCenterpiece ? '6 Thẻ Kỷ Niệm' : 'Ngắm Đóa Hồng'}</span>
+            <span>{focusCenterpiece ? '🌹 Đang Ngắm Hoa' : 'Ngắm Đóa Hồng'}</span>
           </button>
 
           <button
             onClick={() => setIsAutoSpinning(!isAutoSpinning)}
-            className={`px-2.5 sm:px-3 py-1 rounded-full border text-[10.5px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all ${
+            className={`px-3 sm:px-3.5 py-1.5 rounded-full border text-[11px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer ${
               isAutoSpinning
-                ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200'
-                : 'bg-white/10 hover:bg-white/20 border-white/25 text-slate-200'
+                ? 'bg-cyan-500/40 border-cyan-400 text-cyan-100 ring-1 ring-cyan-400/40'
+                : 'bg-white/10 hover:bg-white/20 border-white/30 text-slate-100'
             }`}
             title="Tự động xoay hộp nhạc 360 độ"
           >
@@ -631,124 +787,86 @@ export default function CrystalCarouselFX({ config }: Props) {
             animate={
               isShaking
                 ? {
-                    x: [-8, 8, -6, 6, -3, 3, 0],
-                    rotate: [-3, 3, -2, 2, 0],
+                    x: [-10, 10, -7, 7, -3, 3, 0],
+                    rotate: [-3.5, 3.5, -2, 2, 0],
                   }
                 : {}
             }
             transition={{ duration: 0.8 }}
-            className={`relative w-[260px] sm:w-[305px] h-[245px] sm:h-[280px] rounded-t-[130px] sm:rounded-t-[152px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2px] border-b-0 border-white/60 shadow-[0_0_50px_rgba(0,0,0,0.85),inset_0_2px_8px_rgba(255,255,255,0.7),inset_0_0_30px_rgba(255,255,255,0.18),0_0_45px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-1.5 sm:p-2`}
+            className={`relative w-[285px] sm:w-[335px] h-[270px] sm:h-[310px] rounded-t-[142px] sm:rounded-t-[168px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2px] border-b-0 border-white/60 shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_2px_10px_rgba(255,255,255,0.7),inset_0_0_35px_rgba(255,255,255,0.2),0_0_50px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-2 sm:p-2.5`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
           >
+            {/* Dynamic 60fps Particle Canvas (Tuyết rơi / bão tuyết) */}
+            <canvas
+              ref={weatherCanvasRef}
+              width={340}
+              height={320}
+              className="absolute inset-0 w-full h-full pointer-events-none z-20"
+            />
+
             {/* Inner Glass Refractive Rim (Tạo độ dày thật 4mm cho kính) */}
-            <div className="absolute inset-1 rounded-t-[125px] sm:rounded-t-[146px] border border-white/25 pointer-events-none" />
+            <div className="absolute inset-1 rounded-t-[138px] sm:rounded-t-[164px] border border-white/30 pointer-events-none" />
 
             {/* Primary Curved Specular Glass Reflection (Khúc xạ ánh sáng mặt kính cong 3D) */}
-            <div className="absolute top-2 left-3.5 w-10 sm:w-11 h-44 sm:h-52 rounded-[100%] bg-gradient-to-b from-white/60 via-white/20 to-transparent blur-[2px] -rotate-[15deg] pointer-events-none" />
+            <div className="absolute top-2 left-4 w-12 sm:w-14 h-48 sm:h-56 rounded-[100%] bg-gradient-to-b from-white/65 via-white/25 to-transparent blur-[2px] -rotate-[16deg] pointer-events-none z-30" />
             
             {/* Specular Glint Highlight on glass shoulder */}
-            <div className="absolute top-8 left-10 w-3 h-3 rounded-full bg-white/95 blur-[0.5px] pointer-events-none shadow-[0_0_12px_rgba(255,255,255,0.95)]" />
+            <div className="absolute top-9 left-11 w-3.5 h-3.5 rounded-full bg-white/95 blur-[0.5px] pointer-events-none shadow-[0_0_14px_rgba(255,255,255,0.95)] z-30" />
 
             {/* Secondary Ambient Rim Reflection on right side */}
-            <div className="absolute top-6 right-4 w-3.5 sm:w-4 h-48 sm:h-56 rounded-[100%] bg-gradient-to-b from-white/35 via-white/10 to-transparent blur-[1px] rotate-[15deg] pointer-events-none" />
+            <div className="absolute top-6 right-4 w-4 sm:w-5 h-52 sm:h-60 rounded-[100%] bg-gradient-to-b from-white/40 via-white/12 to-transparent blur-[1px] rotate-[16deg] pointer-events-none z-30" />
 
             {/* Internal Warm Stage LED Uplight Spotlight (Đèn hắt đáy từ mâm máy lên) */}
-            <div className="absolute bottom-0 inset-x-0 h-32 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.32)_0%,rgba(56,189,248,0.12)_45%,transparent_75%)] pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-36 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.36)_0%,rgba(56,189,248,0.15)_45%,transparent_75%)] pointer-events-none" />
 
             {/* Frosted base mist at bottom of the globe */}
-            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/25 via-white/8 to-transparent pointer-events-none backdrop-blur-[1px]" />
+            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-white/28 via-white/10 to-transparent pointer-events-none backdrop-blur-[1px]" />
 
             {/* Glass bottom thick rolled lip bead */}
-            <div className="absolute bottom-0 inset-x-0 h-1.5 bg-gradient-to-r from-white/40 via-white/70 to-white/40 pointer-events-none shadow-xs" />
-
-            {/* Internal Weather Particles */}
-            {particles.map((p) => (
-              <motion.div
-                key={p.id}
-                className={`absolute pointer-events-none text-xs sm:text-sm select-none ${
-                  weatherType === 'snow'
-                    ? 'text-cyan-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]'
-                    : weatherType === 'petals'
-                    ? 'text-rose-300'
-                    : weatherType === 'hearts'
-                    ? 'text-pink-300'
-                    : weatherType === 'notes'
-                    ? 'text-amber-200'
-                    : 'text-yellow-200'
-                }`}
-                style={{
-                  left: p.left,
-                  top: p.top,
-                }}
-                animate={
-                  isShaking
-                    ? {
-                        y: [-120, 100, -80, 80, 0],
-                        x: [-60, 60, -40, 40, 0],
-                        rotate: [0, 720],
-                        scale: [0.8, 1.6, 0.9],
-                        opacity: [0.3, 1, 0.4],
-                      }
-                    : {
-                        y: weatherType === 'notes' ? [-40, -110, -40] : [-15, 25, -15],
-                        x: [-12, 12, -12],
-                        opacity: [0.3, 0.95, 0.3],
-                        scale: [0.8, 1.2, 0.8],
-                        rotate: [0, 60, 0],
-                      }
-                }
-                transition={{
-                  duration: isShaking ? 2.5 : p.duration,
-                  delay: isShaking ? 0 : p.delay,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              >
-                {p.symbol}
-              </motion.div>
-            ))}
+            <div className="absolute bottom-0 inset-x-0 h-2 bg-gradient-to-r from-white/40 via-white/80 to-white/40 pointer-events-none shadow-xs z-25" />
 
             {/* Musical Notes Floating Up when music box is playing */}
             {isPlayingBox &&
-              Array.from({ length: 6 }).map((_, i) => (
+              Array.from({ length: 7 }).map((_, i) => (
                 <motion.div
                   key={`note-${i}`}
-                  className="absolute text-yellow-300 font-bold pointer-events-none z-30"
+                  className="absolute text-yellow-300 font-bold pointer-events-none z-30 text-sm sm:text-base drop-shadow-[0_0_6px_rgba(250,204,21,0.9)]"
                   style={{
-                    left: `${28 + i * 9}%`,
-                    bottom: '25px',
+                    left: `${24 + i * 9}%`,
+                    bottom: '28px',
                   }}
                   initial={{ y: 0, opacity: 0, scale: 0.5 }}
                   animate={{
-                    y: -220,
+                    y: -240,
                     opacity: [0, 1, 1, 0],
                     scale: [0.6, 1.4, 1],
-                    x: [0, (i % 2 === 0 ? 1 : -1) * 25, 0],
+                    x: [0, (i % 2 === 0 ? 1 : -1) * 28, 0],
                   }}
                   transition={{
-                    duration: 3.2 + i * 0.4,
+                    duration: 3.2 + i * 0.35,
                     repeat: Infinity,
-                    delay: i * 0.5,
+                    delay: i * 0.45,
                     ease: 'easeOut',
                   }}
                 >
-                  {['♪', '♫', '♬', '✨', '♪', '♫'][i]}
+                  {['♪', '♫', '♬', '✨', '♪', '♫', '✦'][i]}
                 </motion.div>
               ))}
 
             {/* ─── 3D CAROUSEL STAGE WITH REALISTIC DEPTH & CENTERPIECE ─── */}
             <div
-              className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+              className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10"
               style={{ perspective: '1100px' }}
             >
-              {/* The Unified 3D Coordinate System (Driven directly by GPU Compositor) */}
+              {/* The Unified 3D Coordinate System (Driven directly by GPU Compositor with X-tilt and Y-rotation) */}
               <motion.div
                 style={{
                   rotateY: carouselAngleMotion,
+                  rotateX: carouselTiltMotion,
                   transformStyle: 'preserve-3d',
                 }}
-                className="relative w-22 sm:w-26 h-32 sm:h-40 flex items-center justify-center"
+                className="relative w-24 sm:w-28 h-36 sm:h-44 flex items-center justify-center"
               >
                 {/* ── 1. CENTERPIECE AT (0,0,0) INSIDE 3D SPACE ── */}
                 <div
@@ -762,11 +880,11 @@ export default function CrystalCarouselFX({ config }: Props) {
                   <motion.div
                     animate={{ rotate: -360 }}
                     transition={{ duration: 35, repeat: Infinity, ease: 'linear' }}
-                    className="absolute bottom-2 w-32 h-32 rounded-full border-2 border-amber-300/70 bg-gradient-to-b from-amber-300/30 via-yellow-400/15 to-transparent flex items-center justify-center shadow-[0_0_25px_rgba(251,191,36,0.4)]"
+                    className="absolute bottom-2 w-36 h-36 rounded-full border-2 border-amber-300/80 bg-gradient-to-b from-amber-300/35 via-yellow-400/20 to-transparent flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.45)]"
                     style={{ transform: 'rotateX(75deg)' }}
                   >
-                    <div className="w-full h-full rounded-full border border-dashed border-amber-300/50 flex items-center justify-center">
-                      <span className="text-[7.5px] font-mono text-amber-200/70 tracking-widest uppercase">
+                    <div className="w-full h-full rounded-full border border-dashed border-amber-300/60 flex items-center justify-center">
+                      <span className="text-[8px] font-mono text-amber-200/80 tracking-widest uppercase">
                         ★ I ★ III ★ V ★ VII ★ IX ★ XI ★
                       </span>
                     </div>
@@ -785,16 +903,16 @@ export default function CrystalCarouselFX({ config }: Props) {
                     }}
                     className="relative z-10"
                   >
-                    {centerpieceType === 'rose' && <SculptedCrystalRose />}
-                    {centerpieceType === 'swans' && <SculptedTwinSwans />}
-                    {centerpieceType === 'heart' && <SculptedDiamondHeart />}
+                    {centerpieceType === 'rose' && <SculptedCrystalRose isFocus={focusCenterpiece} />}
+                    {centerpieceType === 'swans' && <SculptedTwinSwans isFocus={focusCenterpiece} />}
+                    {centerpieceType === 'heart' && <SculptedDiamondHeart isFocus={focusCenterpiece} />}
                     {centerpieceType === 'castle' && (
-                      <div className="text-4xl filter drop-shadow-[0_0_25px_rgba(251,191,36,0.9)] animate-pulse">
+                      <div className="text-5xl filter drop-shadow-[0_0_25px_rgba(251,191,36,0.9)] animate-pulse">
                         🏰
                       </div>
                     )}
                     {centerpieceType === 'teddy' && (
-                      <div className="text-4xl filter drop-shadow-[0_0_25px_rgba(168,85,247,0.9)] animate-pulse">
+                      <div className="text-5xl filter drop-shadow-[0_0_25px_rgba(168,85,247,0.9)] animate-pulse">
                         🧸
                       </div>
                     )}
@@ -804,9 +922,9 @@ export default function CrystalCarouselFX({ config }: Props) {
                 {/* ── 2. THE 6 GILDED CRYSTAL CAROUSEL PANELS ── */}
                 {panels.map((panel, idx) => {
                   const angle = idx * 60; // 360 / 6 = 60 deg
-                  const orbitRadius = focusCenterpiece ? 130 : 108;
+                  const orbitRadius = focusCenterpiece ? 145 : 115;
                   const depthScale = focusCenterpiece ? 0.72 : 1;
-                  const depthOpacity = focusCenterpiece ? 0.35 : 1;
+                  const depthOpacity = focusCenterpiece ? 0.22 : 1;
 
                   return (
                     <div
@@ -816,7 +934,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                         transform: `rotateY(${angle}deg) translateZ(${orbitRadius}px) scale(${depthScale})`,
                         transformStyle: 'preserve-3d',
                         opacity: depthOpacity,
-                        transition: 'opacity 0.4s ease, transform 0.4s ease',
+                        transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       {/* FRONT FACE: Gilded Vintage Crystal Slide */}
@@ -825,76 +943,68 @@ export default function CrystalCarouselFX({ config }: Props) {
                           soundFx.playPinClick();
                           setSelectedItemIndex(panel.id);
                         }}
-                        className={`absolute inset-0 rounded-2xl p-1.5 bg-[#0c1222] border-2 border-amber-300/90 shadow-[0_10px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/50 flex flex-col items-center justify-between cursor-pointer hover:border-white hover:scale-105 transition-all group overflow-hidden`}
+                        className={`absolute inset-0 rounded-2xl p-1.5 bg-[#0a0f1d]/90 backdrop-blur-xs border-2 border-amber-300/90 shadow-[0_12px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/60 flex flex-col items-center justify-between cursor-pointer hover:border-white hover:scale-105 transition-all group overflow-hidden`}
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                         }}
                       >
                         {/* Baroque corner accents */}
-                        <span className="absolute top-1 left-1.5 text-amber-400/80 text-[7px] pointer-events-none">❖</span>
-                        <span className="absolute top-1 right-1.5 text-amber-400/80 text-[7px] pointer-events-none">❖</span>
+                        <span className="absolute top-1 left-1.5 text-amber-300 text-[8px] pointer-events-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">❖</span>
+                        <span className="absolute top-1 right-1.5 text-amber-300 text-[8px] pointer-events-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">❖</span>
 
                         {/* Header Badge */}
-                        <div className="w-full flex items-center justify-between text-[7.5px] font-mono font-bold text-amber-200 px-1 border-b border-amber-400/30 pb-0.5">
-                          <span className="text-amber-300">#{panel.indexStr}</span>
-                          <span className="text-[6.5px] text-amber-400 font-serif tracking-widest">KỶ NIỆM</span>
+                        <div className="w-full flex items-center justify-between text-[8px] font-mono font-bold text-amber-200 px-1 border-b border-amber-400/35 pb-0.5">
+                          <span className="text-amber-300 font-black">#{panel.indexStr}</span>
+                          <span className="text-[7px] text-amber-300 font-serif tracking-widest uppercase">KỶ NIỆM</span>
                         </div>
 
-                        {/* Photo or Gem Placeholder */}
-                        {panel.image ? (
-                          <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black/60 border border-amber-300/50 shadow-inner group-hover:border-amber-200 transition-colors">
-                            <img
-                              src={panel.image}
-                              alt=""
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-1">
-                              <span className="text-[7.5px] font-bold text-white flex items-center gap-1">
-                                <Maximize2 className="w-2.5 h-2.5 text-amber-300" /> Xem ảnh
-                              </span>
-                            </div>
+                        {/* High-Resolution Memory Image */}
+                        <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black/60 border border-amber-300/60 shadow-inner group-hover:border-amber-200 transition-colors">
+                          <img
+                            src={panel.image}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="eager"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-1">
+                            <span className="text-[8px] font-bold text-white flex items-center gap-1 drop-shadow-md">
+                              <Maximize2 className="w-2.5 h-2.5 text-amber-300" /> Xem ảnh
+                            </span>
                           </div>
-                        ) : (
-                          <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-black border border-amber-400/40 flex flex-col items-center justify-center shadow-inner group">
-                            <div className="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-300/50 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(251,191,36,0.4)]">
-                              💎
-                            </div>
-                            <span className="text-[6.5px] text-amber-300/70 font-serif mt-1">Pha Lê Kỷ Niệm</span>
-                          </div>
-                        )}
+                        </div>
 
                         {/* Romantic Quote Plaque */}
-                        <div className="w-full bg-black/60 rounded-lg p-1 border border-amber-400/30">
-                          <p className="text-[7.5px] sm:text-[8.5px] font-medium font-serif italic text-amber-100/90 text-center line-clamp-2 leading-tight">
+                        <div className="w-full bg-black/70 rounded-lg p-1 border border-amber-400/35 shadow-xs">
+                          <p className="text-[8px] sm:text-[9px] font-medium font-serif italic text-amber-100/95 text-center line-clamp-2 leading-tight">
                             "{panel.quote}"
                           </p>
                         </div>
 
                         {/* Shimmer Light Reflection Sweep */}
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none opacity-30" />
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none opacity-40" />
                       </div>
 
                       {/* BACK FACE: Royal Damask Gold Foil Crest */}
                       <div
-                        className="absolute inset-0 rounded-2xl p-2 bg-gradient-to-b from-[#151d36] via-[#090e1f] to-[#151d36] border-2 border-amber-400/80 shadow-[0_10px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/40 flex flex-col items-center justify-center text-center"
+                        className="absolute inset-0 rounded-2xl p-2 bg-gradient-to-b from-[#151d36] via-[#090e1f] to-[#151d36] border-2 border-amber-400/85 shadow-[0_12px_35px_rgba(0,0,0,0.95)] ring-1 ring-amber-400/50 flex flex-col items-center justify-center text-center"
                         style={{
                           transform: 'rotateY(180deg)',
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                         }}
                       >
-                        <div className="w-8 h-8 rounded-full border border-amber-300/60 bg-amber-400/10 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(251,191,36,0.3)] mb-0.5">
+                        <div className="w-8 h-8 rounded-full border border-amber-300/70 bg-amber-400/15 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(251,191,36,0.35)] mb-1">
                           ⚜️
                         </div>
-                        <p className="text-[8px] font-serif font-black tracking-widest text-amber-200">
+                        <p className="text-[8.5px] font-serif font-black tracking-widest text-amber-200">
                           ROYAL
                         </p>
-                        <p className="text-[6px] text-amber-400/70 font-mono tracking-wider">
+                        <p className="text-[6.5px] text-amber-400/80 font-mono tracking-wider">
                           MUSIC BOX 3D
                         </p>
-                        <div className="w-7 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent my-1" />
-                        <span className="text-[8px] text-rose-300">🌹</span>
+                        <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent my-1" />
+                        <span className="text-[9px] text-rose-300">🌹</span>
                       </div>
                     </div>
                   );
@@ -903,22 +1013,22 @@ export default function CrystalCarouselFX({ config }: Props) {
             </div>
 
             {/* Bottom Prompt Badge inside dome */}
-            <div className="relative z-20 text-[9px] text-white/80 font-medium flex items-center gap-1.5 bg-black/60 px-2.5 py-0.5 rounded-full border border-white/15 backdrop-blur-xs">
+            <div className="relative z-25 text-[9.5px] text-white/90 font-medium flex items-center gap-1.5 bg-black/65 px-3 py-0.5 rounded-full border border-white/20 backdrop-blur-xs shadow-md">
               <span>👆 Vuốt ngang xoay 360° • Chạm ảnh xem kỷ niệm</span>
             </div>
           </motion.div>
         </div>
 
         {/* ─── LUXURY 3D MULTI-TIERED MAHOGANY WOODEN & BRASS PEDESTAL (BỆ ĐẾ HOÀNG GIA ĐA TẦNG 3D) ─── */}
-        <div className="relative w-full max-w-[288px] sm:max-w-[335px] flex flex-col items-center z-20">
+        <div className="relative w-full max-w-[295px] sm:max-w-[345px] flex flex-col items-center z-20">
           
           {/* TIER 1: Heavy Beveled Brass Dome Retaining Collar (Vành cổ đồng giữ kính) */}
-          <div className="w-[260px] sm:w-[305px] h-2.5 sm:h-3 bg-gradient-to-r from-amber-700 via-amber-300 via-yellow-100 via-amber-400 to-amber-800 rounded-t-lg border-t border-yellow-100/90 shadow-[0_3px_8px_rgba(0,0,0,0.85)] flex items-center justify-around px-3 relative overflow-hidden">
+          <div className="w-[285px] sm:w-[335px] h-2.5 sm:h-3 bg-gradient-to-r from-amber-700 via-amber-300 via-yellow-100 via-amber-400 to-amber-800 rounded-t-lg border-t border-yellow-100/90 shadow-[0_3px_8px_rgba(0,0,0,0.85)] flex items-center justify-around px-3 relative overflow-hidden">
             {/* Cylindrical shine highlight streak */}
             <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_20%,rgba(255,255,255,0.45)_45%,transparent_65%)] pointer-events-none" />
             
             {/* 3D Beaded pearl rivets along the rim */}
-            {Array.from({ length: 11 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
                 className="w-1.5 h-1.5 rounded-full bg-gradient-to-b from-yellow-100 via-amber-400 to-amber-950 border border-yellow-200/80 shadow-xs shrink-0"
@@ -928,7 +1038,7 @@ export default function CrystalCarouselFX({ config }: Props) {
 
           {/* TIER 2: Upper Stepped Wood Moulding Profile (Phào chỉ gỗ trên vát cong 3D) */}
           <div
-            className="w-[270px] sm:w-[316px] h-2 rounded-t-md border-t border-amber-500/40 shadow-inner relative"
+            className="w-[292px] sm:w-[342px] h-2 rounded-t-md border-t border-amber-500/40 shadow-inner relative"
             style={{ background: theme.baseWood }}
           >
             {/* Ambient shadow cast by the collar above */}
@@ -959,7 +1069,7 @@ export default function CrystalCarouselFX({ config }: Props) {
             <div className="flex flex-col items-center gap-1 z-10 shrink-0">
               <button
                 onClick={handleTogglePlayBox}
-                className="group relative focus:outline-none"
+                className="group relative focus:outline-none cursor-pointer"
                 title={isPlayingBox ? 'Dừng phát nhạc' : 'Vặn dây cót để phát nhạc'}
               >
                 <ButterflyWindingKey isPlaying={isPlayingBox} />
@@ -968,10 +1078,10 @@ export default function CrystalCarouselFX({ config }: Props) {
               {/* Status Indicator Badge */}
               <button
                 onClick={handleTogglePlayBox}
-                className={`px-2 py-0.5 rounded-full font-serif text-[8.5px] font-black tracking-wider uppercase flex items-center gap-1 border shadow-md active:scale-95 transition-all ${
+                className={`px-2.5 py-0.5 rounded-full font-serif text-[9px] font-black tracking-wider uppercase flex items-center gap-1 border shadow-md active:scale-95 transition-all cursor-pointer ${
                   isPlayingBox
-                    ? 'bg-rose-950/80 border-rose-400 text-rose-200 ring-1 ring-rose-400/50'
-                    : 'bg-amber-950/80 border-amber-400 text-amber-200 hover:bg-amber-900/80 ring-1 ring-amber-400/30'
+                    ? 'bg-rose-950/85 border-rose-400 text-rose-200 ring-1 ring-rose-400/50'
+                    : 'bg-amber-950/85 border-amber-400 text-amber-200 hover:bg-amber-900/80 ring-1 ring-amber-400/30'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${isPlayingBox ? 'bg-rose-400 animate-ping' : 'bg-amber-400'}`} />
@@ -981,15 +1091,15 @@ export default function CrystalCarouselFX({ config }: Props) {
           </div>
 
           {/* TIER 4: Lower Stepped Wood Moulding & Inlaid Brass Trim (Phào chỉ đế dưới & chỉ đồng) */}
-          <div className="w-[282px] sm:w-[330px] h-1.5 bg-gradient-to-r from-amber-700 via-yellow-300 via-amber-200 to-amber-800 shadow-sm border-t border-yellow-100/70" />
+          <div className="w-[290px] sm:w-[340px] h-1.5 bg-gradient-to-r from-amber-700 via-yellow-300 via-amber-200 to-amber-800 shadow-sm border-t border-yellow-100/70" />
           
           <div
-            className="w-[286px] sm:w-[334px] h-2.5 rounded-b-lg border-b border-amber-900/80 shadow-md relative"
+            className="w-[294px] sm:w-[344px] h-2.5 rounded-b-lg border-b border-amber-900/80 shadow-md relative"
             style={{ background: theme.baseWood }}
           />
 
           {/* TIER 5: 4 Sculpted Spherical Brass Feet (4 Chân đế quả cầu đồng hoàng gia) */}
-          <div className="w-[268px] sm:w-[314px] flex items-center justify-between px-2 -mt-0.5">
+          <div className="w-[276px] sm:w-[324px] flex items-center justify-between px-2 -mt-0.5">
             <BrassPedestalFoot />
             <BrassPedestalFoot />
             <BrassPedestalFoot />
@@ -1004,7 +1114,7 @@ export default function CrystalCarouselFX({ config }: Props) {
         <div className="flex items-center gap-2 sm:gap-3 z-20 pt-0.5">
           <button
             onClick={handleRotateLeft}
-            className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 shadow-md hover:border-amber-400"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 shadow-md hover:border-amber-400 cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Xoay Trái</span>
@@ -1012,15 +1122,15 @@ export default function CrystalCarouselFX({ config }: Props) {
 
           <button
             onClick={handleTogglePlayBox}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-900/80 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center justify-center shadow-md hover:border-emerald-400"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-900/85 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center justify-center shadow-md hover:border-emerald-400 cursor-pointer"
             title={isPlayingBox ? 'Tạm dừng nhạc' : 'Phát nhạc nền'}
           >
-            {isPlayingBox ? <Pause className="w-3.5 h-3.5 text-rose-400" /> : <Play className="w-3.5 h-3.5 text-emerald-400" />}
+            {isPlayingBox ? <Pause className="w-4 h-4 text-rose-400" /> : <Play className="w-4 h-4 text-emerald-400" />}
           </button>
 
           <button
             onClick={handleRotateRight}
-            className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 shadow-md hover:border-amber-400"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-white hover:bg-slate-800 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 shadow-md hover:border-amber-400 cursor-pointer"
           >
             <span>Xoay Phải</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -1045,7 +1155,7 @@ export default function CrystalCarouselFX({ config }: Props) {
               {/* Close Button */}
               <button
                 onClick={() => setSelectedItemIndex(null)}
-                className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+                className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1057,24 +1167,18 @@ export default function CrystalCarouselFX({ config }: Props) {
                 </span>
               </div>
 
-              {/* Photo or Gem */}
-              {panels[selectedItemIndex].image ? (
-                <div className="w-full aspect-square rounded-2xl overflow-hidden border-2 border-amber-300/80 shadow-2xl relative">
-                  <img
-                    src={panels[selectedItemIndex].image}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                </div>
-              ) : (
-                <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-amber-500/20 to-transparent border-2 border-amber-300/60 flex items-center justify-center text-5xl shadow-inner">
-                  💎
-                </div>
-              )}
+              {/* High-Resolution Photo */}
+              <div className="w-full aspect-square rounded-2xl overflow-hidden border-2 border-amber-300/80 shadow-2xl relative bg-black">
+                <img
+                  src={panels[selectedItemIndex].image}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+              </div>
 
               {/* Romantic Quote */}
-              <div className="bg-black/60 rounded-2xl p-3 border border-amber-400/30">
+              <div className="bg-black/60 rounded-2xl p-3.5 border border-amber-400/35">
                 <p className="text-sm font-serif italic text-amber-100 leading-relaxed">
                   "{panels[selectedItemIndex].quote}"
                 </p>
@@ -1093,7 +1197,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                     soundFx.playPinClick();
                     setSelectedItemIndex((prev) => (prev !== null ? (prev - 1 + 6) % 6 : 0));
                   }}
-                  className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                  className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" /> Ảnh trước
                 </button>
@@ -1103,7 +1207,7 @@ export default function CrystalCarouselFX({ config }: Props) {
                     soundFx.playPinClick();
                     setSelectedItemIndex((prev) => (prev !== null ? (prev + 1) % 6 : 0));
                   }}
-                  className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                  className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                 >
                   Ảnh sau <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -1112,7 +1216,7 @@ export default function CrystalCarouselFX({ config }: Props) {
               {/* Continue Rotating Button */}
               <button
                 onClick={() => setSelectedItemIndex(null)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 text-stone-950 font-black text-xs shadow-lg hover:brightness-110 active:scale-98 transition-all"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 text-stone-950 font-black text-xs shadow-lg hover:brightness-110 active:scale-98 transition-all cursor-pointer"
               >
                 Tiếp tục quay hộp nhạc
               </button>
