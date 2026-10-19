@@ -292,6 +292,120 @@ function CrystalDomeFinial() {
   );
 }
 
+/* ─── 3D OPTICAL CURVED STUDIO SOFTBOX GLASS REFLECTION (PHẢN CHIẾU CỬA SỔ CONG 3D) ─── */
+function CurvedStudioGlassReflection() {
+  return (
+    <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-t-[142px] sm:rounded-t-[168px]">
+      {/* Studio Softbox Dual Light Bars curved along the spherical surface */}
+      <svg
+        viewBox="0 0 340 310"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-full object-cover"
+      >
+        <defs>
+          {/* Main softbox curved gradient */}
+          <linearGradient id="softboxMain" x1="40" y1="20" x2="110" y2="260" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+            <stop offset="25%" stopColor="#ffffff" stopOpacity="0.45" />
+            <stop offset="60%" stopColor="#ffffff" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Secondary parallel softbox bar */}
+          <linearGradient id="softboxSecondary" x1="65" y1="25" x2="125" y2="240" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+            <stop offset="35%" stopColor="#ffffff" stopOpacity="0.2" />
+            <stop offset="70%" stopColor="#ffffff" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Opposing bounce rim light */}
+          <linearGradient id="bounceRim" x1="310" y1="35" x2="270" y2="260" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+            <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.2" />
+            <stop offset="75%" stopColor="#7dd3fc" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Apical dome crest highlight */}
+          <linearGradient id="apicalCrest" x1="90" y1="4" x2="250" y2="4" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.75" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="70%" stopColor="#ffffff" stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Prismatic rainbow fringe filter */}
+          <linearGradient id="rainbowFringe" x1="10" y1="10" x2="40" y2="180" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.45" />
+            <stop offset="50%" stopColor="#f472b6" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.25" />
+          </linearGradient>
+        </defs>
+
+        {/* 1. Apical top curvature crest highlight */}
+        <path
+          d="M95 8 Q170 3 245 8"
+          stroke="url(#apicalCrest)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="filter drop-shadow-[0_1px_4px_rgba(255,255,255,0.8)]"
+        />
+
+        {/* 2. Prismatic outer dispersion fringe */}
+        <path
+          d="M22 135 C20 85 45 35 95 12"
+          stroke="url(#rainbowFringe)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          opacity="0.75"
+        />
+
+        {/* 3. Primary Wide Curved Studio Softbox Window Reflection */}
+        <path
+          d="M60 22 C38 48 28 85 28 135 C28 185 36 225 45 255 C40 225 34 185 35 135 C36 90 46 55 68 28 Z"
+          fill="url(#softboxMain)"
+          className="filter blur-[0.8px]"
+        />
+
+        {/* 4. Secondary Parallel Studio Light Bar */}
+        <path
+          d="M78 28 C62 55 52 92 52 140 C52 185 58 220 66 248 C61 220 57 185 58 140 C59 96 68 62 84 34 Z"
+          fill="url(#softboxSecondary)"
+          className="filter blur-[0.6px]"
+        />
+
+        {/* 5. Opposing Right-Side Rim Bounce Refraction */}
+        <path
+          d="M280 28 C302 55 312 92 312 142 C312 188 306 225 296 255 C302 225 307 188 306 142 C305 96 295 60 274 34 Z"
+          fill="url(#bounceRim)"
+          className="filter blur-[0.8px]"
+        />
+      </svg>
+
+      {/* Primary Diamond Specular Hotspot Glint on glass shoulder */}
+      <div className="absolute top-8 left-12 flex items-center justify-center pointer-events-none">
+        <div className="w-5 h-5 rounded-full bg-white/40 blur-[4px] animate-pulse" />
+        <div className="absolute w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
+        {/* 4-point flare */}
+        <div className="absolute w-9 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent" />
+        <div className="absolute h-9 w-[1px] bg-gradient-to-b from-transparent via-white to-transparent" />
+      </div>
+
+      {/* Secondary smaller glint */}
+      <div className="absolute top-16 left-8 w-1.5 h-1.5 rounded-full bg-white/90 shadow-[0_0_6px_#ffffff]" />
+
+      {/* Front Glass Curvature Convex Sheen Plate */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_35%_25%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.03)_40%,transparent_70%)] pointer-events-none" />
+
+      {/* Inner Cavity Spherical Ambient Occlusion (Bóng đổ sâu lòng kính 3D) */}
+      <div className="absolute inset-0 rounded-t-[142px] sm:rounded-t-[168px] shadow-[inset_0_0_60px_rgba(0,0,0,0.7),inset_0_2px_18px_rgba(255,255,255,0.95)] pointer-events-none" />
+    </div>
+  );
+}
+
 /* ─── HIGH-END SCULPTED CRYSTAL ROSE (ĐÓA HỒNG PHA LÊ SWAROVSKI ĐA DIỆN 3D) ─── */
 function SculptedCrystalRose({ isFocus = false }: { isFocus?: boolean }) {
   return (
@@ -793,11 +907,17 @@ export default function CrystalCarouselFX({ config }: Props) {
                 : {}
             }
             transition={{ duration: 0.8 }}
-            className={`relative w-[285px] sm:w-[335px] h-[270px] sm:h-[310px] rounded-t-[142px] sm:rounded-t-[168px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2px] border-b-0 border-white/60 shadow-[0_0_60px_rgba(0,0,0,0.85),inset_0_2px_10px_rgba(255,255,255,0.7),inset_0_0_35px_rgba(255,255,255,0.2),0_0_50px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-2 sm:p-2.5`}
+            className={`relative w-[285px] sm:w-[335px] h-[270px] sm:h-[310px] rounded-t-[142px] sm:rounded-t-[168px] rounded-b-none bg-gradient-to-b ${theme.domeBg} border-[2.5px] border-b-0 border-white/75 shadow-[0_22px_50px_rgba(0,0,0,0.92),inset_0_2px_16px_rgba(255,255,255,0.95),inset_8px_0_24px_rgba(255,255,255,0.35),inset_-8px_0_24px_rgba(255,255,255,0.25),0_0_55px_${theme.glowHex}35] overflow-hidden flex flex-col items-center justify-between p-2 sm:p-2.5`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
           >
-            {/* Dynamic 60fps Particle Canvas (Tuyết rơi / bão tuyết) */}
+            {/* 1. LỚP THÀNH KÍNH ĐÔI 4MM (Inner Glass Wall Thickness) */}
+            <div className="absolute inset-[3.5px] rounded-t-[138px] sm:rounded-t-[164px] border-[1.5px] border-b-0 border-white/35 pointer-events-none z-25" />
+
+            {/* 2. HIỆU ỨNG THẤU KÍNH QUANG HỌC PHẢN CHIẾU CỬA SỔ STUDIO CONG 3D */}
+            <CurvedStudioGlassReflection />
+
+            {/* 3. Dynamic 60fps Particle Canvas (Tuyết rơi / bão tuyết trong lòng kính) */}
             <canvas
               ref={weatherCanvasRef}
               width={340}
@@ -805,26 +925,14 @@ export default function CrystalCarouselFX({ config }: Props) {
               className="absolute inset-0 w-full h-full pointer-events-none z-20"
             />
 
-            {/* Inner Glass Refractive Rim (Tạo độ dày thật 4mm cho kính) */}
-            <div className="absolute inset-1 rounded-t-[138px] sm:rounded-t-[164px] border border-white/30 pointer-events-none" />
+            {/* 4. Internal Warm Stage LED Uplight Spotlight (Đèn hắt đáy từ mâm máy lên) */}
+            <div className="absolute bottom-0 inset-x-0 h-36 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.38)_0%,rgba(56,189,248,0.15)_45%,transparent_75%)] pointer-events-none" />
 
-            {/* Primary Curved Specular Glass Reflection (Khúc xạ ánh sáng mặt kính cong 3D) */}
-            <div className="absolute top-2 left-4 w-12 sm:w-14 h-48 sm:h-56 rounded-[100%] bg-gradient-to-b from-white/65 via-white/25 to-transparent blur-[2px] -rotate-[16deg] pointer-events-none z-30" />
-            
-            {/* Specular Glint Highlight on glass shoulder */}
-            <div className="absolute top-9 left-11 w-3.5 h-3.5 rounded-full bg-white/95 blur-[0.5px] pointer-events-none shadow-[0_0_14px_rgba(255,255,255,0.95)] z-30" />
-
-            {/* Secondary Ambient Rim Reflection on right side */}
-            <div className="absolute top-6 right-4 w-4 sm:w-5 h-52 sm:h-60 rounded-[100%] bg-gradient-to-b from-white/40 via-white/12 to-transparent blur-[1px] rotate-[16deg] pointer-events-none z-30" />
-
-            {/* Internal Warm Stage LED Uplight Spotlight (Đèn hắt đáy từ mâm máy lên) */}
-            <div className="absolute bottom-0 inset-x-0 h-36 bg-[radial-gradient(ellipse_at_bottom,rgba(251,191,36,0.36)_0%,rgba(56,189,248,0.15)_45%,transparent_75%)] pointer-events-none" />
-
-            {/* Frosted base mist at bottom of the globe */}
+            {/* 5. Frosted base mist at bottom of the globe */}
             <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-white/28 via-white/10 to-transparent pointer-events-none backdrop-blur-[1px]" />
 
-            {/* Glass bottom thick rolled lip bead */}
-            <div className="absolute bottom-0 inset-x-0 h-2 bg-gradient-to-r from-white/40 via-white/80 to-white/40 pointer-events-none shadow-xs z-25" />
+            {/* 6. GỜ CHÂN KÍNH THỦY TINH ĐÚC DÀY 3D TIẾP XÚC BỆ ĐỒNG (Glass Meniscus Lip) */}
+            <div className="absolute bottom-0 inset-x-0 h-2.5 bg-gradient-to-r from-white/35 via-white/85 via-50% to-white/35 pointer-events-none shadow-[0_-1px_4px_rgba(255,255,255,0.6),0_2px_4px_rgba(0,0,0,0.8)] z-35 border-t border-white/60" />
 
             {/* Musical Notes Floating Up when music box is playing */}
             {isPlayingBox &&
