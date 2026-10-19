@@ -1188,9 +1188,38 @@ app.get('/api/search-music', async (req, res) => {
   }
 });
 
+// Tự động mở đường truyền Public Tunnel và tự động kết nối lại khi bị ngắt
+async function startTunnel() {
+  try {
+    const { default: localtunnel } = await import('localtunnel');
+    const tunnel = await localtunnel({
+      port: PORT,
+      subdomain: 'lovecard-2010',
+    });
+
+    console.log(`🌍 Public Cloud Bridge đã sẵn sàng: ${tunnel.url}`);
+
+    tunnel.on('close', () => {
+      console.warn('⚠️ Tunnel đã đóng, đang tự động kết nối lại sau 3s...');
+      setTimeout(startTunnel, 3000);
+    });
+
+    tunnel.on('error', (err) => {
+      console.warn('⚠️ Lỗi tunnel, tự động kết nối lại sau 3s:', err?.message);
+      setTimeout(startTunnel, 3000);
+    });
+  } catch (err) {
+    console.warn('⚠️ Không thể mở tunnel, thử lại sau 5s:', err?.message);
+    setTimeout(startTunnel, 5000);
+  }
+}
+
 // Khởi chạy Server
 app.listen(PORT, () => {
   console.log(`🚀 Backend Express API đang chạy tại http://localhost:${PORT}`);
   // Tự động tải sẵn toàn bộ file nhạc vào thư mục public/music
   downloadAndBundleSongs();
+  // Khởi động tunnel kết nối Vercel ra Internet
+  startTunnel();
 });
+
