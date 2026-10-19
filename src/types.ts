@@ -437,3 +437,56 @@ export const TEMPLATES: CardTemplate[] = [
     },
   },
 ];
+
+export const TEMPLATE_ALIASES: Record<string, string> = {
+  'galaxy-3d': 'galaxy-memories',
+  'galaxy': 'galaxy-memories',
+  'blossom': 'blossom-rain',
+  'petal-rain': 'blossom-rain',
+  'scratch': 'scratch-card',
+  'scratch-vintage': 'scratch-card',
+  'scratch-card': 'scratch-card',
+  'lantern': 'lantern-festival',
+  'lantern-3d': 'lantern-festival',
+  'vinyl': 'vinyl-player',
+  'vinyl-record': 'vinyl-player',
+  'vinyl-player': 'vinyl-player',
+  'crystal': 'crystal-carousel',
+  'carousel': 'crystal-carousel',
+  'film': 'cinema-filmstrip',
+  'cinema': 'cinema-filmstrip',
+  'cinema-film': 'cinema-filmstrip',
+  'cinema-filmstrip': 'cinema-filmstrip',
+  'bouquet': 'interactive-bouquet',
+  'bouquet-3d': 'interactive-bouquet',
+  'rose-bouquet': 'interactive-bouquet',
+  'interactive-bouquet': 'interactive-bouquet',
+  'blow-mic': 'blow-mic-reveal',
+  'blow-mic-reveal': 'blow-mic-reveal',
+  'ai-gesture': 'ai-gesture-unlock',
+  'ai-gesture-unlock': 'ai-gesture-unlock',
+  'hold-reveal': 'hold-to-reveal',
+  'hold-to-reveal': 'hold-to-reveal',
+  'foggy': 'foggy-mirror',
+  'foggy-mirror': 'foggy-mirror',
+  'polaroid': 'polaroid-swipe',
+  'polaroid-swipe': 'polaroid-swipe',
+};
+
+export function resolveTemplate(rawId?: string): CardTemplate {
+  if (!rawId) return TEMPLATES[0];
+  const cleanId = rawId.replace(/^demo-/, '').toLowerCase().trim();
+  const mappedId = TEMPLATE_ALIASES[cleanId] || cleanId;
+  const directMatch = TEMPLATES.find((t) => t.id === mappedId || t.id.toLowerCase() === cleanId);
+  if (directMatch) return directMatch;
+
+  const byEffect = TEMPLATES.find(
+    (t) =>
+      t.effectType.toLowerCase().replace(/_/g, '-') === cleanId ||
+      t.id.includes(cleanId) ||
+      cleanId.includes(t.id)
+  );
+  if (byEffect) return byEffect;
+
+  return TEMPLATES[0];
+}

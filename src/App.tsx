@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Landing from './pages/Landing';
 import Templates from './pages/Templates';
@@ -22,6 +22,21 @@ function ModalsContainer() {
       <DatabaseModal isOpen={isDbModalOpen} onClose={closeDbModal} />
     </>
   );
+}
+
+function StudioRoute() {
+  const { templateId } = useParams<{ templateId: string }>();
+  return <Studio key={templateId || 'default'} />;
+}
+
+function CardViewerRoute() {
+  const params = useParams();
+  const cardId = params['*']
+    ? params.cardId
+      ? `${params.cardId}/${params['*']}`
+      : params['*']
+    : params.cardId;
+  return <CardViewer key={cardId || 'default'} />;
 }
 
 function App() {
@@ -50,10 +65,11 @@ function App() {
                 </>
               }
             />
-            <Route path="/studio/:templateId" element={<Studio />} />
-            <Route path="/card/:cardId/*" element={<CardViewer />} />
-            <Route path="/card/:cardId" element={<CardViewer />} />
-            <Route path="/card/*" element={<CardViewer />} />
+            <Route path="/studio/:templateId" element={<StudioRoute />} />
+            <Route path="/studio" element={<StudioRoute />} />
+            <Route path="/card/:cardId/*" element={<CardViewerRoute />} />
+            <Route path="/card/:cardId" element={<CardViewerRoute />} />
+            <Route path="/card/*" element={<CardViewerRoute />} />
             <Route
               path="/history"
               element={

@@ -23,7 +23,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { TEMPLATES, type CardConfig, type CreatedCard } from '../types';
+import { TEMPLATES, resolveTemplate, type CardConfig, type CreatedCard } from '../types';
 import EffectRenderer from '../components/effects/EffectRenderer';
 import { encodeCardData, saveCard, generateShortId, getCardById, incrementTemplateUse } from '../utils/cardStorage';
 import { soundFx, MUSIC_PRESETS } from '../utils/soundEffects';
@@ -335,11 +335,11 @@ export function getTemplatePhotoConfig(effectType: string): TemplatePhotoConfig 
 export default function Studio() {
   const { templateId } = useParams<{ templateId: string }>();
   const location = useLocation();
-  const template = TEMPLATES.find((t) => t.id === templateId) || TEMPLATES[0];
+  const template = resolveTemplate(templateId);
   const { user } = useAuth();
 
   // Persistent card ID
-  const [currentCardId] = useState<string>(() => {
+  const [currentCardId, setCurrentCardId] = useState<string>(() => {
     try {
       const savedId = sessionStorage.getItem(`lovecard_active_id_${template.id}`);
       if (savedId) return savedId;
@@ -352,7 +352,7 @@ export default function Studio() {
   });
 
   const [config, setConfig] = useState<CardConfig>(() => {
-    // 1. Phục hồi bản nháp gần nhất từ sessionStorage (tránh mất sạch dữ liệu khi vô tình reload trang)
+    // 1. Phục hồi bản nháp gần nhất từ sessionStorage
     try {
       const savedDraft = sessionStorage.getItem(`lovecard_draft_${template.id}`);
       if (savedDraft) {
@@ -361,11 +361,12 @@ export default function Studio() {
       }
     } catch {}
 
-    const existing = getCardById(template.id);
     const defaultPreset = template.defaultConfig?.musicPreset || 'anh-nang-cua-anh';
-    const base = existing
-      ? { ...existing.cardData, images: existing.cardData?.images || [] }
-      : { ...template.defaultConfig, musicPreset: defaultPreset, images: [] };
+    const base: CardConfig = {
+      ...template.defaultConfig,
+      musicPreset: defaultPreset,
+      images: [],
+    };
     const navState = location.state as { wishText?: string; recipientName?: string } | null;
     if (navState?.wishText) {
       return {
@@ -959,8 +960,15 @@ export default function Studio() {
     if (e && e.preventDefault) e.preventDefault();
     setIsSaving(true);
     soundFx.playSuccessChime();
+
+    const cardIdToSave = currentCardId || generateShortId();
+    setCurrentCardId(cardIdToSave);
+    try {
+      sessionStorage.setItem(`lovecard_active_id_${template.id}`, cardIdToSave);
+    } catch {}
+
     const newCard: CreatedCard = {
-      id: currentCardId,
+      id: cardIdToSave,
       creatorId: user ? user.id : null,
       templateId: template.id,
       title: `${template.titleVi} — Gửi ${config.recipientName || 'người thương'}`,

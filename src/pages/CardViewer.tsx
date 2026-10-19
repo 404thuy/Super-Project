@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { TEMPLATES, type CardConfig } from '../types';
+import { TEMPLATES, resolveTemplate, type CardConfig } from '../types';
 import EffectRenderer from '../components/effects/EffectRenderer';
 import {
   decodeCardData,
@@ -33,33 +33,9 @@ export default function CardViewer() {
   const [replayKey, setReplayKey] = useState(0);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const cardContainerRef = useRef<HTMLDivElement>(null);
-
-  const TEMPLATE_ALIASES: Record<string, string> = {
-    'galaxy-3d': 'galaxy-memories',
-    'galaxy': 'galaxy-memories',
-    'blossom': 'blossom-rain',
-    'petal-rain': 'blossom-rain',
-    'scratch': 'scratch-vintage',
-    'scratch-card': 'scratch-vintage',
-    'lantern': 'lantern-festival',
-    'lantern-3d': 'lantern-festival',
-    'vinyl': 'vinyl-record',
-    'vinyl-player': 'vinyl-record',
-    'crystal': 'crystal-carousel',
-    'carousel': 'crystal-carousel',
-    'film': 'cinema-film',
-    'cinema': 'cinema-film',
-    'bouquet': 'rose-bouquet',
-    'bouquet-3d': 'rose-bouquet',
-  };
-
-  const resolveTemplate = (rawId: string) => {
-    const cleanId = (rawId || '').replace(/^demo-/, '');
-    const mappedId = TEMPLATE_ALIASES[cleanId] || cleanId;
-    return TEMPLATES.find((t) => t.id === mappedId || t.id === cleanId) || TEMPLATES[0];
-  };
 
   // Check if viewing in demo mode (from template store) vs shared recipient card
   const isDemo = Boolean(cardId && cardId.startsWith('demo-'));
@@ -108,6 +84,13 @@ export default function CardViewer() {
           if (remote && isCurrent) {
             setActiveTemplateId(remote.templateId);
             setActiveConfig(remote.cardData);
+            setLoadError(null);
+          } else if (!remote && isCurrent && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
+            setLoadError('Không tìm thấy thông tin thiệp hoặc mã thẻ chưa sẵn sàng.');
+          }
+        } catch {
+          if (isCurrent && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
+            setLoadError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
           }
         } finally {
           if (isCurrent) {
@@ -221,6 +204,36 @@ export default function CardViewer() {
         <p className="text-xs text-slate-400 mt-2">
           Đang tải lời chúc & khoảnh khắc ý nghĩa dành riêng cho bạn ✨
         </p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center text-white px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-2xl mb-4">
+          💌
+        </div>
+        <h2 className="text-lg font-bold text-rose-300 max-w-md">
+          {loadError}
+        </h2>
+        <p className="text-xs text-slate-400 mt-2 max-w-sm">
+          Mã thẻ hoặc đường dẫn có thể chưa được kích hoạt hoặc đã bị thay đổi.
+        </p>
+        <div className="flex items-center gap-3 mt-6">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            Tải lại
+          </button>
+          <Link
+            to="/templates"
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all"
+          >
+            Xem kho mẫu thiệp
+          </Link>
+        </div>
       </div>
     );
   }
