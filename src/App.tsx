@@ -11,6 +11,8 @@ import SettingsModal from './components/SettingsModal';
 import DatabaseModal from './components/DatabaseModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function ModalsContainer() {
   const { isDbModalOpen, closeDbModal } = useAuth();
   return (
@@ -24,11 +26,12 @@ function ModalsContainer() {
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-slate-50 text-slate-800">
-        <ModalsContainer />
-        <AnimatePresence mode="wait">
-          <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <div className="min-h-screen bg-slate-50 text-slate-800">
+          <ModalsContainer />
+          <AnimatePresence mode="wait">
+            <Routes>
             <Route
               path="/"
               element={
@@ -73,6 +76,7 @@ function App() {
         </AnimatePresence>
       </div>
     </AuthProvider>
+  </ErrorBoundary>
   );
 }
 

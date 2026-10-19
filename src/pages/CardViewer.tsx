@@ -89,22 +89,34 @@ export default function CardViewer() {
 
   const [activeTemplateId, setActiveTemplateId] = useState<string>(initialTemplateId);
   const [activeConfig, setActiveConfig] = useState<CardConfig>(initialConfig);
+  const [isLoadingCard, setIsLoadingCard] = useState<boolean>(() => {
+    if (resolvedCardId?.startsWith('lc_')) {
+      return !getCardById(resolvedCardId);
+    }
+    return false;
+  });
 
   const template = resolveTemplate(activeTemplateId);
 
-  // Fetch full card data with user-uploaded images from Oracle 19c
+  // Fetch full card data with user-uploaded images from Supabase Cloud / Oracle 19c
   useEffect(() => {
     let isCurrent = true;
-    async function loadCardFromOracle() {
+    async function loadCardFromRemote() {
       if (resolvedCardId) {
-        const remote = await fetchCardById(resolvedCardId);
-        if (remote && isCurrent) {
-          setActiveTemplateId(remote.templateId);
-          setActiveConfig(remote.cardData);
+        try {
+          const remote = await fetchCardById(resolvedCardId);
+          if (remote && isCurrent) {
+            setActiveTemplateId(remote.templateId);
+            setActiveConfig(remote.cardData);
+          }
+        } finally {
+          if (isCurrent) {
+            setIsLoadingCard(false);
+          }
         }
       }
     }
-    loadCardFromOracle();
+    loadCardFromRemote();
     return () => {
       isCurrent = false;
     };
@@ -195,6 +207,23 @@ export default function CardViewer() {
     const nextMuted = soundFx.toggleMute();
     setIsMuted(nextMuted);
   };
+
+  if (isLoadingCard) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center text-white px-4">
+        <div className="relative mb-6">
+          <div className="w-16 h-16 rounded-full border-4 border-rose-500/20 border-t-rose-500 animate-spin" />
+          <Sparkles className="w-6 h-6 text-rose-400 absolute inset-0 m-auto animate-pulse" />
+        </div>
+        <h2 className="text-lg font-bold bg-gradient-to-r from-rose-300 via-pink-200 to-amber-200 bg-clip-text text-transparent">
+          Đang mở thiệp yêu thương...
+        </h2>
+        <p className="text-xs text-slate-400 mt-2">
+          Đang tải lời chúc & khoảnh khắc ý nghĩa dành riêng cho bạn ✨
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between overflow-x-hidden">

@@ -22,7 +22,7 @@ export function notifyStatsChanged(templateId?: string) {
 
 function getCurrentUserId(): string | null {
   try {
-    const raw = localStorage.getItem('lovecard_user_v2');
+    const raw = localStorage.getItem('lovecard_user_cache_v2') || localStorage.getItem('lovecard_user_v2');
     if (raw) {
       const u = JSON.parse(raw);
       return u?.id || null;
@@ -488,9 +488,10 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
   // 1. Save to Supabase Cloud
   if (isSupabaseReady && supabase) {
     try {
-      const row = {
+      const potentialUid = card.creatorId || getCurrentUserId() || null;
+      const row: any = {
         id: card.id,
-        user_id: card.creatorId || getCurrentUserId() || null,
+        user_id: potentialUid,
         template_id: card.templateId,
         sender_name: card.cardData?.senderName || null,
         recipient_name: card.cardData?.recipientName || null,
@@ -500,18 +501,26 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
         hearts_count: card.heartsCount || 0,
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from('cards').upsert(row);
+
+      let { error } = await supabase.from('cards').upsert(row);
+
+      // Nếu gặp lỗi foreign key do user_id không tồn tại trong bảng users trên Supabase -> Thử lại với user_id = null
+      if (error && (error.code === '23503' || error.message?.includes('foreign key') || error.message?.includes('cards_user_id_fkey'))) {
+        row.user_id = null;
+        const retryResult = await supabase.from('cards').upsert(row);
+        error = retryResult.error;
+      }
+
       if (!error) {
         return card;
       }
-      console.warn('Supabase upsert card error:', error);
+      console.warn('Supabase upsert card error, attempting backend fallback:', error);
     } catch (err) {
       console.warn('Supabase saveCard fallback:', err);
     }
-    return card;
   }
 
-  // 2. Save to Oracle 19c local API fallback (khi không dùng Supabase)
+  // 2. Save to Oracle 19c local API fallback (khi không dùng Supabase hoặc Supabase gặp lỗi)
   try {
     const res = await fetch(`${BACKEND_URL}/api/cards`, {
       method: 'POST',
@@ -659,6 +668,11 @@ export async function incrementCardHearts(id: string): Promise<number> {
 
 function cacheCardLocally(card: CreatedCard) {
   try {
+    // Lưu riêng thẻ này để truy xuất tức thì mà không cần duyệt mảng
+    try {
+      localStorage.setItem(`lovecard_card_${card.id}`, JSON.stringify(card));
+    } catch {}
+
     const cards = getAllCards();
     const index = cards.findIndex((c) => c.id === card.id);
     let updated: CreatedCard[];
@@ -668,7 +682,17 @@ function cacheCardLocally(card: CreatedCard) {
     } else {
       updated = [card, ...cards];
     }
-    localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(updated));
+    // Giới hạn tối đa 15 thẻ gần nhất trong cache mảng để không vượt ngưỡng quota localStorage
+    const trimmed = updated.slice(0, 15);
+    try {
+      localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(trimmed));
+    } catch {
+      try {
+        localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(trimmed.slice(0, 5)));
+      } catch {
+        localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify([card]));
+      }
+    }
   } catch {}
 }
 
@@ -700,6 +724,15 @@ export function getUserCards(userId: string | null): CreatedCard[] {
 }
 
 export function getCardById(id: string): CreatedCard | null {
+  // 1. Kiểm tra cache riêng biệt trước
+  try {
+    const direct = localStorage.getItem(`lovecard_card_${id}`);
+    if (direct) {
+      const parsed = JSON.parse(direct);
+      if (parsed && parsed.id) return parsed;
+    }
+  } catch {}
+
   const cards = getAllCards();
   const cleanId = id.replace(/^demo-/, '');
   const found = cards.find((c) => c.id === id || c.id === cleanId || c.id === `demo-${cleanId}`);
@@ -760,6 +793,9 @@ export function encodeCardData(
   cardId?: string
 ): string {
   try {
+    // Tuyệt đối không nén audio dạng data: (Base64) vào URL slug để tránh tràn bộ nhớ
+    const safeAudioUrl = config.audioUrl?.startsWith('data:') ? undefined : config.audioUrl;
+
     const payload: CompactPayload = {
       t: templateId,
       id: cardId,
@@ -769,7 +805,7 @@ export function encodeCardData(
         m: config.mainText,
         p: config.passcode,
         ph: config.passcodeHint,
-        a: config.audioUrl,
+        a: safeAudioUrl,
         mp: config.musicPreset,
         ast: config.audioStartTime,
         aet: config.audioEndTime,

@@ -339,24 +339,50 @@ export default function Studio() {
   const { user } = useAuth();
 
   // Persistent card ID
-  const [currentCardId] = useState<string>(() => generateShortId());
+  const [currentCardId] = useState<string>(() => {
+    try {
+      const savedId = sessionStorage.getItem(`lovecard_active_id_${template.id}`);
+      if (savedId) return savedId;
+    } catch {}
+    const newId = generateShortId();
+    try {
+      sessionStorage.setItem(`lovecard_active_id_${template.id}`, newId);
+    } catch {}
+    return newId;
+  });
+
   const [config, setConfig] = useState<CardConfig>(() => {
+    // 1. Phục hồi bản nháp gần nhất từ sessionStorage (tránh mất sạch dữ liệu khi vô tình reload trang)
+    try {
+      const savedDraft = sessionStorage.getItem(`lovecard_draft_${template.id}`);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed) return parsed;
+      }
+    } catch {}
+
     const existing = getCardById(template.id);
     const defaultPreset = template.defaultConfig?.musicPreset || 'anh-nang-cua-anh';
     const base = existing
-      ? { ...existing.cardData, images: [] }
+      ? { ...existing.cardData, images: existing.cardData?.images || [] }
       : { ...template.defaultConfig, musicPreset: defaultPreset, images: [] };
     const navState = location.state as { wishText?: string; recipientName?: string } | null;
     if (navState?.wishText) {
       return {
         ...base,
-        images: [],
         mainText: navState.wishText,
         recipientName: navState.recipientName || base.recipientName,
       };
     }
-    return { ...base, images: [] };
+    return base;
   });
+
+  // Tự động lưu bản nháp theo thời gian thực để chống mất mát dữ liệu
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`lovecard_draft_${template.id}`, JSON.stringify(config));
+    } catch {}
+  }, [config, template.id]);
 
   // Mobile View Switch: 'edit' or 'preview'
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
@@ -506,8 +532,9 @@ export default function Studio() {
     }
   }, [isMusicModalOpen]);
 
-  const encodedSlug = 'c_' + encodeCardData(template.id, config, currentCardId);
-  const shareUrl = `${window.location.origin}/card/${encodedSlug}`;
+  // Đường dẫn thiệp chia sẻ chuẩn xác nhất bằng mã thẻ duy nhất (không bao giờ làm vỡ mã QR)
+  const shareUrl = `${window.location.origin}/card/${currentCardId}`;
+  const encodedSlug = currentCardId;
 
   const updateConfig = (key: keyof CardConfig, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -522,8 +549,8 @@ export default function Studio() {
     setTimeout(() => setWishAppliedNotice(null), 3000);
   };
 
-  // Helper nén ảnh siêu nhẹ và mượt mà, chống lỗi ngắt stream FileReader trên iOS Safari
-  const compressImageFile = (file: File, maxDim = 1200, quality = 0.85): Promise<string> => {
+  // Helper nén ảnh siêu nhẹ và mượt mà, tối ưu dung lượng <100KB/ảnh, chống tràn bộ nhớ localStorage & database
+  const compressImageFile = (file: File, maxDim = 800, quality = 0.72): Promise<string> => {
     return new Promise((resolve) => {
       // 1. Thử dùng Blob URL trực tiếp (không bị ảnh hưởng bởi e.target.value = '')
       try {
@@ -927,8 +954,9 @@ export default function Studio() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Save Card & Open Share to Oracle 19c (DA.CARDS & DA.CARD_IMAGES)
-  const handleSaveAndShare = async () => {
+  // Save Card & Open Share to Oracle 19c & Supabase Cloud
+  const handleSaveAndShare = async (e?: React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     setIsSaving(true);
     soundFx.playSuccessChime();
     const newCard: CreatedCard = {
@@ -2467,11 +2495,31 @@ export default function Studio() {
               </div>
             )}
 
+            <div className="flex items-center justify-between px-3 py-2 bg-purple-50/80 rounded-xl border border-purple-200/60 text-xs">
+              <span className="text-slate-600 font-medium">Mã thiệp:</span>
+              <div className="flex items-center gap-1.5 font-mono font-bold text-purple-700">
+                <span>{currentCardId}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(currentCardId);
+                    soundFx.playPinClick();
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="p-1 hover:bg-purple-100 rounded text-purple-600 transition-colors"
+                  title="Sao chép mã thiệp"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
             <div className="pt-2 flex items-center justify-between border-t border-slate-100 text-xs">
               <Link
-                to={`/card/${encodedSlug}`}
+                to={`/card/${currentCardId}`}
                 target="_blank"
-                className="text-purple-600 hover:text-purple-700 font-bold flex items-center gap-1 mx-auto"
+                className="text-purple-600 hover:text-purple-700 font-bold flex items-center gap-1 mx-auto py-1 px-3 rounded-lg hover:bg-purple-50 transition-colors"
               >
                 <span>Mở xem thử như người nhận</span>
                 <ExternalLink className="w-3.5 h-3.5" />
