@@ -399,7 +399,7 @@ export default function Dashboard() {
                         {/* Compact on mobile, rich on desktop */}
                         <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
                           <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                            <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
+                            <TemplateThumbnail effectType={tmpl.effectType} thumbnailUrl={tmpl.thumbnail} className="w-full h-full" />
                           </div>
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
 

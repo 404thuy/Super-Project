@@ -689,7 +689,7 @@ export default function Landing() {
                 <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-slate-900">
                   <Link to={`/studio/${tmpl.id}`} className="block w-full h-full">
                     <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                      <TemplateThumbnail effectType={tmpl.effectType} className="w-full h-full" />
+                      <TemplateThumbnail effectType={tmpl.effectType} thumbnailUrl={tmpl.thumbnail} className="w-full h-full" />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
                   </Link>
