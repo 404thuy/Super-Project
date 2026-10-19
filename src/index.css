@@ -23,6 +23,9 @@ html, body {
   overflow-x: hidden;
   max-width: 100vw;
   width: 100%;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 #root {
@@ -31,10 +34,21 @@ html, body {
   width: 100%;
 }
 
+/* Chống triệt để hiện tượng Auto-zoom (bị phóng to / room) trên Mobile khi nhấn vào ô nhập thông tin */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: 16px !important;
+  }
+}
+
 /* Ensure Vietnamese tone marks and diacritics are never displaced, warped or clipped */
 h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select {
   font-family: inherit;
   text-decoration-skip-ink: auto;
+  touch-action: manipulation;
 }
 
 /* Font family utility classes with robust Vietnamese fallbacks */
