@@ -1,10 +1,22 @@
 import type { CardConfig, CardTemplate, CreatedCard } from '../types';
 import { TEMPLATES } from '../types';
+import { supabase, isSupabaseReady } from './supabaseClient';
 
 const TOKEN_KEY = 'lovecard_session_token';
 const CARDS_CACHE_KEY = 'lovecard_cards_cache_v2';
 const TEMPLATE_STATS_KEY = 'lovecard_template_stats_v2';
 const USER_LIKED_TEMPLATES_KEY = 'lovecard_user_liked_templates_v2';
+
+function getCurrentUserId(): string | null {
+  try {
+    const raw = localStorage.getItem('lovecard_user_v2');
+    if (raw) {
+      const u = JSON.parse(raw);
+      return u?.id || null;
+    }
+  } catch {}
+  return null;
+}
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -31,13 +43,52 @@ export function formatStat(num: number): string {
 }
 
 // ----------------------------------------------------
-// 1. TEMPLATES STATS & LIKES (ORACLE 19C DA.TEMPLATES)
+// 1. TEMPLATES STATS & LIKES (SUPABASE & ORACLE FALLBACK)
 // ----------------------------------------------------
 
 export async function fetchLiveTemplateStats(): Promise<{
   stats: Record<string, { views: number; hearts: number; uses: number }>;
   likedTemplateIds: string[];
 }> {
+  // 1. Supabase Cloud Sync
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data: tmplData } = await supabase.from('templates').select('*');
+      const stats: Record<string, { views: number; hearts: number; uses: number }> = {};
+      if (tmplData) {
+        tmplData.forEach((row: any) => {
+          stats[row.id] = {
+            views: row.views_count || 0,
+            hearts: row.hearts_count || 0,
+            uses: row.uses_count || 0,
+          };
+        });
+      }
+
+      const uid = getCurrentUserId();
+      let likedIds: string[] = [];
+      if (uid) {
+        const { data: likesData } = await supabase
+          .from('template_likes')
+          .select('template_id')
+          .eq('user_id', uid);
+        if (likesData) {
+          likedIds = likesData.map((l: any) => l.template_id);
+        }
+      }
+
+      localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(stats));
+      if (uid) {
+        localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(likedIds));
+      }
+
+      return { stats, likedTemplateIds: likedIds };
+    } catch (err) {
+      console.warn('Supabase fetch templates stats fallback:', err);
+    }
+  }
+
+  // 2. Oracle 19c local API fallback
   try {
     const res = await fetch('/api/templates', {
       headers: getAuthHeaders(),
@@ -60,7 +111,7 @@ export async function fetchLiveTemplateStats(): Promise<{
     // Vercel static fallback
   }
 
-  // Fallback cache
+  // 3. Fallback cache
   try {
     const raw = localStorage.getItem(TEMPLATE_STATS_KEY);
     const rawLiked = localStorage.getItem(USER_LIKED_TEMPLATES_KEY);
@@ -91,12 +142,28 @@ export function getTemplateLiveStats(templateId: string): { views: number; heart
 }
 
 export async function incrementTemplateView(templateId: string): Promise<void> {
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data } = await supabase.from('templates').select('views_count').eq('id', templateId).maybeSingle();
+      const current = data?.views_count || 0;
+      await supabase.from('templates').upsert({ id: templateId, views_count: current + 1, updated_at: new Date().toISOString() });
+      return;
+    } catch {}
+  }
   try {
     await fetch(`/api/templates/${encodeURIComponent(templateId)}/view`, { method: 'POST' });
   } catch {}
 }
 
 export async function incrementTemplateUse(templateId: string): Promise<void> {
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data } = await supabase.from('templates').select('uses_count').eq('id', templateId).maybeSingle();
+      const current = data?.uses_count || 0;
+      await supabase.from('templates').upsert({ id: templateId, uses_count: current + 1, updated_at: new Date().toISOString() });
+      return;
+    } catch {}
+  }
   try {
     await fetch(`/api/templates/${encodeURIComponent(templateId)}/use`, { method: 'POST' });
   } catch {}
@@ -118,11 +185,69 @@ export function isTemplateLikedByUser(templateId: string, _userId?: string | nul
   return list.includes(templateId);
 }
 
-// Toggle Heart: calls POST /api/templates/:templateId/like (Stores in DA.TEMPLATE_LIKES in Oracle)
+// Toggle Heart
 export async function toggleTemplateHeart(
   templateId: string,
-  _userId?: string
+  userIdParam?: string
 ): Promise<{ isLiked: boolean; newHearts: number }> {
+  const uid = userIdParam || getCurrentUserId() || 'guest';
+
+  // 1. Supabase Cloud Sync
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data: existing } = await supabase
+        .from('template_likes')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('template_id', templateId)
+        .maybeSingle();
+
+      const { data: tmpl } = await supabase
+        .from('templates')
+        .select('hearts_count')
+        .eq('id', templateId)
+        .maybeSingle();
+
+      let hearts = tmpl?.hearts_count || 0;
+      let isLiked = false;
+
+      if (existing) {
+        // Unlike
+        await supabase.from('template_likes').delete().eq('user_id', uid).eq('template_id', templateId);
+        hearts = Math.max(0, hearts - 1);
+        isLiked = false;
+      } else {
+        // Like
+        await supabase.from('template_likes').insert({ user_id: uid, template_id: templateId });
+        hearts += 1;
+        isLiked = true;
+      }
+
+      await supabase.from('templates').upsert({ id: templateId, hearts_count: hearts, updated_at: new Date().toISOString() });
+
+      // Update local storage
+      const currentLikes = getUserLikedTemplateIds();
+      let updatedLikes: string[];
+      if (isLiked) {
+        updatedLikes = [...currentLikes.filter((id) => id !== templateId), templateId];
+      } else {
+        updatedLikes = currentLikes.filter((id) => id !== templateId);
+      }
+      localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
+
+      const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
+      const statsData = rawStats ? JSON.parse(rawStats) : {};
+      if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
+      statsData[templateId].hearts = hearts;
+      localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
+
+      return { isLiked, newHearts: hearts };
+    } catch (err) {
+      console.warn('Supabase toggleTemplateHeart error:', err);
+    }
+  }
+
+  // 2. Oracle 19c local API fallback
   try {
     const res = await fetch(`/api/templates/${encodeURIComponent(templateId)}/like`, {
       method: 'POST',
@@ -135,7 +260,6 @@ export async function toggleTemplateHeart(
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
-        // Update local cache
         const currentLikes = getUserLikedTemplateIds();
         let updatedLikes: string[];
         if (data.isLiked) {
@@ -145,7 +269,6 @@ export async function toggleTemplateHeart(
         }
         localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
 
-        // Update stats cache
         const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
         const statsData = rawStats ? JSON.parse(rawStats) : {};
         if (statsData[templateId]) {
@@ -168,11 +291,36 @@ export function getLikedTemplates(userId: string | null): CardTemplate[] {
 }
 
 // ----------------------------------------------------
-// 2. CARDS & CARD IMAGES (ORACLE 19C DA.CARDS & DA.CARD_IMAGES)
+// 2. CARDS & CARD IMAGES (SUPABASE & ORACLE CLOUD/LOCAL)
 // ----------------------------------------------------
 
-// Fetch single card from Oracle 19c
+// Fetch single card from Supabase or Oracle 19c
 export async function fetchCardById(id: string): Promise<CreatedCard | null> {
+  // 1. Supabase Cloud fetch
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data, error } = await supabase.from('cards').select('*').eq('id', id).maybeSingle();
+      if (!error && data) {
+        const card: CreatedCard = {
+          id: data.id,
+          creatorId: data.user_id,
+          templateId: data.template_id,
+          title: data.template_id,
+          cardData: data.card_data,
+          viewsCount: data.views_count || 1,
+          heartsCount: data.hearts_count || 0,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+        cacheCardLocally(card);
+        return card;
+      }
+    } catch (err) {
+      console.warn('Supabase fetchCardById fallback:', err);
+    }
+  }
+
+  // 2. Oracle 19c local API fallback
   try {
     const res = await fetch(`/api/cards/${encodeURIComponent(id)}`);
     const isJson = res.headers.get('content-type')?.includes('application/json');
@@ -187,15 +335,41 @@ export async function fetchCardById(id: string): Promise<CreatedCard | null> {
     // Vercel static fallback
   }
 
-  // Fallback to local cache if offline or direct template
+  // 3. Fallback to local cache if offline or direct template
   return getCardById(id);
 }
 
-// Save or update card into Oracle 19c (DA.CARDS & DA.CARD_IMAGES)
+// Save or update card into Supabase or Oracle 19c
 export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
   // Update local cache first
   cacheCardLocally(card);
 
+  // 1. Save to Supabase Cloud
+  if (isSupabaseReady && supabase) {
+    try {
+      const row = {
+        id: card.id,
+        user_id: card.creatorId || getCurrentUserId() || null,
+        template_id: card.templateId,
+        sender_name: card.cardData?.senderName || null,
+        recipient_name: card.cardData?.recipientName || null,
+        wish_message: card.cardData?.mainText || null,
+        card_data: card.cardData,
+        views_count: card.viewsCount || 1,
+        hearts_count: card.heartsCount || 0,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase.from('cards').upsert(row);
+      if (!error) {
+        return card;
+      }
+      console.warn('Supabase upsert card error:', error);
+    } catch (err) {
+      console.warn('Supabase saveCard fallback:', err);
+    }
+  }
+
+  // 2. Save to Oracle 19c local API fallback
   try {
     const res = await fetch('/api/cards', {
       method: 'POST',
@@ -221,9 +395,17 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
   return card;
 }
 
-// Delete card from Oracle 19c
+// Delete card
 export async function deleteCard(id: string): Promise<void> {
   removeCardFromLocalCache(id);
+
+  if (isSupabaseReady && supabase) {
+    try {
+      await supabase.from('cards').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase deleteCard error:', err);
+    }
+  }
 
   try {
     await fetch(`/api/cards/${encodeURIComponent(id)}`, {
@@ -235,8 +417,40 @@ export async function deleteCard(id: string): Promise<void> {
   }
 }
 
-// Fetch all cards belonging to current user from Oracle 19c
+// Fetch all cards belonging to current user
 export async function fetchUserCards(): Promise<CreatedCard[]> {
+  const currentUid = getCurrentUserId();
+
+  // 1. Fetch from Supabase Cloud
+  if (isSupabaseReady && supabase && currentUid) {
+    try {
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('user_id', currentUid)
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        const cards: CreatedCard[] = data.map((d: any) => ({
+          id: d.id,
+          creatorId: d.user_id,
+          templateId: d.template_id,
+          title: d.template_id,
+          cardData: d.card_data,
+          viewsCount: d.views_count || 1,
+          heartsCount: d.hearts_count || 0,
+          createdAt: d.created_at,
+          updatedAt: d.updated_at,
+        }));
+        localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(cards));
+        return cards;
+      }
+    } catch (err) {
+      console.warn('Supabase fetchUserCards fallback:', err);
+    }
+  }
+
+  // 2. Fetch from Oracle 19c local API
   try {
     const res = await fetch('/api/users/me/cards', {
       headers: getAuthHeaders(),
@@ -253,12 +467,20 @@ export async function fetchUserCards(): Promise<CreatedCard[]> {
     // Vercel static fallback
   }
 
-  // Fallback to cached cards
+  // 3. Fallback to cached cards
   return getAllCards();
 }
 
 // Increment view count
 export async function incrementCardViews(id: string): Promise<number> {
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data } = await supabase.from('cards').select('views_count').eq('id', id).maybeSingle();
+      const current = data?.views_count || 0;
+      await supabase.from('cards').update({ views_count: current + 1 }).eq('id', id);
+      return current + 1;
+    } catch {}
+  }
   try {
     await fetch(`/api/cards/${encodeURIComponent(id)}/view`, { method: 'POST' });
   } catch {}
@@ -267,6 +489,14 @@ export async function incrementCardViews(id: string): Promise<number> {
 
 // Increment hearts count
 export async function incrementCardHearts(id: string): Promise<number> {
+  if (isSupabaseReady && supabase) {
+    try {
+      const { data } = await supabase.from('cards').select('hearts_count').eq('id', id).maybeSingle();
+      const current = data?.hearts_count || 0;
+      await supabase.from('cards').update({ hearts_count: current + 1 }).eq('id', id);
+      return current + 1;
+    } catch {}
+  }
   try {
     await fetch(`/api/cards/${encodeURIComponent(id)}/heart`, { method: 'POST' });
   } catch {}

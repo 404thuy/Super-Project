@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User } from '../types';
+import { supabase, isSupabaseReady } from '../utils/supabaseClient';
 
 interface AuthResponse {
   success: boolean;
@@ -86,6 +87,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {}
       }
 
+      // Nếu là token phiên Supabase
+      if (token.startsWith('sess_sb_')) {
+        const userId = token.replace('sess_sb_', '');
+        if (isSupabaseReady && supabase) {
+          try {
+            const { data: sbUser } = await supabase.from('users').select('*').eq('id', userId).maybeSingle();
+            if (sbUser && mounted) {
+              const u: User = {
+                id: sbUser.id,
+                username: sbUser.username,
+                displayName: sbUser.display_name,
+                avatarUrl: sbUser.avatar_url,
+                email: sbUser.email || '',
+                createdAt: new Date(sbUser.created_at).toLocaleDateString('vi-VN'),
+              };
+              setUser(u);
+              localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
+              setIsLoading(false);
+              return;
+            }
+          } catch {}
+        }
+        if (mounted && cachedUser) {
+          setUser(cachedUser);
+        }
+        if (mounted) setIsLoading(false);
+        return;
+      }
+
       // Nếu là token phiên local hoặc demo trên Vercel
       if (token.startsWith('sess_local_') || token.startsWith('sess_demo_')) {
         if (mounted && cachedUser) {
@@ -148,6 +178,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<AuthResponse> => {
     const cleanUser = username.trim().toLowerCase().replace(/\s+/g, '');
     const cleanName = displayName?.trim() || cleanUser;
+
+    // 1. Nếu có kết nối Supabase Cloud -> Lưu trực tiếp vào CSDL Supabase
+    if (isSupabaseReady && supabase) {
+      try {
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('id')
+          .eq('username', cleanUser)
+          .maybeSingle();
+
+        if (existingUser) {
+          return {
+            success: false,
+            error: 'Tên tài khoản này đã có người đăng ký. Vui lòng chọn tên khác!',
+          };
+        }
+
+        const userId = 'usr_' + Math.random().toString(36).substring(2, 10);
+        const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(cleanUser)}`;
+
+        const { error: insError } = await supabase.from('users').insert({
+          id: userId,
+          username: cleanUser,
+          password_hash: password,
+          display_name: cleanName,
+          avatar_url: avatarUrl,
+          email: email?.trim() || null,
+        });
+
+        if (!insError) {
+          const newUser: User = {
+            id: userId,
+            username: cleanUser,
+            displayName: cleanName,
+            email: email?.trim() || '',
+            avatarUrl,
+            createdAt: new Date().toLocaleDateString('vi-VN'),
+          };
+
+          setUser(newUser);
+          localStorage.setItem(USER_CACHE_KEY, JSON.stringify(newUser));
+          localStorage.setItem(TOKEN_KEY, 'sess_sb_' + userId);
+          closeAuthModal();
+          return { success: true };
+        }
+      } catch (err) {
+        console.warn('Supabase register error:', err);
+      }
+    }
 
     const createLocalAccount = () => {
       const localUser: User = {
@@ -239,7 +318,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithPassword = async (username: string, password: string): Promise<AuthResponse> => {
     const cleanUser = username.trim().toLowerCase().replace(/\s+/g, '');
 
-    // 1. Kiểm tra trong danh sách tài khoản local đã đăng ký
+    // 1. Kiểm tra tài khoản trên Supabase Cloud
+    if (isSupabaseReady && supabase) {
+      try {
+        const { data: sbUser } = await supabase
+          .from('users')
+          .select('*')
+          .eq('username', cleanUser)
+          .maybeSingle();
+
+        if (sbUser) {
+          if (sbUser.password_hash === password) {
+            const u: User = {
+              id: sbUser.id,
+              username: sbUser.username,
+              displayName: sbUser.display_name || sbUser.username,
+              avatarUrl: sbUser.avatar_url,
+              email: sbUser.email || '',
+              createdAt: new Date(sbUser.created_at).toLocaleDateString('vi-VN'),
+            };
+            setUser(u);
+            localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
+            localStorage.setItem(TOKEN_KEY, 'sess_sb_' + sbUser.id);
+            closeAuthModal();
+            return { success: true };
+          } else {
+            return { success: false, error: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!' };
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase login check warning:', err);
+      }
+    }
+
+    // 2. Kiểm tra trong danh sách tài khoản local đã đăng ký
     try {
       const stored = JSON.parse(localStorage.getItem('lovecard_local_accounts') || '{}');
       if (stored[cleanUser]) {
@@ -256,7 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch {}
 
-    // 2. Tài khoản dùng thử nhanh
+    // 3. Tài khoản dùng thử nhanh
     if (cleanUser === 'khach_trainghiem' || cleanUser.startsWith('khach_')) {
       const demoUser: User = {
         id: 'usr_demo_guest',
@@ -272,7 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
     }
 
-    // 3. Gọi API Backend (nếu chạy local hoặc có server)
+    // 4. Gọi API Backend (nếu chạy local hoặc có server)
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -353,13 +465,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     closeAuthModal();
   };
 
-  // Cập nhật ảnh đại diện vào bảng DA.USERS (với cơ chế đồng bộ mượt mà)
+  // Cập nhật ảnh đại diện vào bảng DA.USERS hoặc Supabase
   const updateAvatar = async (newAvatarUrl: string): Promise<AuthResponse> => {
     if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
 
     const updatedUser: User = { ...user, avatarUrl: newAvatarUrl };
     setUser(updatedUser);
     localStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser));
+
+    // Cập nhật lên Supabase nếu có
+    if (isSupabaseReady && supabase) {
+      try {
+        await supabase.from('users').update({ avatar_url: newAvatarUrl }).eq('id', user.id);
+      } catch (err) {
+        console.warn('Supabase update avatar warning:', err);
+      }
+    }
 
     // Cập nhật tài khoản local nếu có
     try {
@@ -390,6 +511,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Đổi mật khẩu
   const updatePassword = async (oldPassword: string, newPassword: string): Promise<AuthResponse> => {
     if (!user) return { success: false, error: 'Vui lòng đăng nhập để thực hiện' };
+
+    // Cập nhật lên Supabase nếu có
+    if (isSupabaseReady && supabase) {
+      try {
+        const { data: sbUser } = await supabase
+          .from('users')
+          .select('password_hash')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (sbUser && sbUser.password_hash !== oldPassword) {
+          return { success: false, error: 'Mật khẩu cũ không chính xác' };
+        }
+
+        await supabase
+          .from('users')
+          .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        return { success: true };
+      } catch (err) {
+        console.warn('Supabase update password warning:', err);
+      }
+    }
 
     // Cập nhật trong local accounts trước
     try {
@@ -459,7 +603,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerWithEmail,
         loginWithEmail,
         logout,
-        isSupabaseConfigured: false,
+        isSupabaseConfigured: isSupabaseReady,
       }}
     >
       {children}
