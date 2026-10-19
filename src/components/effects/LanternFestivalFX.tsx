@@ -4,7 +4,6 @@ import {
   Sparkles,
   Flame,
   Send,
-  RotateCw,
   Heart,
   ChevronLeft,
   ChevronRight,
@@ -39,11 +38,10 @@ interface Particle {
   life: number;
 }
 
-// 4 Điểm nhìn 3D nghệ thuật
+// Chế độ điểm nhìn 3D
 type CameraViewMode = 'cinematic' | 'reading' | 'skyward' | 'orbit' | 'free';
 
 export default function LanternFestivalFX({ config }: Props) {
-  // Điểm nhìn Camera hiện tại
   const [viewMode, setViewMode] = useState<CameraViewMode>('cinematic');
 
   // Góc quay 3D tự do hoàn toàn
@@ -222,22 +220,22 @@ export default function LanternFestivalFX({ config }: Props) {
     setCurrentFace(faceIdx);
 
     switch (mode) {
-      case 'cinematic': // Góc toàn cảnh 3D lãng mạn
+      case 'cinematic':
         setRotY(-faceIdx * 90 - 18);
         setRotX(-8);
         setScale(1);
         break;
-      case 'reading': // Góc cận cảnh thẳng thắn, phóng to để đọc chữ và ngắm ảnh rõ nét
+      case 'reading':
         setRotY(-faceIdx * 90);
         setRotX(0);
         setScale(1.15);
         break;
-      case 'skyward': // Góc ngước lên bầu trời ngắm đáy lồng đèn rực lửa
+      case 'skyward':
         setRotY(-faceIdx * 90 - 12);
-        setRotX(28);
+        setRotX(35);
         setScale(0.96);
         break;
-      case 'orbit': // Bắt đầu tự xoay 360 độ
+      case 'orbit':
         setRotX(-8);
         setScale(1);
         break;
@@ -278,7 +276,6 @@ export default function LanternFestivalFX({ config }: Props) {
   const handleStagePointerDown = (e: React.PointerEvent) => {
     if (isReleased) return;
 
-    // Cho phép bắt sự kiện pointer toàn diện cả khi rê ra ngoài mép
     try {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     } catch {}
@@ -309,23 +306,18 @@ export default function LanternFestivalFX({ config }: Props) {
     const dx = e.clientX - lastPointer.current.x;
     const dy = e.clientY - lastPointer.current.y;
 
-    // Vận tốc góc theo cả 2 trục X và Y
     velocity.current = {
       x: (dx / dt) * 16,
       y: (dy / dt) * 16,
     };
     lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
 
-    // Tự do xoay 360 độ trục Y vô tận
     const newRotY = dragStartRot.current.y + deltaX * 0.55;
-
-    // Tự do xoay góc nghiêng trục X từ -80 độ (nhìn từ đỉnh nắp) đến +80 độ (nhìn từ dưới đáy)
     const newRotX = Math.max(-80, Math.min(80, dragStartRot.current.x - deltaY * 0.45));
 
     setRotY(newRotY);
     setRotX(newRotX);
 
-    // Tính mặt đang đối diện
     const normalizedY = ((-newRotY % 360) + 360) % 360;
     const faceIndex = Math.round(normalizedY / 90) % 4;
     setCurrentFace(faceIndex);
@@ -341,7 +333,6 @@ export default function LanternFestivalFX({ config }: Props) {
       } catch {}
     }
 
-    // Hiệu ứng vật lý trôi quán tính 2 trục mượt mà
     let vx = velocity.current.x * 0.55;
     let vy = velocity.current.y * 0.4;
 
@@ -363,14 +354,14 @@ export default function LanternFestivalFX({ config }: Props) {
     animFrameId.current = requestAnimationFrame(applyInertia);
   }, []);
 
-  // ─── TỰ DO PHÓNG TO / THU NHỎ (ZOOM) BẰNG CON LĂN CHUỘT ───
+  // Zoom bằng con lăn chuột
   const handleWheel = (e: React.WheelEvent) => {
     if (isReleased) return;
     const zoomDelta = e.deltaY * -0.0012;
     setScale((prev) => Math.max(0.65, Math.min(1.5, prev + zoomDelta)));
   };
 
-  // ─── CỬ CHỈ PINCH TO ZOOM TRÊN MOBILE ───
+  // Pinch to zoom trên mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const dist = Math.hypot(
@@ -397,7 +388,6 @@ export default function LanternFestivalFX({ config }: Props) {
     pinchStartDist.current = null;
   };
 
-  // Đổi tỉ lệ zoom bằng nút bấm
   const handleZoom = (delta: number) => {
     soundFx.playPinClick();
     setScale((prev) => Math.max(0.65, Math.min(1.5, Number((prev + delta).toFixed(2)))));
@@ -433,10 +423,12 @@ export default function LanternFestivalFX({ config }: Props) {
     applyViewMode('cinematic', 0);
   };
 
-  // Kích thước lồng đèn được tối ưu co giãn vừa vặn cho cả Mobile và Máy tính
-  const FACE_WIDTH = 225;
-  const FACE_HEIGHT = 345;
-  const RADIUS = 112.5; // FACE_WIDTH / 2
+  // ─── HÌNH HỌC 3D CHUẨN XÁC 100% (MONOLITHIC GEOMETRY) ───
+  // Khối lăng trụ chữ nhật 4 mặt chuẩn tâm đối xứng
+  const WIDTH = 220; // Chiều rộng mỗi mặt (pixels)
+  const HEIGHT = 330; // Chiều cao mỗi mặt (pixels)
+  const RADIUS = WIDTH / 2; // = 110px: Khoảng cách từ tâm đến 4 mặt
+  const HALF_H = HEIGHT / 2; // = 165px: Khoảng cách từ tâm đến nắp đỉnh và đáy
 
   return (
     <div
@@ -637,7 +629,7 @@ export default function LanternFestivalFX({ config }: Props) {
           </button>
         </div>
 
-        {/* Nút Thả Đèn Nổi Bật Ở Góc Phải */}
+        {/* Nút Thả Đèn */}
         {!isReleased && (
           <button
             onClick={handleReleaseLantern}
@@ -649,7 +641,7 @@ export default function LanternFestivalFX({ config }: Props) {
         )}
       </header>
 
-      {/* ─── VÙNG TƯƠNG TÁC 3D TOÀN DIỆN (CHẠM VUỐT BẤT KỲ ĐÂU ĐỀU XOAY TỰ DO ĐƯỢC) ─── */}
+      {/* ─── VÙNG TƯƠNG TÁC 3D TOÀN MÀN HÌNH (VUỐT MỌI VỊ TRÍ) ─── */}
       <div
         className="relative z-20 flex-1 w-full flex items-center justify-center my-auto overflow-hidden touch-none cursor-grab active:cursor-grabbing select-none"
         onPointerDown={handleStagePointerDown}
@@ -657,10 +649,10 @@ export default function LanternFestivalFX({ config }: Props) {
         onPointerUp={handleStagePointerUp}
         onPointerCancel={handleStagePointerUp}
       >
-        {/* CỤM NÚT ĐIỀU KHIỂN ZOOM VÀ ĐẶT LẠI GÓC NHÌN Ở GÓC TRÊN */}
+        {/* CỤM NÚT ZOOM VÀ RESET GÓC NHÌN */}
         <div
           className="absolute top-2 right-2 sm:right-4 z-30 flex flex-col gap-1.5 bg-black/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/15 shadow-lg pointer-events-auto"
-          onPointerDown={(e) => e.stopPropagation()} // Ngăn chặn kéo xoay khi bấm nút zoom
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => handleZoom(0.12)}
@@ -691,7 +683,7 @@ export default function LanternFestivalFX({ config }: Props) {
           </button>
         </div>
 
-        {/* THÂN LỒNG ĐÈN 3D NGUYÊN KHỐI */}
+        {/* ─── KHUNG BAO NGOÀI 3D SÂN KHẤU (STAGE PRISM WRAPPER) ─── */}
         <motion.div
           animate={
             isReleased
@@ -724,12 +716,12 @@ export default function LanternFestivalFX({ config }: Props) {
           }
           className="relative flex items-center justify-center pointer-events-none"
           style={{
-            width: `${FACE_WIDTH}px`,
-            height: `${FACE_HEIGHT}px`,
+            width: `${WIDTH}px`,
+            height: `${HEIGHT}px`,
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* LÕI ÁNH SÁNG NỘI TẠI TỎA HÀO QUANG VÀNG KIM TẠI TÂM */}
+          {/* LÕI ÁNH SÁNG NỘI TẠI TỎA HÀO QUANG VÀNG KIM TẠI TÂM (0, 0, 0) */}
           <div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{
@@ -751,7 +743,7 @@ export default function LanternFestivalFX({ config }: Props) {
             />
           </div>
 
-          {/* KHỐI QUAY 3D NGUYÊN KHỐI ĐÈN TRỜI HỘI AN */}
+          {/* ─── KHỐI QUAY 3D NGUYÊN KHỐI HOÀN TOÀN KHÉP KÍN (CLOSED 3D MONOLITH) ─── */}
           <motion.div
             className="relative w-full h-full"
             style={{
@@ -771,36 +763,58 @@ export default function LanternFestivalFX({ config }: Props) {
                 : { type: 'spring', stiffness: 220, damping: 24 }
             }
           >
-            {/* ── 1. NẮP TRÊN 3D BÁT GIÁC CỔ ĐIỂN (OCTAGONAL DOMED CANOPY) ── */}
+            {/* ── 1. NẮP ĐỈNH 3D VÒM HOA ĐĂNG (KHỚP KHÍT 100% VỚI 4 ĐỈNH MẶT LỤA) ── */}
             <div
-              className="absolute left-0 top-0 w-full rounded-[26px] bg-gradient-to-br from-[#78350f] via-[#b45309] to-[#451a03] border border-amber-300/80 shadow-[0_8px_20px_rgba(0,0,0,0.5)] flex items-center justify-center pointer-events-none"
+              className="absolute left-1/2 top-1/2 pointer-events-none border border-amber-300/80 shadow-[0_4px_25px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden"
               style={{
-                height: `${FACE_WIDTH}px`,
-                transform: `rotateX(90deg) translateZ(${RADIUS}px)`,
-                transformOrigin: 'top center',
+                width: `${WIDTH}px`,
+                height: `${WIDTH}px`,
+                margin: `-${RADIUS}px 0 0 -${RADIUS}px`,
+                transform: `rotateX(90deg) translateZ(${HALF_H}px)`,
+                transformStyle: 'preserve-3d',
+                background:
+                  'radial-gradient(circle at 50% 50%, #fef3c7 0%, #fde68a 25%, #d97706 70%, #78350f 100%)',
               }}
             >
-              <div className="w-32 h-32 rounded-full border-2 border-yellow-300/70 bg-gradient-to-br from-amber-950 via-yellow-900 to-amber-950 flex items-center justify-center shadow-inner relative">
-                <div className="w-18 h-18 rounded-full border border-dashed border-amber-300/80 flex items-center justify-center text-amber-200 text-[11px] font-serif font-bold shadow-md">
+              {/* Vân nan tre đồng tâm trên nắp đỉnh */}
+              <div className="w-40 h-40 rounded-full border-2 border-amber-900/40 flex items-center justify-center relative">
+                <div className="w-24 h-24 rounded-full border border-dashed border-amber-900/50 flex items-center justify-center text-amber-950 text-[10.5px] font-serif font-black shadow-inner">
                   ❖ 20/10 ❖
                 </div>
-                <div className="absolute -top-2.5 w-5 h-5 rounded-full border-2 border-yellow-300/90 shadow-sm" />
+                {/* Chóp khoen đồng nổi nhô lên 3D */}
+                <div
+                  className="absolute w-8 h-8 rounded-full border-2 border-yellow-300 bg-amber-950 flex items-center justify-center shadow-md"
+                  style={{ transform: 'translateZ(12px)' }}
+                >
+                  <div className="w-3 h-3 rounded-full bg-yellow-300 shadow-sm" />
+                </div>
               </div>
             </div>
 
-            {/* ── 2. VÒNG ĐÁY & NGỌN NẾN LỬA 3D (BOTTOM FIRE HOOP) ── */}
+            {/* ── 2. ĐÁY DƯỚI 3D THÔNG GIÓ & NGỌN NẾN LỬA (KHỚP KHÍT 100% VỚI 4 ĐÁY MẶT LỤA) ── */}
             <div
-              className="absolute left-0 bottom-0 w-full rounded-[26px] bg-gradient-to-br from-[#451a03] via-[#78350f] to-[#451a03] border border-amber-400 shadow-[0_0_50px_rgba(249,115,22,0.9)] flex items-center justify-center pointer-events-none"
+              className="absolute left-1/2 top-1/2 pointer-events-none border border-amber-400 shadow-[0_0_50px_rgba(249,115,22,0.9)] flex items-center justify-center overflow-hidden"
               style={{
-                height: `${FACE_WIDTH}px`,
-                transform: `rotateX(-90deg) translateZ(${FACE_HEIGHT - RADIUS}px)`,
-                transformOrigin: 'bottom center',
+                width: `${WIDTH}px`,
+                height: `${WIDTH}px`,
+                margin: `-${RADIUS}px 0 0 -${RADIUS}px`,
+                transform: `rotateX(-90deg) translateZ(${HALF_H}px)`,
+                transformStyle: 'preserve-3d',
+                background:
+                  'radial-gradient(circle at 50% 50%, #451a03 0%, #78350f 40%, #b45309 85%, #451a03 100%)',
               }}
             >
-              <div className="relative w-36 h-36 rounded-full border-3 border-yellow-400 bg-black/75 shadow-inner flex items-center justify-center">
+              {/* Miệng tròn nan tre thông gió đón khí nóng */}
+              <div className="relative w-36 h-36 rounded-full border-3 border-yellow-400 bg-black/85 shadow-inner flex items-center justify-center">
+                {/* Thanh nan chéo kim loại chữ thập (+) */}
                 <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-0.5 bg-yellow-200/90 shadow-sm" />
                 <div className="absolute inset-y-2 left-1/2 -translate-x-1/2 w-0.5 bg-yellow-200/90 shadow-sm" />
-                <div className="w-9 h-9 rounded-md bg-amber-950 border border-yellow-300 flex items-center justify-center shadow-2xl relative z-10">
+
+                {/* Khối sáp nến và ngọn lửa nhảy múa chiếu sáng */}
+                <div
+                  className="w-10 h-10 rounded-md bg-amber-950 border border-yellow-300 flex items-center justify-center shadow-2xl relative z-10"
+                  style={{ transform: 'translateZ(15px)' }}
+                >
                   <motion.div
                     animate={{
                       scale: [1, 1.25, 0.95, 1.15, 1],
@@ -818,27 +832,30 @@ export default function LanternFestivalFX({ config }: Props) {
               </div>
             </div>
 
-            {/* ── 3. BỐN MẶT LỤA TƠ TẰM HỘI AN HOÀNG KIM (4 SILK FACES) ── */}
+            {/* ── 3. BỐN MẶT LỤA TƠ TẰM HỘI AN KHÉP KÍN 100% ── */}
             {faces.map((f, idx) => {
-              const faceAngle = idx * 90;
+              const faceAngle = idx * 90; // 0, 90, 180, 270 độ
               const relativeAngle = ((rotY + faceAngle) % 360 + 360) % 360;
               const isFrontFacing = relativeAngle < 90 || relativeAngle > 270;
               const shadowAlpha = isFrontFacing
-                ? Math.abs(relativeAngle > 180 ? relativeAngle - 360 : relativeAngle) / 90 * 0.3
-                : 0.52;
+                ? Math.abs(relativeAngle > 180 ? relativeAngle - 360 : relativeAngle) / 90 * 0.28
+                : 0.5;
 
               return (
                 <div
                   key={f.id}
-                  className="absolute inset-0 p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden rounded-[26px] sm:rounded-[32px] transition-all duration-150 border border-amber-300/60"
+                  className="absolute left-1/2 top-1/2 p-3 sm:p-4 flex flex-col justify-between overflow-hidden transition-all duration-150 border-x border-amber-300/60"
                   style={{
+                    width: `${WIDTH}px`,
+                    height: `${HEIGHT}px`,
+                    margin: `-${HALF_H}px 0 0 -${RADIUS}px`,
                     transform: `rotateY(${faceAngle}deg) translateZ(${RADIUS}px)`,
                     transformStyle: 'preserve-3d',
                     backfaceVisibility: 'visible',
                     background:
                       'radial-gradient(ellipse at 50% 55%, rgba(255, 253, 245, 0.99) 0%, rgba(254, 243, 199, 0.96) 32%, rgba(251, 191, 36, 0.92) 72%, rgba(217, 119, 6, 0.95) 100%)',
                     boxShadow:
-                      '0 0 45px rgba(249,115,22,0.55), inset 0 0 35px rgba(254,240,138,0.5)',
+                      '0 0 35px rgba(249,115,22,0.45), inset 0 0 30px rgba(254,240,138,0.45)',
                   }}
                 >
                   {/* Lớp phủ bóng mờ 3D theo góc phối cảnh */}
@@ -846,7 +863,7 @@ export default function LanternFestivalFX({ config }: Props) {
                     className="absolute inset-0 pointer-events-none transition-opacity duration-200"
                     style={{
                       background:
-                        'linear-gradient(to bottom, rgba(30,10,2,0.1) 0%, transparent 45%, rgba(20,5,0,0.35) 100%)',
+                        'linear-gradient(to bottom, rgba(30,10,2,0.08) 0%, transparent 45%, rgba(20,5,0,0.3) 100%)',
                       opacity: 0.7 + shadowAlpha,
                     }}
                   />
@@ -854,14 +871,14 @@ export default function LanternFestivalFX({ config }: Props) {
                   {/* Vân giấy Dó truyền thống mỏng tang */}
                   <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#b45309_1.2px,transparent_1.2px)] [background-size:12px_12px] pointer-events-none" />
 
-                  {/* Viền chỉ vàng dát mỏng tinh tế */}
-                  <div className="absolute inset-1.5 border border-amber-900/40 rounded-[22px] pointer-events-none" />
+                  {/* Nẹp viền trang trí trong mặt lụa */}
+                  <div className="absolute inset-1.5 border border-amber-900/35 rounded-xl pointer-events-none" />
 
                   {/* Góc họa tiết cổ truyền */}
-                  <span className="absolute top-2.5 left-3.5 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
-                  <span className="absolute top-2.5 right-3.5 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
-                  <span className="absolute bottom-2.5 left-3.5 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
-                  <span className="absolute bottom-2.5 right-3.5 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
+                  <span className="absolute top-2.5 left-3 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
+                  <span className="absolute top-2.5 right-3 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
+                  <span className="absolute bottom-2.5 left-3 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
+                  <span className="absolute bottom-2.5 right-3 text-amber-950/70 font-serif text-[11px] select-none">❖</span>
 
                   {/* Header Tiêu Đề Mặt Lụa */}
                   <div className="text-center pt-1 z-10">
@@ -939,12 +956,27 @@ export default function LanternFestivalFX({ config }: Props) {
               );
             })}
 
-            {/* ── 4. TUA RUA LỤA ĐUNG ĐƯA NHẸ NHÀNG DƯỚI ĐÁY ── */}
+            {/* ── 4. BỐN THANH NẸP NAN TRE DÁT VÀNG NỔI KHỐI TẠI 4 GÓC CẠNH ── */}
+            {[45, 135, 225, 315].map((angle, idx) => (
+              <div
+                key={`strut-${idx}`}
+                className="absolute left-1/2 top-1/2 pointer-events-none rounded-full shadow-md"
+                style={{
+                  width: '6px',
+                  height: `${HEIGHT + 4}px`,
+                  margin: `-${HALF_H + 2}px 0 0 -3px`,
+                  transform: `rotateY(${angle}deg) translateZ(${RADIUS * 1.414}px)`,
+                  background:
+                    'linear-gradient(to right, #78350f 0%, #fde68a 50%, #b45309 100%)',
+                }}
+              />
+            ))}
+
+            {/* ── 5. TUA RUA LỤA ĐUNG ĐƯA RỦ XUỐNG TỪ CHÍNH GIỮA ĐÁY ── */}
             <div
-              className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-12 pointer-events-none"
+              className="absolute left-1/2 top-1/2 flex items-center justify-center gap-12 pointer-events-none"
               style={{
-                top: `${FACE_HEIGHT + 6}px`,
-                transform: 'translateZ(0px)',
+                transform: `translate(-50%, -50%) translateY(${HALF_H + 8}px)`,
                 transformStyle: 'preserve-3d',
               }}
             >
@@ -995,7 +1027,7 @@ export default function LanternFestivalFX({ config }: Props) {
           </button>
 
           <span className="text-[10.5px] text-amber-200/70 font-medium">
-            Mặt {currentFace + 1}/4 • Chạm vuốt mọi góc độ 360°
+            Mặt {currentFace + 1}/4 • Vuốt tay xoay 360° mọi góc độ
           </span>
 
           <button
