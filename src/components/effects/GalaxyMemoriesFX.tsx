@@ -7,13 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
   ArrowLeft,
-  Rotate3d,
-  Sliders,
   Sparkles,
   RefreshCw,
   Star,
   CheckCircle2,
   Wand2,
+  Compass,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { CardConfig } from '../../types';
@@ -25,7 +24,28 @@ interface Props {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   PROCEDURAL ASTRONOMICAL TEXTURES (Smooth Gaussian Radial Falloffs)
+   ROMANTIC FALLBACK MEMORY IMAGES (High-Res, Aesthetic & Inspiring)
+   ═══════════════════════════════════════════════════════════════════════ */
+const DEFAULT_MEMORY_IMAGES = [
+  'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=700&auto=format&fit=crop&q=80', // Nắm tay ngọt ngào
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&auto=format&fit=crop&q=80', // Hoa hồng pha lê lung linh
+  'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=700&auto=format&fit=crop&q=80', // Ánh đèn nến ấm áp
+  'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=700&auto=format&fit=crop&q=80', // Khoảnh khắc yêu thương
+  'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=700&auto=format&fit=crop&q=80', // Trái tim ánh sáng lấp lánh
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=700&auto=format&fit=crop&q=80', // Tinh thể pha lê lộng lẫy
+];
+
+const SAMPLE_GALAXY_QUOTES = [
+  'Mỗi khoảnh khắc có em là một vì sao sáng lấp lánh trong vũ trụ của anh.',
+  'Em là định mệnh ngọt ngào nhất mà cuộc đời đã ban tặng.',
+  'Dù vũ trụ có bao la đến đâu, trái tim anh vẫn luôn hướng về em.',
+  'Chúc em ngày 20/10 ngập tràn nụ cười, hạnh phúc và vạn sự như ý!',
+  'Cảm ơn em vì đã mang đến ấm áp và diệu kỳ cho cả thế giới của anh.',
+  'Tình yêu này tựa ngân hà vô tận, mãi mãi tỏa sáng vì em.',
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PROCEDURAL SILKY ASTRONOMICAL TEXTURES (Gaussian Glow Falloffs)
    ═══════════════════════════════════════════════════════════════════════ */
 let cachedRoundStarTexture: THREE.CanvasTexture | null = null;
 let cachedStarFlareTexture: THREE.CanvasTexture | null = null;
@@ -34,20 +54,20 @@ let cachedNebulaTexture: THREE.CanvasTexture | null = null;
 function getRoundStarTexture(): THREE.CanvasTexture {
   if (cachedRoundStarTexture) return cachedRoundStarTexture;
   const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
+  canvas.width = 128;
+  canvas.height = 128;
   const ctx = canvas.getContext('2d');
   if (ctx) {
-    const cx = 32;
-    const cy = 32;
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
+    const cx = 64;
+    const cy = 64;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
     grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.18, 'rgba(255, 255, 255, 0.95)');
-    grad.addColorStop(0.4, 'rgba(240, 245, 255, 0.55)');
-    grad.addColorStop(0.7, 'rgba(180, 210, 255, 0.15)');
+    grad.addColorStop(0.12, 'rgba(255, 255, 255, 0.95)');
+    grad.addColorStop(0.35, 'rgba(235, 245, 255, 0.6)');
+    grad.addColorStop(0.65, 'rgba(168, 195, 255, 0.18)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillRect(0, 0, 128, 128);
   }
   cachedRoundStarTexture = new THREE.CanvasTexture(canvas);
   cachedRoundStarTexture.generateMipmaps = true;
@@ -117,9 +137,9 @@ function getNebulaCloudTexture(): THREE.CanvasTexture {
     const cx = 64;
     const cy = 64;
     const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-    grad.addColorStop(0.3, 'rgba(230, 200, 255, 0.35)');
-    grad.addColorStop(0.65, 'rgba(160, 100, 240, 0.12)');
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+    grad.addColorStop(0.25, 'rgba(235, 210, 255, 0.45)');
+    grad.addColorStop(0.6, 'rgba(160, 110, 240, 0.15)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 128, 128);
@@ -137,18 +157,19 @@ function VolumetricNebulaClouds() {
 
   const clouds = useMemo(
     () => [
-      { pos: [-14, 6, -18], scale: 28, color: '#ec4899', rot: 0.1 },
-      { pos: [16, -8, -20], scale: 32, color: '#8b5cf6', rot: -0.2 },
-      { pos: [0, 12, -22], scale: 26, color: '#38bdf8', rot: 0.15 },
-      { pos: [-18, -10, -15], scale: 30, color: '#d946ef', rot: -0.1 },
-      { pos: [12, 14, -16], scale: 24, color: '#f59e0b', rot: 0.05 },
+      { pos: [-16, 6, -20], scale: 38, color: '#ec4899', rot: 0.1 },
+      { pos: [18, -8, -22], scale: 42, color: '#8b5cf6', rot: -0.2 },
+      { pos: [0, 14, -25], scale: 36, color: '#38bdf8', rot: 0.15 },
+      { pos: [-20, -12, -18], scale: 40, color: '#d946ef', rot: -0.1 },
+      { pos: [14, 16, -19], scale: 32, color: '#f59e0b', rot: 0.05 },
+      { pos: [0, -4, -12], scale: 28, color: '#6366f1', rot: 0.08 },
     ],
     []
   );
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.0015;
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.0018;
     }
   });
 
@@ -160,7 +181,7 @@ function VolumetricNebulaClouds() {
             map={texture}
             color={c.color}
             transparent
-            opacity={0.18}
+            opacity={0.22}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
@@ -171,9 +192,9 @@ function VolumetricNebulaClouds() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   REALISTIC MULTI-SPECTRAL STARFIELD (Twinkling Spectral Classification)
+   DEEP SPACE BACKGROUND STARS (Infinite Cosmic Depth)
    ═══════════════════════════════════════════════════════════════════════ */
-function RealisticDeepSpaceField({ count = 3000 }: { count?: number }) {
+function DeepCosmosField({ count = 2800 }: { count?: number }) {
   const mesh = useRef<THREE.Points>(null);
   const texture = useMemo(() => getRoundStarTexture(), []);
 
@@ -182,16 +203,16 @@ function RealisticDeepSpaceField({ count = 3000 }: { count?: number }) {
     const col = new Float32Array(count * 3);
 
     const starColors = [
-      [0.85, 0.92, 1.0],  // Ice Blue
-      [0.99, 0.99, 1.0],  // Diamond White
-      [1.0, 0.96, 0.88],  // Warm Gold Starlight
-      [1.0, 0.84, 0.70],  // Sunset Amber
-      [1.0, 0.75, 0.85],  // Rose Giant
-      [0.75, 0.85, 1.0],  // Royal Celestial
+      [0.85, 0.92, 1.0], // Ice Blue
+      [0.99, 0.99, 1.0], // Diamond White
+      [1.0, 0.96, 0.88], // Warm Gold Starlight
+      [1.0, 0.84, 0.7],  // Sunset Amber
+      [1.0, 0.75, 0.88], // Rose Starlight
+      [0.72, 0.85, 1.0], // Celestial Blue
     ];
 
     for (let i = 0; i < count; i++) {
-      const radius = 48 + Math.random() * 52;
+      const radius = 50 + Math.random() * 60;
       const theta = 2 * Math.PI * Math.random();
       const phi = Math.acos(2 * Math.random() - 1);
 
@@ -209,8 +230,7 @@ function RealisticDeepSpaceField({ count = 3000 }: { count?: number }) {
 
   useFrame((state) => {
     if (mesh.current) {
-      mesh.current.rotation.y = state.clock.elapsedTime * 0.0025;
-      mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.0018) * 0.015;
+      mesh.current.rotation.y = state.clock.elapsedTime * 0.002;
     }
   });
 
@@ -235,52 +255,82 @@ function RealisticDeepSpaceField({ count = 3000 }: { count?: number }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   COSMIC SPIRAL DUST ARMS (Romantic Rose & Gold Spiral Nebula)
+   4-ARM HIGH-PRECISION LOGARITHMIC SPIRAL GALAXY (Volumetric Depth)
    ═══════════════════════════════════════════════════════════════════════ */
-function CosmicSpiralArms({ count = 1200 }: { count?: number }) {
+function RealisticSpiralGalaxy({ count = 9000 }: { count?: number }) {
   const mesh = useRef<THREE.Points>(null);
   const texture = useMemo(() => getRoundStarTexture(), []);
 
   const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
-    const palette = [
-      [0.98, 0.45, 0.68], // Rose Pink
-      [0.78, 0.45, 0.98], // Royal Violet
-      [0.35, 0.78, 0.98], // Celestial Cyan
-      [1.0, 0.88, 0.48],  // Golden Aurora
-      [0.98, 0.98, 1.0],  // White Diamond
-      [0.45, 0.95, 0.85], // Emerald Glow
-    ];
 
-    const arms = 2;
+    const arms = 4;
+    const maxRadius = 18.0;
+
+    // Palette with cosmic spectral gradients
+    const colorInside = new THREE.Color('#fff7ed'); // Warm incandescent core
+    const colorMidCyan = new THREE.Color('#38bdf8'); // Stellar blue arm ridges
+    const colorMidMagenta = new THREE.Color('#ec4899'); // Glowing rose nebula
+    const colorOuterPurple = new THREE.Color('#a855f7'); // Interstellar violet
+    const colorOuterEdge = new THREE.Color('#6366f1'); // Deep cosmic indigo
+
     for (let i = 0; i < count; i++) {
+      // Logarithmic spiral distribution
+      const rRatio = Math.pow(Math.random(), 1.45);
+      const r = 0.5 + rRatio * maxRadius;
+
+      // Arm assignment
       const armIndex = i % arms;
-      const r1 = Math.abs(Math.sin(i * 12.9898 + 1.234) * 43758.5453) % 1;
-      const r2 = Math.abs(Math.sin(i * 78.233 + 5.678) * 43758.5453) % 1;
-      const r3 = Math.abs(Math.sin(i * 45.164 + 9.101) * 43758.5453) % 1;
-      const r4 = Math.abs(Math.sin(i * 91.731 + 3.415) * 43758.5453) % 1;
+      const armAngle = (armIndex / arms) * Math.PI * 2;
 
-      const dist = Math.pow(r1, 1.35) * 23 + 2.8;
-      const angle = dist * 0.4 + armIndex * Math.PI + (r2 - 0.5) * 0.75;
-      const height = (r3 - 0.5) * (dist * 0.28);
+      // Logarithmic spiral curve
+      const spinAngle = r * 0.42;
 
-      pos[i * 3] = Math.cos(angle) * dist;
-      pos[i * 3 + 1] = height;
-      pos[i * 3 + 2] = Math.sin(angle) * dist;
+      // Filamentary cluster dispersion (clusters concentrate near arm axis)
+      const spread = (Math.pow(Math.random(), 2.8) * 1.5 + 0.15) * (r * 0.28);
+      const spreadAngle = (Math.random() - 0.5) * spread;
 
-      const c = palette[Math.floor(r4 * palette.length)];
-      col[i * 3] = c[0];
-      col[i * 3 + 1] = c[1];
-      col[i * 3 + 2] = c[2];
+      const finalAngle = armAngle + spinAngle + spreadAngle;
+
+      // Volumetric thickness: Thick galactic bulge at center, thin disc on arms
+      const bulgeHeight = Math.exp(-r / 3.0) * 2.2;
+      const discHeight = (Math.random() - 0.5) * (0.45 + r * 0.05);
+      const y = (Math.random() - 0.5) * bulgeHeight + discHeight;
+
+      pos[i * 3] = Math.cos(finalAngle) * r;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = Math.sin(finalAngle) * r;
+
+      // Color interpolation according to distance from core
+      const t = r / maxRadius;
+      const c = new THREE.Color();
+
+      if (t < 0.2) {
+        c.lerpColors(colorInside, colorMidCyan, t / 0.2);
+      } else if (t < 0.5) {
+        c.lerpColors(colorMidCyan, colorMidMagenta, (t - 0.2) / 0.3);
+      } else if (t < 0.8) {
+        c.lerpColors(colorMidMagenta, colorOuterPurple, (t - 0.5) / 0.3);
+      } else {
+        c.lerpColors(colorOuterPurple, colorOuterEdge, (t - 0.8) / 0.2);
+      }
+
+      // Add random starlight sparkle variation
+      const sparkle = 0.85 + Math.random() * 0.35;
+      col[i * 3] = Math.min(1, c.r * sparkle);
+      col[i * 3 + 1] = Math.min(1, c.g * sparkle);
+      col[i * 3 + 2] = Math.min(1, c.b * sparkle);
     }
+
     return [pos, col];
   }, [count]);
 
   useFrame((state) => {
     if (mesh.current) {
-      mesh.current.rotation.y = state.clock.elapsedTime * 0.016;
-      mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.005) * 0.05;
+      // Fluid differential rotation
+      mesh.current.rotation.y = state.clock.elapsedTime * 0.024;
+      mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.008) * 0.035;
     }
   });
 
@@ -292,10 +342,10 @@ function CosmicSpiralArms({ count = 1200 }: { count?: number }) {
       </bufferGeometry>
       <pointsMaterial
         map={texture}
-        size={0.25}
+        size={0.24}
         vertexColors
         transparent
-        opacity={0.88}
+        opacity={0.92}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}
@@ -305,61 +355,557 @@ function CosmicSpiralArms({ count = 1200 }: { count?: number }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GLOWING ORBITAL LIGHT PATH RINGS
+   CELESTIAL ASTROLABE PLANE (Ancient Cosmic Map Rings & Coordinate Grid)
    ═══════════════════════════════════════════════════════════════════════ */
-function OrbitRing({
-  radius,
-  tilt = 0,
-  color = '#a855f7',
-  speed = 0.01,
-}: {
-  radius: number;
-  tilt?: number;
-  color?: string;
-  speed?: number;
-}) {
-  const lineRef = useRef<THREE.Line>(null);
+function CelestialAstrolabeGrid() {
+  const groupRef = useRef<THREE.Group>(null);
 
-  const points = useMemo(() => {
+  const circles = useMemo(() => [5.2, 8.8, 12.4, 16.0], []);
+
+  const radialLines = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    const segments = 100;
-    for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
+    const count = 12;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      pts.push(
+        new THREE.Vector3(Math.cos(angle) * 3.5, 0, Math.sin(angle) * 3.5),
+        new THREE.Vector3(Math.cos(angle) * 16.5, 0, Math.sin(angle) * 16.5)
+      );
     }
-    return new THREE.BufferGeometry().setFromPoints(pts);
-  }, [radius]);
-
-  const lineObject = useMemo(() => {
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
-      color,
+      color: '#c084fc',
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
     });
-    return new THREE.Line(points, mat);
-  }, [points, color]);
+    return new THREE.LineSegments(geo, mat);
+  }, []);
 
   useFrame((state) => {
-    if (lineRef.current) {
-      lineRef.current.rotation.y = state.clock.elapsedTime * speed;
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.elapsedTime * -0.003;
     }
   });
 
   return (
-    <group ref={lineRef as unknown as React.Ref<THREE.Group>} rotation={[tilt, 0, 0]}>
-      <primitive object={lineObject} />
+    <group ref={groupRef} position={[0, -0.6, 0]}>
+      <primitive object={radialLines} />
+      {circles.map((radius, idx) => {
+        const pts: THREE.Vector3[] = [];
+        const segs = 120;
+        for (let i = 0; i <= segs; i++) {
+          const theta = (i / segs) * Math.PI * 2;
+          pts.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
+        }
+        const geo = new THREE.BufferGeometry().setFromPoints(pts);
+        const mat = new THREE.LineBasicMaterial({
+          color: idx % 2 === 0 ? '#f472b6' : '#38bdf8',
+          transparent: true,
+          opacity: 0.22,
+          blending: THREE.AdditiveBlending,
+        });
+        const line = new THREE.Line(geo, mat);
+        return <primitive key={idx} object={line} />;
+      })}
     </group>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ANIMATED CONSTELLATION WEB (Glowing Energy Photons Traveling)
+   LUMINOUS GALACTIC CORE & POLAR PLASMA BEAMS (Trọng Tâm Vũ Trụ)
    ═══════════════════════════════════════════════════════════════════════ */
-function ConstellationWeb({ points }: { points: [number, number, number][] }) {
-  const photonRef = useRef<THREE.Points>(null);
-  const texture = useMemo(() => getRoundStarTexture(), []);
+function LuminousGalacticCore({ recipientName }: { recipientName: string }) {
+  const coreRef = useRef<THREE.Mesh>(null);
+  const ringRef1 = useRef<THREE.Mesh>(null);
+  const ringRef2 = useRef<THREE.Mesh>(null);
+  const flareTexture = useMemo(() => getStarFlareTexture(), []);
 
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (coreRef.current) {
+      const pulse = 1 + Math.sin(t * 2.8) * 0.09;
+      coreRef.current.scale.setScalar(pulse);
+      coreRef.current.rotation.y = t * 0.2;
+    }
+    if (ringRef1.current) {
+      ringRef1.current.rotation.z = t * 0.45;
+      ringRef1.current.rotation.x = Math.PI / 3 + Math.sin(t * 0.4) * 0.08;
+    }
+    if (ringRef2.current) {
+      ringRef2.current.rotation.z = -t * 0.38;
+      ringRef2.current.rotation.y = Math.PI / 4 + Math.cos(t * 0.5) * 0.08;
+    }
+  });
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* 1. Primary White-Hot Diffraction Flare */}
+      <sprite scale={[7.2, 7.2, 1]}>
+        <spriteMaterial
+          map={flareTexture}
+          color="#ffffff"
+          transparent
+          opacity={0.95}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </sprite>
+
+      {/* 2. Secondary Magenta/Rose Corona Halo */}
+      <sprite scale={[5.0, 5.0, 1]}>
+        <spriteMaterial
+          map={flareTexture}
+          color="#fb7185"
+          transparent
+          opacity={0.85}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </sprite>
+
+      {/* 3. Golden Heart Energy Halo */}
+      <sprite scale={[3.2, 3.2, 1]}>
+        <spriteMaterial
+          map={flareTexture}
+          color="#fef08a"
+          transparent
+          opacity={0.7}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </sprite>
+
+      {/* 4. Central Stellar Sphere */}
+      <mesh ref={coreRef}>
+        <sphereGeometry args={[1.05, 32, 32]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          emissive="#fb7185"
+          emissiveIntensity={4.2}
+          roughness={0.05}
+        />
+      </mesh>
+
+      {/* 5. Pulsing Volumetric Atmosphere */}
+      <mesh>
+        <sphereGeometry args={[1.5, 32, 32]} />
+        <meshBasicMaterial
+          color="#f43f5e"
+          transparent
+          opacity={0.25}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* 6. Rotating Celestial Relativistic Accretion Rings */}
+      <mesh ref={ringRef1}>
+        <torusGeometry args={[2.0, 0.025, 16, 80]} />
+        <meshBasicMaterial color="#fde047" transparent opacity={0.65} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh ref={ringRef2}>
+        <torusGeometry args={[2.45, 0.018, 16, 80]} />
+        <meshBasicMaterial color="#f472b6" transparent opacity={0.55} blending={THREE.AdditiveBlending} />
+      </mesh>
+
+      {/* 7. Polar Relativistic Plasma Beams (Jets) */}
+      <group>
+        <mesh position={[0, 3.5, 0]}>
+          <cylinderGeometry args={[0.04, 0.18, 7.0, 16]} />
+          <meshBasicMaterial color="#38bdf8" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
+        </mesh>
+        <mesh position={[0, -3.5, 0]}>
+          <cylinderGeometry args={[0.18, 0.04, 7.0, 16]} />
+          <meshBasicMaterial color="#38bdf8" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
+        </mesh>
+      </group>
+
+      {/* 8. Luminous Galactic Core Name Tag */}
+      <Html position={[0, -2.1, 0]} center distanceFactor={14}>
+        <div className="px-3.5 py-1 rounded-full bg-slate-950/90 backdrop-blur-md border border-rose-400/50 text-[11px] font-extrabold text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.45)] pointer-events-none whitespace-nowrap flex items-center gap-1.5 select-none">
+          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
+          <span>Tâm Vũ Trụ: {recipientName || 'Người Thương'}</span>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3D FACETED PHOTO MEMORY CRYSTAL PRISM (Khối Pha Lê Kỷ Niệm 3D Chân Thực)
+   ═══════════════════════════════════════════════════════════════════════ */
+function VolumetricPhotoCrystal({
+  position,
+  imageUrl,
+  index,
+  recipientName,
+  onClick,
+}: {
+  position: [number, number, number];
+  imageUrl: string;
+  index: number;
+  recipientName: string;
+  onClick: () => void;
+}) {
+  const crystalRef = useRef<THREE.Group>(null);
+  const gemMeshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  const flareTexture = useMemo(() => getStarFlareTexture(), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (crystalRef.current) {
+      // Harmonic floating bobbing
+      crystalRef.current.position.y =
+        position[1] + Math.sin(t * 1.5 + index * 1.3) * 0.28;
+    }
+    if (gemMeshRef.current) {
+      // Slow tumbling crystal reflection
+      gemMeshRef.current.rotation.y = t * 0.45 + index;
+      gemMeshRef.current.rotation.x = Math.sin(t * 0.35 + index) * 0.2;
+    }
+  });
+
+  return (
+    <group ref={crystalRef} position={position}>
+      <Float speed={2.0} rotationIntensity={0.2} floatIntensity={0.4}>
+        {/* Clickable 3D Gemstone Prism */}
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            setHovered(false);
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* 1. Starlight Corona Glow on Hover */}
+          <sprite scale={hovered ? [3.8, 3.8, 1] : [2.6, 2.6, 1]}>
+            <spriteMaterial
+              map={flareTexture}
+              color={hovered ? '#f43f5e' : '#c084fc'}
+              transparent
+              opacity={hovered ? 0.95 : 0.65}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </sprite>
+
+          {/* 2. 3D Faceted Crystal Body (Bipyramidal Octahedron) */}
+          <group ref={gemMeshRef} scale={hovered ? [1.15, 1.15, 1.15] : [1, 1, 1]}>
+            {/* Outer Gem Glass Shell */}
+            <mesh
+              scale={[0.85, 1.35, 0.85]}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+            >
+              <octahedronGeometry args={[1.0, 0]} />
+              <meshPhysicalMaterial
+                color="#f8fafc"
+                emissive={hovered ? '#fb7185' : '#818cf8'}
+                emissiveIntensity={hovered ? 1.6 : 0.65}
+                roughness={0.05}
+                metalness={0.1}
+                transmission={0.82}
+                thickness={1.2}
+                transparent
+                opacity={0.88}
+                wireframe={false}
+              />
+            </mesh>
+
+            {/* Radiant Crystal Facet Wireframe Edge Outlines */}
+            <mesh
+              scale={[0.86, 1.36, 0.86]}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+            >
+              <octahedronGeometry args={[1.0, 0]} />
+              <meshBasicMaterial
+                color={hovered ? '#ffffff' : '#38bdf8'}
+                wireframe
+                transparent
+                opacity={hovered ? 0.9 : 0.45}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          </group>
+
+          {/* 3. Floating 3D Crystal Memory Tag with Glassmorphic Preview */}
+          <Html position={[0, 0, 0]} center distanceFactor={11}>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+              className={`cursor-pointer transition-all duration-300 transform select-none ${
+                hovered ? 'scale-110 -translate-y-1' : 'scale-95 opacity-90'
+              }`}
+            >
+              {/* Floating Glassmorphic Crystal Card */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                className="cursor-pointer relative w-28 sm:w-32 h-36 sm:h-40 rounded-2xl p-1.5 bg-slate-950/85 backdrop-blur-xl border border-purple-400/50 shadow-[0_10px_30px_rgba(0,0,0,0.85),0_0_20px_rgba(192,132,252,0.35)] flex flex-col justify-between overflow-hidden group hover:border-rose-400/80 transition-colors"
+              >
+                {/* Iridescent shimmer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/15 via-transparent to-rose-500/25 pointer-events-none" />
+
+                {/* Top Badge */}
+                <div className="flex items-center justify-between text-[9px] font-extrabold text-purple-200 z-10 px-1 pointer-events-none">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-rose-400" />
+                    <span>Pha Lê #{index + 1}</span>
+                  </span>
+                  <span className="text-[8px] text-amber-300">💎 3D</span>
+                </div>
+
+                {/* Center Image */}
+                <div className="flex-1 my-1 rounded-xl overflow-hidden bg-slate-900 border border-white/10 relative shadow-inner flex items-center justify-center pointer-events-none">
+                  <img
+                    src={imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+                </div>
+
+                {/* Bottom Caption */}
+                <div className="text-center z-10 pointer-events-none">
+                  <p className="text-[9px] font-bold text-rose-300 truncate">
+                    {recipientName || 'Người Thương'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Html>
+        </group>
+      </Float>
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7 CELESTIAL CONSTELLATION STARS (Chòm Sao 20/10 Tỏa Sáng Tự Nhiên)
+   ═══════════════════════════════════════════════════════════════════════ */
+interface ConstellationStarData {
+  id: string;
+  pos: [number, number, number];
+  name: string;
+  symbol: string;
+  color: string;
+  secondaryColor: string;
+  meaning: string;
+  blessing: string;
+}
+
+const CONSTELLATION_STARS: ConstellationStarData[] = [
+  {
+    id: 'star-1',
+    pos: [-5.2, 2.2, -3.0],
+    name: 'Sao Hạnh Phúc',
+    symbol: '⭐',
+    color: '#FB7185',
+    secondaryColor: '#fef08a',
+    meaning: 'Ánh sáng của nụ cười, niềm vui và sự lạc quan yêu đời',
+    blessing: 'Chúc bạn mỗi sớm mai thức dậy đều đón nhận nụ cười rạng rỡ, trọn vẹn niềm vui và ngập tràn hạnh phúc bất tận.',
+  },
+  {
+    id: 'star-2',
+    pos: [4.8, -1.8, -3.2],
+    name: 'Sao Yêu Thương',
+    symbol: '💖',
+    color: '#F43F5E',
+    secondaryColor: '#fda4af',
+    meaning: 'Tình cảm nồng thắm, sự chân thành và nâng niu vô điều kiện',
+    blessing: 'Mong bạn luôn được che chở trong tình yêu thương ấm áp, luôn có một bờ vai vững chãi đồng hành cùng bạn.',
+  },
+  {
+    id: 'star-3',
+    pos: [-3.0, -3.0, 3.2],
+    name: 'Sao Rực Rỡ',
+    symbol: '🌹',
+    color: '#C084FC',
+    secondaryColor: '#e9d5ff',
+    meaning: 'Nhan sắc kiêu sa, khí chất tự tin và tỏa sáng của phái nữ',
+    blessing: 'Chúc người phụ nữ tuyệt vời ngày 20/10 luôn kiêu hãnh, tự tin và ngát hương như đóa hồng nhung nở giữa trời đêm.',
+  },
+  {
+    id: 'star-4',
+    pos: [3.8, 3.4, 2.0],
+    name: 'Sao Kiêu Hãnh',
+    symbol: '👑',
+    color: '#FBBF24',
+    secondaryColor: '#ffffff',
+    meaning: 'Sự thông tuệ, bản lĩnh và thành công rực rỡ',
+    blessing: 'Chúc bạn gặt hái thêm nhiều thành công vượt bậc, luôn là người phụ nữ độc lập, quyến rũ và tỏa sáng ở mọi nơi bạn bước tới.',
+  },
+  {
+    id: 'star-5',
+    pos: [0.8, 4.4, -2.8],
+    name: 'Sao Ước Nguyện',
+    symbol: '✨',
+    color: '#38BDF8',
+    secondaryColor: '#bae6fd',
+    meaning: 'Mọi ước vọng sâu thẳm đều trở thành hiện thực',
+    blessing: 'Gửi ngàn ước nguyện tốt lành nhất qua dải thiên hà: chúc mọi hoài bão và mong ước của bạn đều nở hoa rực rỡ.',
+  },
+  {
+    id: 'star-6',
+    pos: [-4.2, -1.0, -4.6],
+    name: 'Sao Tri Kỷ',
+    symbol: '💫',
+    color: '#A855F7',
+    secondaryColor: '#f472b6',
+    meaning: 'Sự thấu hiểu, đồng hành và gắn kết keo sơn',
+    blessing: 'Cảm ơn vì đã luôn có mặt trong cuộc đời tôi, lắng nghe và chia sẻ mọi khoảnh khắc buồn vui quý giá.',
+  },
+  {
+    id: 'star-7',
+    pos: [2.6, -4.0, 1.2],
+    name: 'Sao Bình An',
+    symbol: '🌙',
+    color: '#34D399',
+    secondaryColor: '#a7f3d0',
+    meaning: 'Tâm hồn thư thái, an yên và thanh bình',
+    blessing: 'Chúc tâm hồn bạn luôn như mặt hồ êm ả, bình yên trước bão giông và luôn cảm nhận được sự dịu dàng của cuộc sống.',
+  },
+];
+
+function ConstellationBeaconNode({
+  star,
+  isLit,
+  onClick,
+}: {
+  star: ConstellationStarData;
+  isLit: boolean;
+  onClick: () => void;
+}) {
+  const starMesh = useRef<THREE.Mesh>(null);
+  const flareRef = useRef<THREE.Sprite>(null);
+  const flareTexture = useMemo(() => getStarFlareTexture(), []);
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const offset = star.pos[0] * 1.5 + star.pos[1];
+
+    if (starMesh.current) {
+      const pulse = (isLit ? 1.3 : 1.0) + Math.sin(t * 3.5 + offset) * 0.12;
+      starMesh.current.scale.setScalar(pulse);
+      starMesh.current.rotation.y = t * 1.2 + offset;
+    }
+
+    if (flareRef.current) {
+      const baseScale = isLit ? 3.4 : 2.5;
+      const flareScale = baseScale + Math.sin(t * 3.0 + offset) * 0.35;
+      flareRef.current.scale.set(flareScale, flareScale, 1);
+    }
+  });
+
+  return (
+    <Float speed={2.2} rotationIntensity={0.2} floatIntensity={0.35}>
+      <group position={star.pos}>
+        {/* Interactive Starlight Trigger */}
+        <group
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            setHovered(false);
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {/* 1. Diffraction Flare */}
+          <sprite ref={flareRef} scale={[2.6, 2.6, 1]}>
+            <spriteMaterial
+              map={flareTexture}
+              color={isLit ? '#ffffff' : star.secondaryColor}
+              transparent
+              opacity={isLit ? 0.95 : 0.85}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </sprite>
+
+          {/* 2. Secondary Chromatic Halo */}
+          <sprite scale={[1.8, 1.8, 1]}>
+            <spriteMaterial
+              map={flareTexture}
+              color={star.color}
+              transparent
+              opacity={0.7}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </sprite>
+
+          {/* 3. 3D Faceted Octahedron Gem Core */}
+          <mesh
+            ref={starMesh}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            <octahedronGeometry args={[0.3, 0]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive={isLit ? '#ffffff' : star.color}
+              emissiveIntensity={isLit ? 4.5 : 3.0}
+              roughness={0.1}
+            />
+          </mesh>
+
+          {/* 4. Delicate Starlight Title Tag (Subtle, Clean & Non-Intrusive) */}
+          <Html position={[0, -0.65, 0]} center distanceFactor={13}>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+              className={`cursor-pointer px-2.5 py-1 rounded-full border transition-all duration-300 flex items-center gap-1.5 select-none whitespace-nowrap shadow-xl ${
+                hovered
+                  ? 'scale-110 bg-slate-900/95 border-rose-400 text-rose-200 shadow-[0_0_20px_rgba(244,63,94,0.45)]'
+                  : isLit
+                  ? 'bg-amber-950/85 border-amber-400/80 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+                  : 'bg-slate-950/80 border-white/15 text-white/90'
+              }`}
+            >
+              <span className="text-xs">{star.symbol}</span>
+              <span className="text-[10px] font-bold">{star.name}</span>
+              {isLit && <span className="text-[9px] text-amber-300">★</span>}
+            </div>
+          </Html>
+        </group>
+      </group>
+    </Float>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONSTELLATION WEB (Laser-Thin Starlight Connecting Major Stars)
+   ═══════════════════════════════════════════════════════════════════════ */
+function ConstellationStarLines({ points }: { points: [number, number, number][] }) {
   const lineObject = useMemo(() => {
     const linePts: THREE.Vector3[] = [];
     for (let i = 0; i < points.length; i++) {
@@ -377,197 +923,48 @@ function ConstellationWeb({ points }: { points: [number, number, number][] }) {
     const mat = new THREE.LineBasicMaterial({
       color: '#c084fc',
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
     });
     return new THREE.LineSegments(geo, mat);
   }, [points]);
 
-  // Traveling photons along lines
-  const [photonPositions] = useMemo(() => {
-    const count = 14;
-    const pos = new Float32Array(count * 3);
-    return [pos];
-  }, []);
-
-  useFrame((state) => {
-    if (photonRef.current && points.length > 0) {
-      const t = state.clock.elapsedTime * 0.45;
-      const positions = photonRef.current.geometry.attributes.position.array as Float32Array;
-
-      for (let i = 0; i < points.length; i++) {
-        const nextIdx = (i + 1) % points.length;
-        const p1 = points[i];
-        const p2 = points[nextIdx];
-        const progress = (t + i * (1 / points.length)) % 1;
-
-        positions[i * 3] = p1[0] + (p2[0] - p1[0]) * progress;
-        positions[i * 3 + 1] = p1[1] + (p2[1] - p1[1]) * progress;
-        positions[i * 3 + 2] = p1[2] + (p2[2] - p1[2]) * progress;
-      }
-      photonRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <group>
-      <primitive object={lineObject} />
-      <points ref={photonRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[photonPositions, 3]} />
-        </bufferGeometry>
-        <pointsMaterial
-          map={texture}
-          size={0.35}
-          color="#fef08a"
-          transparent
-          opacity={0.9}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
-    </group>
-  );
+  return <primitive object={lineObject} />;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   CENTRAL GALACTIC HYPERGIANT (Heart of the Universe with Rotating Rings)
+   SHOOTING STARS / METEORS (Ion Glowing Tails)
    ═══════════════════════════════════════════════════════════════════════ */
-function GalacticCoreStar({ recipientName }: { recipientName: string }) {
-  const coreRef = useRef<THREE.Mesh>(null);
-  const innerDiamondRef = useRef<THREE.Mesh>(null);
-  const ringRef1 = useRef<THREE.Mesh>(null);
-  const ringRef2 = useRef<THREE.Mesh>(null);
-  const flareTexture = useMemo(() => getStarFlareTexture(), []);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    if (coreRef.current) {
-      const pulse = 1 + Math.sin(t * 2.4) * 0.08;
-      coreRef.current.scale.setScalar(pulse);
-      coreRef.current.rotation.y = t * 0.12;
-    }
-    if (innerDiamondRef.current) {
-      innerDiamondRef.current.rotation.x = t * 0.6;
-      innerDiamondRef.current.rotation.y = t * 0.9;
-    }
-    if (ringRef1.current) {
-      ringRef1.current.rotation.z = t * 0.4;
-      ringRef1.current.rotation.x = Math.PI / 3 + Math.sin(t * 0.5) * 0.1;
-    }
-    if (ringRef2.current) {
-      ringRef2.current.rotation.z = -t * 0.35;
-      ringRef2.current.rotation.y = Math.PI / 4 + Math.cos(t * 0.6) * 0.1;
-    }
-  });
-
-  return (
-    <group position={[0, 0, 0]}>
-      {/* 1. Large Photometric Telescope Flare Billboard */}
-      <sprite scale={[5.8, 5.8, 1]}>
-        <spriteMaterial
-          map={flareTexture}
-          color="#fb7185"
-          transparent
-          opacity={0.82}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </sprite>
-
-      {/* 2. Secondary Golden Corona */}
-      <sprite scale={[3.4, 3.4, 1]}>
-        <spriteMaterial
-          map={flareTexture}
-          color="#fef08a"
-          transparent
-          opacity={0.65}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </sprite>
-
-      {/* 3. Outer Corona Atmosphere */}
-      <mesh ref={coreRef}>
-        <sphereGeometry args={[1.35, 32, 32]} />
-        <meshBasicMaterial color="#f43f5e" transparent opacity={0.22} blending={THREE.AdditiveBlending} />
-      </mesh>
-
-      {/* 4. Ultra-Hot Luminous Stellar Plasma Core */}
-      <mesh>
-        <sphereGeometry args={[0.78, 32, 32]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#fb7185"
-          emissiveIntensity={3.6}
-          roughness={0.1}
-        />
-      </mesh>
-
-      {/* 5. Inner Spinning Octahedron Crystal Core */}
-      <mesh ref={innerDiamondRef}>
-        <octahedronGeometry args={[0.55, 0]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#f43f5e"
-          emissiveIntensity={2.5}
-          wireframe
-        />
-      </mesh>
-
-      {/* 6. Rotating Celestial Golden Energy Rings */}
-      <mesh ref={ringRef1}>
-        <torusGeometry args={[1.8, 0.02, 16, 64]} />
-        <meshBasicMaterial color="#fde047" transparent opacity={0.55} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <mesh ref={ringRef2}>
-        <torusGeometry args={[2.2, 0.015, 16, 64]} />
-        <meshBasicMaterial color="#f472b6" transparent opacity={0.45} blending={THREE.AdditiveBlending} />
-      </mesh>
-
-      {/* Core Tag */}
-      <Html position={[0, -1.65, 0]} center>
-        <div className="px-4 py-1.5 rounded-full bg-slate-950/95 border border-rose-400/60 text-xs font-black text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.4)] pointer-events-none whitespace-nowrap flex items-center gap-2">
-          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
-          <span>Tâm Vũ Trụ: {recipientName || 'Người Thương'}</span>
-        </div>
-      </Html>
-    </group>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   SHOOTING STARS / METEORS (With Radiant Glowing Tail)
-   ═══════════════════════════════════════════════════════════════════════ */
-function ShootingStar() {
-  const headRef = useRef<THREE.Mesh>(null);
-  const tailRef = useRef<THREE.Line>(null);
+function CosmicShootingStar() {
+  const headRef = useRef<THREE.Group>(null);
   const [active, setActive] = useState(false);
   const startPos = useRef(new THREE.Vector3());
   const velocity = useRef(new THREE.Vector3());
 
   const tailGeo = useMemo(() => {
-    const pts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(2.5, 2.5, 1)];
+    const pts = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(3.2, 3.2, 1.2)];
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, []);
 
-  const tailMat = useMemo(() => {
-    return new THREE.LineBasicMaterial({
-      color: '#ffffff',
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-    });
-  }, []);
+  const tailMat = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: '#ffffff',
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
 
   useEffect(() => {
     const triggerMeteor = () => {
       startPos.current.set(
-        (Math.random() - 0.5) * 40,
-        12 + Math.random() * 8,
-        (Math.random() - 0.5) * 22
+        (Math.random() - 0.5) * 42,
+        14 + Math.random() * 8,
+        (Math.random() - 0.5) * 25
       );
-      velocity.current.set(-16 - Math.random() * 10, -16 - Math.random() * 8, -7);
+      velocity.current.set(-18 - Math.random() * 10, -18 - Math.random() * 8, -8);
       if (headRef.current) {
         headRef.current.position.copy(startPos.current);
       }
@@ -575,14 +972,14 @@ function ShootingStar() {
 
       setTimeout(() => {
         setActive(false);
-      }, 900);
+      }, 850);
     };
 
     const interval = setInterval(() => {
-      if (Math.random() > 0.35) {
+      if (Math.random() > 0.3) {
         triggerMeteor();
       }
-    }, 4200);
+    }, 3800);
 
     return () => clearInterval(interval);
   }, []);
@@ -594,20 +991,20 @@ function ShootingStar() {
   });
 
   return (
-    <group ref={headRef as unknown as React.Ref<THREE.Group>} visible={active}>
+    <group ref={headRef} visible={active}>
       <mesh>
-        <sphereGeometry args={[0.18, 16, 16]} />
+        <sphereGeometry args={[0.2, 16, 16]} />
         <meshBasicMaterial color="#ffffff" />
       </mesh>
-      <primitive object={new THREE.Line(tailGeo, tailMat)} ref={tailRef} />
+      <primitive object={new THREE.Line(tailGeo, tailMat)} />
     </group>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SMOOTH CAMERA CONTROLLER (Cinematic Focus to Selected Celestial Objects)
+   SMOOTH CINEMATIC CAMERA RIG (Lerps to Focused Object)
    ═══════════════════════════════════════════════════════════════════════ */
-function CameraRig({
+function CameraController({
   targetPos,
   isZoomed,
 }: {
@@ -616,11 +1013,25 @@ function CameraRig({
 }) {
   const { camera } = useThree();
   const zoomTarget = useMemo(() => new THREE.Vector3(), []);
+  const defaultPos = useMemo(() => new THREE.Vector3(0, 4.5, 13.5), []);
+  const returningRef = useRef(false);
+
+  useEffect(() => {
+    if (!isZoomed && targetPos === null) {
+      returningRef.current = true;
+    }
+  }, [isZoomed, targetPos]);
 
   useFrame(() => {
     if (isZoomed && targetPos) {
-      zoomTarget.set(targetPos[0] * 0.72, targetPos[1] * 0.72 + 0.35, targetPos[2] + 2.9);
-      camera.position.lerp(zoomTarget, 0.065);
+      returningRef.current = false;
+      zoomTarget.set(targetPos[0] * 0.75, targetPos[1] * 0.75 + 0.4, targetPos[2] + 3.2);
+      camera.position.lerp(zoomTarget, 0.06);
+    } else if (returningRef.current) {
+      camera.position.lerp(defaultPos, 0.05);
+      if (camera.position.distanceTo(defaultPos) < 0.15) {
+        returningRef.current = false;
+      }
     }
   });
 
@@ -628,479 +1039,59 @@ function CameraRig({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   3D FACETED PHOTO MEMORY CRYSTAL (Double-Sided 360 Glass Prism)
+   MAIN GALAXY MEMORIES COMPONENT
    ═══════════════════════════════════════════════════════════════════════ */
-function VolumetricMemoryCrystal({
-  position,
-  imageUrl,
-  index,
-  recipientName,
-  senderName,
-  quoteText,
-  onClick,
-  hidden = false,
-}: {
-  position: [number, number, number];
-  imageUrl?: string;
-  index: number;
-  recipientName: string;
-  senderName: string;
-  quoteText: string;
-  onClick: () => void;
-  hidden?: boolean;
-}) {
-  const groupRef = useRef<THREE.Group>(null);
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.position.y =
-        position[1] + Math.sin(state.clock.elapsedTime * 1.4 + index * 1.5) * 0.22;
-    }
-  });
-
-  const toggleFlip = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    soundFx.playPinClick();
-    setIsFlipped(!isFlipped);
-  };
-
-  if (hidden) {
-    return <group ref={groupRef} position={position} />;
-  }
-
-  return (
-    <group ref={groupRef} position={position}>
-      <Float speed={1.9} rotationIntensity={0.25} floatIntensity={0.35}>
-        <Html position={[0, 0, 0]} center distanceFactor={9}>
-          <div
-            onClick={onClick}
-            className="group relative cursor-pointer select-none"
-            style={{ perspective: '1200px' }}
-          >
-            {/* 3D Volumetric Card with Flip Animation */}
-            <div
-              className="relative w-44 sm:w-48 h-56 sm:h-60 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
-              style={{
-                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                transformStyle: 'preserve-3d',
-                transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              {/* ===== FRONT FACE (Photo + Crystal Bevel Border) ===== */}
-              <div
-                className="absolute inset-0 rounded-3xl p-3 bg-gradient-to-br from-purple-950/95 via-slate-950/98 to-rose-950/95 border-2 border-purple-400/60 flex flex-col justify-between overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.8)]"
-                style={{
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
-              >
-                {/* Iridescent edge sheen */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/15 via-transparent to-rose-500/25 pointer-events-none" />
-
-                {/* Top Badge */}
-                <div className="flex items-center justify-between text-[10px] font-extrabold text-purple-200">
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-                    <span>Pha Lê #{index + 1}</span>
-                  </span>
-                  <button
-                    onClick={toggleFlip}
-                    className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                    title="Lật 180° xem mặt sau"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* Center Image with Crystal Mount */}
-                <div className="flex-1 my-2 rounded-2xl overflow-hidden bg-slate-950/80 border border-white/15 flex items-center justify-center relative shadow-inner">
-                  {imageUrl ? (
-                    <img src={imageUrl} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
-                  ) : (
-                    <div className="text-center p-3 space-y-1">
-                      <div className="text-3xl animate-pulse">💎</div>
-                      <p className="text-[10px] font-bold text-rose-300">Pha Lê Tình Yêu</p>
-                      <p className="text-[8px] text-white/50">Mặt trước kỷ niệm</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom Tag */}
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-rose-300 truncate">
-                    Gửi {recipientName || 'Người Thương'}
-                  </p>
-                </div>
-              </div>
-
-              {/* ===== BACK FACE (Engraved Love Quote on Frosted Crystal Glass) ===== */}
-              <div
-                className="absolute inset-0 rounded-3xl p-3.5 bg-gradient-to-br from-indigo-950/98 via-purple-950/95 to-slate-950/98 border-2 border-rose-400/60 flex flex-col justify-between text-center overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.8)]"
-                style={{
-                  transform: 'rotateY(180deg)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-500/20 via-transparent to-purple-500/20 pointer-events-none" />
-
-                {/* Top Header */}
-                <div className="flex items-center justify-between text-[10px] font-extrabold text-rose-300">
-                  <span>Lời Khắc Sau Pha Lê</span>
-                  <button
-                    onClick={toggleFlip}
-                    className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white"
-                    title="Lật về mặt trước"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* Center Engraved Text */}
-                <div className="flex-1 flex flex-col items-center justify-center p-1.5">
-                  <p className="text-[10.5px] leading-relaxed text-purple-100 font-medium italic line-clamp-5">
-                    "{quoteText}"
-                  </p>
-                </div>
-
-                {/* Sender Signature */}
-                <div className="text-right border-t border-white/10 pt-1.5">
-                  <p className="text-[9.5px] font-bold text-rose-400 italic">
-                    — {senderName || 'Người gửi'} 🌹
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Click to inspect guide */}
-            <div className="mt-2.5 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="px-2.5 py-1 rounded-full bg-purple-600/90 text-white text-[9.5px] font-bold shadow-lg">
-                Nhấp để xem gần ✨
-              </span>
-            </div>
-          </div>
-        </Html>
-      </Float>
-    </group>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   3D HIGH-PRECISION CELESTIAL STAR NODE (Faceted Crystal + Halo)
-   ═══════════════════════════════════════════════════════════════════════ */
-function HighPrecisionStarNode({
-  position,
-  label,
-  icon,
-  onClick,
-  color = '#FB7185',
-  secondaryColor = '#fef08a',
-  isLit = false,
-  hidden = false,
-}: {
-  position: [number, number, number];
-  label: string;
-  icon: string;
-  onClick: () => void;
-  color?: string;
-  secondaryColor?: string;
-  isLit?: boolean;
-  hidden?: boolean;
-}) {
-  const crystalMesh = useRef<THREE.Mesh>(null);
-  const coronaSphere = useRef<THREE.Mesh>(null);
-  const outerSparks = useRef<THREE.Group>(null);
-  const flareSprite = useRef<THREE.Sprite>(null);
-  const flareTexture = useMemo(() => getStarFlareTexture(), []);
-
-  const emberAngles = useMemo(
-    () => [
-      { speed: 1.8, radius: 0.65 },
-      { speed: -2.3, radius: 0.8 },
-      { speed: 1.4, radius: 0.95 },
-    ],
-    []
-  );
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    const offset = position[0] * 1.5 + position[1];
-
-    if (crystalMesh.current) {
-      const pulse = (isLit ? 1.25 : 1) + Math.sin(t * 3.5 + offset) * 0.08;
-      crystalMesh.current.scale.setScalar(pulse);
-      crystalMesh.current.rotation.y = t * 0.9 + offset;
-      crystalMesh.current.rotation.x = t * 0.45;
-    }
-
-    if (coronaSphere.current) {
-      const coronaPulse = (isLit ? 1.3 : 1.1) + Math.cos(t * 2.2 + offset) * 0.12;
-      coronaSphere.current.scale.setScalar(coronaPulse);
-    }
-
-    if (flareSprite.current) {
-      const baseScale = isLit ? 3.2 : 2.5;
-      const flareScale = baseScale + Math.sin(t * 2.8 + offset) * 0.3;
-      flareSprite.current.scale.set(flareScale, flareScale, 1);
-    }
-
-    if (outerSparks.current) {
-      outerSparks.current.rotation.y = t * 1.2;
-      outerSparks.current.rotation.z = Math.sin(t * 0.6) * 0.3;
-    }
-  });
-
-  return (
-    <Float speed={2.0} rotationIntensity={0.2} floatIntensity={0.35}>
-      <group position={position}>
-        {/* 1. Telescope Diffraction Cross Flare Sprite */}
-        <sprite ref={flareSprite} scale={[2.5, 2.5, 1]} onClick={onClick}>
-          <spriteMaterial
-            map={flareTexture}
-            color={isLit ? '#ffffff' : secondaryColor}
-            transparent
-            opacity={isLit ? 0.95 : 0.88}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </sprite>
-
-        {/* 2. Soft Secondary Chromatic Aura Sprite */}
-        <sprite scale={[1.6, 1.6, 1]}>
-          <spriteMaterial
-            map={flareTexture}
-            color={color}
-            transparent
-            opacity={0.7}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </sprite>
-
-        {/* 3. 3D Faceted Octahedron Gemstone Core */}
-        <mesh ref={crystalMesh} onClick={onClick}>
-          <octahedronGeometry args={[0.28, 0]} />
-          <meshStandardMaterial
-            color="#ffffff"
-            emissive={isLit ? '#ffffff' : color}
-            emissiveIntensity={isLit ? 4.2 : 3.0}
-            roughness={0.1}
-          />
-        </mesh>
-
-        {/* 4. Volumetric Corona Atmosphere */}
-        <mesh ref={coronaSphere}>
-          <sphereGeometry args={[0.42, 32, 32]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={isLit ? 0.45 : 0.28}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-
-        {/* 5. Delicate Kinetic Light Ray Needles */}
-        <group>
-          <mesh rotation={[0, 0, 0]}>
-            <cylinderGeometry args={[0.005, 0.015, 1.2, 16]} />
-            <meshBasicMaterial
-              color={secondaryColor}
-              transparent
-              opacity={0.38}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-          <mesh rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.005, 0.015, 1.2, 16]} />
-            <meshBasicMaterial
-              color={secondaryColor}
-              transparent
-              opacity={0.38}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-        </group>
-
-        {/* 6. Orbiting Starlight Micro-Embers */}
-        <group ref={outerSparks}>
-          {emberAngles.map((ember, idx) => (
-            <mesh
-              key={idx}
-              position={[
-                Math.cos(idx * 2.1) * ember.radius,
-                Math.sin(idx * 1.5) * 0.25,
-                Math.sin(idx * 2.1) * ember.radius,
-              ]}
-            >
-              <sphereGeometry args={[0.04, 12, 12]} />
-              <meshBasicMaterial
-                color={secondaryColor}
-                transparent
-                opacity={0.88}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-          ))}
-        </group>
-
-        {/* 7. Starlight Label Tag with Glow Halo */}
-        {!hidden && (
-          <Html position={[0, -0.72, 0]} center>
-            <button
-              onClick={onClick}
-              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold shadow-xl hover:scale-110 active:scale-95 transition-all select-none whitespace-nowrap ${
-                isLit
-                  ? 'bg-amber-950/95 border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.5)]'
-                  : 'bg-slate-950/90 border-white/20 text-white hover:border-rose-400'
-              }`}
-            >
-              <span>{icon}</span>
-              <span className="group-hover:text-rose-300 transition-colors">{label}</span>
-              {isLit && <span className="text-[10px] text-amber-300">✨</span>}
-            </button>
-          </Html>
-        )}
-      </group>
-    </Float>
-  );
-}
-
-const SAMPLE_GALAXY_QUOTES = [
-  'Mỗi khoảnh khắc có em là một vì sao sáng lấp lánh trong vũ trụ của anh.',
-  'Em là định mệnh ngọt ngào nhất mà cuộc đời đã ban tặng.',
-  'Dù vũ trụ có bao la đến đâu, trái tim anh vẫn luôn hướng về em.',
-  'Chúc em ngày 20/10 ngập tràn niềm vui, nụ cười và hạnh phúc!',
-];
-
-/* ═══════════════════════════════════════════════════════════════════════
-   7 UNIQUE CONSTELLATION STARS (Chòm Sao 20/10)
-   ═══════════════════════════════════════════════════════════════════════ */
-interface ConstellationStarData {
-  id: string;
-  pos: [number, number, number];
-  name: string;
-  symbol: string;
-  color: string;
-  secondaryColor: string;
-  meaning: string;
-  blessing: string;
-}
-
-const CONSTELLATION_STARS: ConstellationStarData[] = [
-  {
-    id: 'star-1',
-    pos: [-4.6, 2.8, -2.5],
-    name: 'Sao Hạnh Phúc',
-    symbol: '⭐',
-    color: '#FB7185',
-    secondaryColor: '#fef08a',
-    meaning: 'Ánh sáng của nụ cười, niềm vui và sự lạc quan yêu đời',
-    blessing: 'Chúc bạn mỗi sớm mai thức dậy đều đón nhận nụ cười rạng rỡ, trọn vẹn niềm vui và ngập tràn hạnh phúc bất tận.',
-  },
-  {
-    id: 'star-2',
-    pos: [4.4, -1.6, -3.0],
-    name: 'Sao Yêu Thương',
-    symbol: '💖',
-    color: '#F43F5E',
-    secondaryColor: '#fda4af',
-    meaning: 'Tình cảm nồng thắm, sự chân thành và nâng niu vô điều kiện',
-    blessing: 'Mong bạn luôn được che chở trong tình yêu thương ấm áp, luôn có một bờ vai vững chãi đồng hành cùng bạn.',
-  },
-  {
-    id: 'star-3',
-    pos: [-2.4, -2.9, 2.6],
-    name: 'Sao Rực Rỡ',
-    symbol: '🌹',
-    color: '#C084FC',
-    secondaryColor: '#e9d5ff',
-    meaning: 'Nhan sắc kiêu sa, khí chất tự tin và tỏa sáng của phái nữ',
-    blessing: 'Chúc người phụ nữ tuyệt vời ngày 20/10 luôn kiêu hãnh, tự tin và ngát hương như đóa hồng nhung nở giữa trời đêm.',
-  },
-  {
-    id: 'star-4',
-    pos: [3.5, 3.2, 1.6],
-    name: 'Sao Kiêu Hãnh',
-    symbol: '👑',
-    color: '#FBBF24',
-    secondaryColor: '#ffffff',
-    meaning: 'Sự thông tuệ, bản lĩnh và thành công rực rỡ',
-    blessing: 'Chúc bạn gặt hái thêm nhiều thành công vượt bậc, luôn là người phụ nữ độc lập, quyến rũ và tỏa sáng ở mọi nơi bạn bước tới.',
-  },
-  {
-    id: 'star-5',
-    pos: [0.6, 4.2, -2.4],
-    name: 'Sao Ước Nguyện',
-    symbol: '✨',
-    color: '#38BDF8',
-    secondaryColor: '#bae6fd',
-    meaning: 'Mọi ước vọng sâu thẳm đều trở thành hiện thực',
-    blessing: 'Gửi ngàn ước nguyện tốt lành nhất qua dải thiên hà: chúc mọi hoài bão và mong ước của bạn đều nở hoa rực rỡ.',
-  },
-  {
-    id: 'star-6',
-    pos: [-3.8, -0.8, -4.2],
-    name: 'Sao Tri Kỷ',
-    symbol: '💫',
-    color: '#A855F7',
-    secondaryColor: '#f472b6',
-    meaning: 'Sự thấu hiểu, đồng hành và gắn kết keo sơn',
-    blessing: 'Cảm ơn vì đã luôn có mặt trong cuộc đời tôi, lắng nghe và chia sẻ mọi khoảnh khắc buồn vui quý giá.',
-  },
-  {
-    id: 'star-7',
-    pos: [2.2, -3.8, 0.8],
-    name: 'Sao Bình An',
-    symbol: '🌙',
-    color: '#34D399',
-    secondaryColor: '#a7f3d0',
-    meaning: 'Tâm hồn thư thái, an yên và thanh bình',
-    blessing: 'Chúc tâm hồn bạn luôn như mặt hồ êm ả, bình yên trước bão giông và luôn cảm nhận được sự dịu dàng của cuộc sống.',
-  },
-];
-
-export default function GalaxyMemoriesFX({ config, mode }: Props) {
+export default function GalaxyMemoriesFX({ config }: Props) {
   const [selectedStarIndex, setSelectedStarIndex] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<string>('');
   const [targetFocusPos, setTargetFocusPos] = useState<[number, number, number] | null>(null);
-  const [showContent, setShowContent] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [inspectFlipped, setInspectFlipped] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-
-  // Track illuminated stars (Gamified galaxy completion!)
   const [litStarIds, setLitStarIds] = useState<Set<string>>(new Set());
-
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const [graphicsQuality, setGraphicsQuality] = useState<'high' | 'smooth'>(
-    isMobile ? 'smooth' : 'high'
-  );
 
   const constellationPoints = useMemo<[number, number, number][]>(
     () => CONSTELLATION_STARS.map((s) => s.pos),
     []
   );
 
-  const crystalPositions = useMemo(
+  // Position 6 3D memory crystals gracefully along the spiral arms
+  const crystalPositions = useMemo<[number, number, number][]>(
     () => [
-      [-5.2, 0.4, 3.2] as [number, number, number],
-      [4.8, 0.8, 3.0] as [number, number, number],
-      [0.8, -3.2, -4.2] as [number, number, number],
-      [-3.0, 3.2, 3.8] as [number, number, number],
+      [-6.5, 0.5, 3.2],
+      [5.8, 0.8, 3.8],
+      [1.2, -3.8, -4.5],
+      [-3.8, 3.6, 4.2],
+      [6.8, -2.4, -2.2],
+      [-5.5, -2.8, -3.8],
     ],
     []
   );
 
+  // Harmonize user uploaded photos with fallback photos so galaxy is always filled
   const memoryItems = useMemo(() => {
     const uploaded = config.images || [];
-    if (uploaded.length > 0) {
-      return uploaded.slice(0, 4).map((img, i) => ({
-        img,
-        quote: SAMPLE_GALAXY_QUOTES[i % SAMPLE_GALAXY_QUOTES.length],
-      }));
-    }
-    return [];
-  }, [config.images]);
+    const pool = uploaded.length > 0 ? uploaded : DEFAULT_MEMORY_IMAGES;
+
+    return crystalPositions.map((pos, i) => {
+      const img = pool[i % pool.length];
+      const quote = SAMPLE_GALAXY_QUOTES[i % SAMPLE_GALAXY_QUOTES.length];
+      return { pos, img, quote };
+    });
+  }, [config.images, crystalPositions]);
+
+  const handleCrystalClick = (img: string, quote: string, pos: [number, number, number]) => {
+    soundFx.playPaperSwoosh();
+    setTargetFocusPos(pos);
+    setSelectedImage(img);
+    setSelectedQuote(quote);
+    setSelectedStarIndex(null);
+    setInspectFlipped(false);
+
+    setTimeout(() => {
+      setShowModal(true);
+    }, 320);
+  };
 
   const handleStarClick = (index: number) => {
     soundFx.playShootingStar();
@@ -1111,26 +1102,14 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
     setInspectFlipped(false);
 
     setTimeout(() => {
-      setShowContent(true);
+      setShowModal(true);
       soundFx.playSuccessChime();
-    }, 380);
-  };
-
-  const handleCrystalClick = (img: string | undefined, pos: [number, number, number]) => {
-    soundFx.playPaperSwoosh();
-    setTargetFocusPos(pos);
-    setSelectedImage(img || 'fallback');
-    setSelectedStarIndex(null);
-    setInspectFlipped(false);
-
-    setTimeout(() => {
-      setShowContent(true);
     }, 350);
   };
 
   const handleDismissModal = () => {
     soundFx.playPaperSwoosh();
-    setShowContent(false);
+    setShowModal(false);
     setSelectedStarIndex(null);
     setSelectedImage(null);
     setTargetFocusPos(null);
@@ -1146,38 +1125,36 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
       const next = new Set(prev);
       next.add(star.id);
 
-      // Check if all 7 stars are lit -> Grand Supernova Celebration!
       if (next.size === CONSTELLATION_STARS.length) {
         setTimeout(() => {
           confetti({
-            particleCount: 120,
-            spread: 100,
+            particleCount: 140,
+            spread: 120,
             origin: { y: 0.5 },
             colors: ['#FBBF24', '#FB7185', '#C084FC', '#38BDF8', '#FFFFFF', '#34D399'],
             shapes: ['star', 'circle'],
           });
-        }, 500);
+        }, 400);
       }
       return next;
     });
 
     confetti({
-      particleCount: 55,
-      spread: 75,
+      particleCount: 50,
+      spread: 70,
       origin: { y: 0.6 },
       colors: [star.color, star.secondaryColor, '#FFFFFF'],
       shapes: ['star', 'circle'],
     });
   };
 
-  // Illuminate all stars at once
   const handleIlluminateAll = () => {
     soundFx.playSuccessChime();
     const all = new Set(CONSTELLATION_STARS.map((s) => s.id));
     setLitStarIds(all);
     confetti({
-      particleCount: 150,
-      spread: 120,
+      particleCount: 160,
+      spread: 130,
       origin: { y: 0.5 },
       colors: ['#FBBF24', '#FB7185', '#C084FC', '#38BDF8', '#FFFFFF', '#34D399'],
       shapes: ['star', 'circle'],
@@ -1189,48 +1166,33 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
   const isCurrentStarLit = currentStar ? litStarIds.has(currentStar.id) : false;
 
   return (
-    <div
-      onPointerDown={() => setHasInteracted(true)}
-      className="relative w-full h-full min-h-full overflow-hidden select-none cursor-grab active:cursor-grabbing bg-slate-950"
-    >
-      {/* ── TOP CONTROLS & STATUS BAR ── */}
+    <div className="relative w-full h-full min-h-full overflow-hidden select-none cursor-grab active:cursor-grabbing bg-slate-950">
+      {/* ── TOP CONTROLS & STATUS BAR (Minimalist & Non-Intrusive) ── */}
       <div className="absolute top-4 inset-x-4 z-20 flex items-center justify-between pointer-events-none">
-        {/* Left: Quality & Star Counter */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            onClick={() => {
-              soundFx.playPinClick();
-              setGraphicsQuality((prev) => (prev === 'high' ? 'smooth' : 'high'));
-            }}
-            className="px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-xl border border-white/20 text-white text-[11px] font-bold flex items-center gap-1.5 hover:border-purple-400 transition-colors shadow-lg active:scale-95"
-          >
-            <Sliders className="w-3.5 h-3.5 text-purple-400" />
-            <span>Đồ họa: {graphicsQuality === 'high' ? 'Ultra (4200 sao)' : 'Mượt mà'}</span>
-          </button>
-
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-950/75 backdrop-blur-xl border border-purple-500/40 text-purple-200 text-[11px] font-semibold shadow-lg">
+        {/* Left: Star Counter */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-xl border border-purple-500/30 text-purple-200 text-xs font-semibold shadow-lg">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>
-              Đã thắp sáng: <strong className="text-amber-300">{litStarIds.size}/7</strong> sao
+              Chòm sao: <strong className="text-amber-300">{litStarIds.size}/7</strong>
             </span>
           </div>
         </div>
 
-        {/* Right: Quick Supernova Button */}
+        {/* Right: Quick Illuminate All Button */}
         <div className="pointer-events-auto">
           {litStarIds.size < 7 ? (
             <button
               onClick={handleIlluminateAll}
-              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-rose-500/80 to-purple-600/80 hover:from-rose-500 hover:to-purple-600 backdrop-blur-xl border border-white/25 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.35)] active:scale-95 transition-all"
+              className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-rose-500/80 to-purple-600/80 hover:from-rose-500 hover:to-purple-600 backdrop-blur-xl border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.35)] active:scale-95 transition-all"
             >
               <Wand2 className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Thắp Sáng Toàn Bộ 7 Sao</span>
-              <span className="sm:hidden">Thắp sáng tất cả</span>
+              <span>Thắp Sáng Cả Dải Ngân Hà</span>
             </button>
           ) : (
-            <div className="px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-400/50 text-emerald-200 text-[11px] font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(52,211,153,0.35)]">
+            <div className="px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-400/50 text-emerald-200 text-xs font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(52,211,153,0.35)]">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Thiên Hà Tỏa Sáng Trọn Vẹn! ✨</span>
+              <span>Thiên Hà Rực Rỡ! ✨</span>
             </div>
           )}
         </div>
@@ -1239,140 +1201,92 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
       {/* ── 3D THREE.JS CANVAS ── */}
       <div className="absolute inset-0">
         <Canvas
-          camera={{ position: [0, 3, 11], fov: 60 }}
-          dpr={isMobile ? 1 : [1, 1.25]}
+          camera={{ position: [0, 4.5, 13.5], fov: 55 }}
+          dpr={[1, 1.5]}
           gl={{
             powerPreference: 'high-performance',
-            antialias: false,
+            antialias: true,
             stencil: false,
             depth: true,
           }}
         >
-          <ambientLight intensity={0.5} />
-          <pointLight position={[15, 15, 15]} intensity={1.6} color="#C084FC" />
-          <pointLight position={[-15, -15, -15]} intensity={1.3} color="#FB7185" />
-          <pointLight position={[0, 0, 0]} intensity={2.4} color="#F43F5E" />
+          <ambientLight intensity={0.6} />
+          <pointLight position={[18, 18, 18]} intensity={1.8} color="#C084FC" />
+          <pointLight position={[-18, -18, -18]} intensity={1.5} color="#FB7185" />
+          <pointLight position={[0, 0, 0]} intensity={3.0} color="#F43F5E" />
 
           {/* Deep Space Volumetric Nebula Clouds */}
           <VolumetricNebulaClouds />
 
-          {/* Central Galactic Hypergiant Star */}
-          <GalacticCoreStar recipientName={config.recipientName} />
+          {/* Infinite Multi-Spectral Background Starfield */}
+          <DeepCosmosField count={2600} />
 
-          {/* Glowing Planetary Orbit Rings */}
-          <OrbitRing radius={5.8} tilt={0.15} color="#ec4899" speed={0.015} />
-          <OrbitRing radius={8.4} tilt={-0.22} color="#a855f7" speed={-0.012} />
-          <OrbitRing radius={11.2} tilt={0.09} color="#38bdf8" speed={0.008} />
+          {/* Shooting Stars & Dynamic Camera Controller */}
+          <CosmicShootingStar />
+          <CameraController targetPos={targetFocusPos} isZoomed={showModal} />
 
-          {/* Constellation Starlight Network with Traveling Photons */}
-          <ConstellationWeb points={constellationPoints} />
+          {/* Tilted Volumetric Galactic Plane (Dramatic 3D Astronomical Perspective) */}
+          <group rotation={[-0.32, 0, 0.08]}>
+            {/* 4-Arm Logarithmic Spiral Galaxy Disc */}
+            <RealisticSpiralGalaxy count={9500} />
 
-          {/* Deep Space Stars & Two-Arm Spiral Dust (Tối ưu số lượng đỉnh cho 60 FPS) */}
-          <RealisticDeepSpaceField count={graphicsQuality === 'high' ? 1600 : 600} />
-          <CosmicSpiralArms count={graphicsQuality === 'high' ? 650 : 250} />
-          <ShootingStar />
+            {/* Ancient Celestial Astrolabe Map Rings & Coordinate Grid */}
+            <CelestialAstrolabeGrid />
 
-          {/* Camera Smooth Lerp Rig */}
-          <CameraRig targetPos={targetFocusPos} isZoomed={showContent} />
+            {/* Central Galactic Supermassive Core & Polar Beams */}
+            <LuminousGalacticCore recipientName={config.recipientName} />
 
-          {/* 7 High-Precision Faceted Constellation Stars */}
-          {CONSTELLATION_STARS.map((star, i) => (
-            <HighPrecisionStarNode
-              key={star.name}
-              position={star.pos}
-              label={star.name}
-              icon={star.symbol}
-              color={star.color}
-              secondaryColor={star.secondaryColor}
-              isLit={litStarIds.has(star.id)}
-              onClick={() => handleStarClick(i)}
-              hidden={showContent}
-            />
-          ))}
+            {/* Constellation Laser Network connecting stars */}
+            <ConstellationStarLines points={constellationPoints} />
 
-          {/* Volumetric Double-Sided 3D Memory Crystals */}
-          {memoryItems.map((item, i) => {
-            const pos = crystalPositions[i % crystalPositions.length];
-            return (
-              <VolumetricMemoryCrystal
+            {/* 7 High-Precision Constellation Stars */}
+            {CONSTELLATION_STARS.map((star, i) => (
+              <ConstellationBeaconNode
+                key={star.id}
+                star={star}
+                isLit={litStarIds.has(star.id)}
+                onClick={() => handleStarClick(i)}
+              />
+            ))}
+
+            {/* 6 Volumetric 3D Faceted Photo Memory Crystals */}
+            {memoryItems.map((item, i) => (
+              <VolumetricPhotoCrystal
                 key={i}
-                position={pos}
+                position={item.pos}
                 imageUrl={item.img}
                 index={i}
                 recipientName={config.recipientName}
-                senderName={config.senderName}
-                quoteText={item.quote}
-                onClick={() => handleCrystalClick(item.img, pos)}
-                hidden={showContent}
+                onClick={() => handleCrystalClick(item.img, item.quote, item.pos)}
               />
-            );
-          })}
+            ))}
+          </group>
 
-          {/* 360-degree Orbit & Swipe Drag Controls */}
+          {/* 360-degree Orbit Drag & Zoom Controls */}
           <OrbitControls
             enableDamping
             dampingFactor={0.06}
-            rotateSpeed={0.85}
-            zoomSpeed={0.9}
-            panSpeed={0.5}
-            minDistance={3.5}
-            maxDistance={26}
-            enabled={!showContent}
+            rotateSpeed={0.8}
+            zoomSpeed={0.85}
+            panSpeed={0.4}
+            minDistance={4.0}
+            maxDistance={28.0}
+            enabled={!showModal}
           />
         </Canvas>
       </div>
-
-      {/* ── CONSTELLATION QUICK-SELECTOR DOCK (Bottom Navigation) ── */}
-      {!showContent && (
-        <div className="absolute bottom-4 sm:bottom-6 inset-x-0 z-20 flex flex-col items-center pointer-events-none px-3">
-          {/* First interaction helper */}
-          {!hasInteracted && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mb-2 px-4 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-xl border border-white/20 text-white text-xs font-semibold flex items-center gap-2 shadow-2xl"
-            >
-              <Rotate3d className="w-3.5 h-3.5 text-purple-400 animate-spin" />
-              <span>Kéo xoay 360° • Chọn chòm sao bên dưới để khám phá ✨</span>
-            </motion.div>
-          )}
-
-          {/* Horizontal Star Selector Dock */}
-          <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 rounded-full bg-slate-900/85 backdrop-blur-2xl border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-x-auto max-w-full scrollbar-none">
-            {CONSTELLATION_STARS.map((s, idx) => {
-              const isLit = litStarIds.has(s.id);
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => handleStarClick(idx)}
-                  className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
-                    isLit
-                      ? 'bg-gradient-to-r from-amber-500/25 to-rose-500/25 border border-amber-400/60 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.4)]'
-                      : 'bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white'
-                  }`}
-                >
-                  <span className="text-sm">{s.symbol}</span>
-                  <span className="text-[11px] hidden sm:inline">{s.name}</span>
-                  {isLit && <span className="text-[10px] text-amber-300">★</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* ── 3D CLOSE-UP INSPECTION MODAL (Portaled to document.body) ── */}
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
-            {showContent && (
+            {showModal && (
               <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.85, y: 25 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.85, y: 25 }}
-                  transition={{ type: 'spring', damping: 20, stiffness: 260 }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 280 }}
                   className="bg-slate-900/95 backdrop-blur-2xl p-6 sm:p-8 rounded-3xl max-w-md w-full border border-purple-500/40 shadow-[0_0_60px_rgba(192,132,252,0.35)] text-center space-y-4"
                 >
                   {/* Photo Crystal Inspection */}
@@ -1381,7 +1295,7 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
                       <div className="flex items-center justify-between text-xs font-bold text-purple-300">
                         <span className="flex items-center gap-1.5">
                           <Sparkles className="w-4 h-4 text-rose-400" />
-                          <span>{inspectFlipped ? 'Mặt Sau: Lời Khắc Kính' : 'Mặt Trước: Ảnh Kỷ Niệm'}</span>
+                          <span>{inspectFlipped ? 'Mặt Sau: Lời Khắc Kính' : 'Mặt Trước: Pha Lê Kỷ Niệm'}</span>
                         </span>
                         <button
                           onClick={() => {
@@ -1395,9 +1309,9 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
                         </button>
                       </div>
 
-                      {/* Flipped Content Card */}
+                      {/* 3D Flipped Content Card */}
                       <div
-                        className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-purple-400/50 shadow-2xl"
+                        className="relative w-full aspect-square"
                         style={{
                           transform: inspectFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                           transformStyle: 'preserve-3d',
@@ -1406,28 +1320,22 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
                       >
                         {/* Front: High-res Photo */}
                         <div
-                          className="absolute inset-0 bg-slate-950 flex items-center justify-center"
+                          className="absolute inset-0 rounded-2xl overflow-hidden border-2 border-purple-400/50 shadow-2xl bg-slate-950 flex items-center justify-center"
                           style={{
                             backfaceVisibility: 'hidden',
                             WebkitBackfaceVisibility: 'hidden',
                           }}
                         >
-                          {selectedImage !== 'fallback' ? (
-                            <img src={selectedImage} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="p-6 text-center space-y-2">
-                              <div className="text-5xl animate-bounce">💎</div>
-                              <h4 className="text-lg font-bold text-rose-300">Pha Lê Kỷ Niệm</h4>
-                              <p className="text-xs text-purple-200">
-                                Khoảnh khắc yêu thương dành riêng cho {config.recipientName || 'Người Thương'}
-                              </p>
-                            </div>
-                          )}
+                          <img
+                            src={selectedImage}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         </div>
 
                         {/* Back: Engraved Cosmic Glass Wish */}
                         <div
-                          className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 p-6 flex flex-col justify-between text-center"
+                          className="absolute inset-0 rounded-2xl overflow-hidden border-2 border-rose-400/50 shadow-2xl bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 p-6 flex flex-col justify-between text-center"
                           style={{
                             transform: 'rotateY(180deg)',
                             backfaceVisibility: 'hidden',
@@ -1438,7 +1346,7 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
                             Thông Điệp Khắc Sau Pha Lê
                           </div>
                           <p className="text-sm sm:text-base leading-relaxed text-purple-100 font-sans italic my-auto">
-                            "{config.mainText || 'Chúc bạn ngày 20/10 ngập tràn niềm vui và hạnh phúc!'}"
+                            "{selectedQuote || config.mainText || 'Mỗi khoảnh khắc có em là một vì sao sáng trong vũ trụ!'}"
                           </p>
                           <p className="text-xs font-bold text-rose-300 italic text-right">
                             — {config.senderName || 'Người gửi'} 🌹
@@ -1519,7 +1427,7 @@ export default function GalaxyMemoriesFX({ config, mode }: Props) {
                     className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 transition-all flex items-center justify-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    <span>Tiếp Tục Xoay Ngắm Bầu Trời</span>
+                    <span>Tiếp Tục Xoay Ngắm Vũ Trụ</span>
                   </button>
                 </motion.div>
               </div>
