@@ -14,6 +14,9 @@ import {
   Compass,
   Play,
   Pause,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { CardConfig } from '../../types';
@@ -37,13 +40,13 @@ interface Particle {
 }
 
 // 4 Điểm nhìn 3D nghệ thuật
-type CameraViewMode = 'cinematic' | 'reading' | 'skyward' | 'orbit';
+type CameraViewMode = 'cinematic' | 'reading' | 'skyward' | 'orbit' | 'free';
 
 export default function LanternFestivalFX({ config }: Props) {
   // Điểm nhìn Camera hiện tại
   const [viewMode, setViewMode] = useState<CameraViewMode>('cinematic');
 
-  // Góc quay 3D
+  // Góc quay 3D tự do hoàn toàn
   const [rotY, setRotY] = useState(-20);
   const [rotX, setRotX] = useState(-8);
   const [scale, setScale] = useState(1);
@@ -52,13 +55,17 @@ export default function LanternFestivalFX({ config }: Props) {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isAutoOrbiting, setIsAutoOrbiting] = useState(false);
 
-  // Kéo xoay tương tác vật lý
+  // Kéo xoay tương tác vật lý toàn màn hình với quán tính
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const dragStartRot = useRef({ y: -20, x: -8 });
-  const lastPointer = useRef({ x: 0, time: 0 });
-  const velocityY = useRef(0);
+  const lastPointer = useRef({ x: 0, y: 0, time: 0 });
+  const velocity = useRef({ x: 0, y: 0 });
   const animFrameId = useRef<number | null>(null);
+
+  // Pinch-to-zoom trên điện thoại
+  const pinchStartDist = useRef<number | null>(null);
+  const pinchStartScale = useRef(1);
 
   // Canvas hạt tàn lửa
   const emberCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -227,12 +234,14 @@ export default function LanternFestivalFX({ config }: Props) {
         break;
       case 'skyward': // Góc ngước lên bầu trời ngắm đáy lồng đèn rực lửa
         setRotY(-faceIdx * 90 - 12);
-        setRotX(18);
+        setRotX(28);
         setScale(0.96);
         break;
       case 'orbit': // Bắt đầu tự xoay 360 độ
         setRotX(-8);
         setScale(1);
+        break;
+      case 'free':
         break;
     }
   };
@@ -265,15 +274,22 @@ export default function LanternFestivalFX({ config }: Props) {
     handleSelectFace(prev);
   };
 
-  // ─── KÉO XOAY BẰNG TAY/CHUỘT ───
-  const handlePointerDown = (e: React.PointerEvent) => {
+  // ─── TỰ DO KÉO VUỐT TOÀN MÀN HÌNH (FULL-SCREEN FREE DRAGGING) ───
+  const handleStagePointerDown = (e: React.PointerEvent) => {
     if (isReleased) return;
+
+    // Cho phép bắt sự kiện pointer toàn diện cả khi rê ra ngoài mép
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+
     isDragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
     dragStartRot.current = { y: rotY, x: rotX };
-    lastPointer.current = { x: e.clientX, time: performance.now() };
-    velocityY.current = 0;
+    lastPointer.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    velocity.current = { x: 0, y: 0 };
     setIsAutoOrbiting(false);
+    setViewMode('free');
     setHasInteracted(true);
 
     if (animFrameId.current) {
@@ -282,47 +298,110 @@ export default function LanternFestivalFX({ config }: Props) {
     }
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handleStagePointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current || isReleased) return;
+
     const deltaX = e.clientX - dragStart.current.x;
     const deltaY = e.clientY - dragStart.current.y;
 
     const now = performance.now();
     const dt = Math.max(1, now - lastPointer.current.time);
     const dx = e.clientX - lastPointer.current.x;
-    velocityY.current = (dx / dt) * 16;
-    lastPointer.current = { x: e.clientX, time: now };
+    const dy = e.clientY - lastPointer.current.y;
 
-    const newRotY = dragStartRot.current.y + deltaX * 0.65;
-    const newRotX = Math.max(-25, Math.min(22, dragStartRot.current.x - deltaY * 0.22));
+    // Vận tốc góc theo cả 2 trục X và Y
+    velocity.current = {
+      x: (dx / dt) * 16,
+      y: (dy / dt) * 16,
+    };
+    lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
+
+    // Tự do xoay 360 độ trục Y vô tận
+    const newRotY = dragStartRot.current.y + deltaX * 0.55;
+
+    // Tự do xoay góc nghiêng trục X từ -80 độ (nhìn từ đỉnh nắp) đến +80 độ (nhìn từ dưới đáy)
+    const newRotX = Math.max(-80, Math.min(80, dragStartRot.current.x - deltaY * 0.45));
 
     setRotY(newRotY);
     setRotX(newRotX);
 
+    // Tính mặt đang đối diện
     const normalizedY = ((-newRotY % 360) + 360) % 360;
     const faceIndex = Math.round(normalizedY / 90) % 4;
     setCurrentFace(faceIndex);
   };
 
-  const handlePointerUp = useCallback(() => {
+  const handleStagePointerUp = useCallback((e?: React.PointerEvent) => {
     if (!isDragging.current) return;
     isDragging.current = false;
 
-    let v = velocityY.current * 0.55;
+    if (e) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {}
+    }
+
+    // Hiệu ứng vật lý trôi quán tính 2 trục mượt mà
+    let vx = velocity.current.x * 0.55;
+    let vy = velocity.current.y * 0.4;
+
     const applyInertia = () => {
-      if (Math.abs(v) > 0.15 && !isDragging.current) {
+      if ((Math.abs(vx) > 0.1 || Math.abs(vy) > 0.1) && !isDragging.current) {
         setRotY((prev) => {
-          const next = prev + v;
+          const next = prev + vx;
           const normalizedY = ((-next % 360) + 360) % 360;
           setCurrentFace(Math.round(normalizedY / 90) % 4);
           return next;
         });
-        v *= 0.92;
+        setRotX((prev) => Math.max(-80, Math.min(80, prev - vy)));
+
+        vx *= 0.92;
+        vy *= 0.92;
         animFrameId.current = requestAnimationFrame(applyInertia);
       }
     };
     animFrameId.current = requestAnimationFrame(applyInertia);
   }, []);
+
+  // ─── TỰ DO PHÓNG TO / THU NHỎ (ZOOM) BẰNG CON LĂN CHUỘT ───
+  const handleWheel = (e: React.WheelEvent) => {
+    if (isReleased) return;
+    const zoomDelta = e.deltaY * -0.0012;
+    setScale((prev) => Math.max(0.65, Math.min(1.5, prev + zoomDelta)));
+  };
+
+  // ─── CỬ CHỈ PINCH TO ZOOM TRÊN MOBILE ───
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchStartDist.current = dist;
+      pinchStartScale.current = scale;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchStartDist.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / pinchStartDist.current;
+      setScale(Math.max(0.65, Math.min(1.5, pinchStartScale.current * factor)));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    pinchStartDist.current = null;
+  };
+
+  // Đổi tỉ lệ zoom bằng nút bấm
+  const handleZoom = (delta: number) => {
+    soundFx.playPinClick();
+    setScale((prev) => Math.max(0.65, Math.min(1.5, Number((prev + delta).toFixed(2)))));
+  };
 
   const handleReleaseLantern = () => {
     soundFx.playPaperSwoosh();
@@ -350,26 +429,28 @@ export default function LanternFestivalFX({ config }: Props) {
   const handleResetLantern = () => {
     soundFx.playPinClick();
     setIsReleased(false);
+    setScale(1);
     applyViewMode('cinematic', 0);
   };
 
   // Kích thước lồng đèn được tối ưu co giãn vừa vặn cho cả Mobile và Máy tính
-  // Mobile: 210px x 320px | Desktop: 240px x 365px
   const FACE_WIDTH = 225;
   const FACE_HEIGHT = 345;
   const RADIUS = 112.5; // FACE_WIDTH / 2
 
   return (
     <div
-      className="relative w-full h-full min-h-full bg-slate-950 overflow-hidden select-none flex flex-col items-center justify-between p-2 sm:p-4"
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+      className="relative w-full h-full min-h-full bg-slate-950 overflow-hidden select-none flex flex-col items-center justify-between p-2 sm:p-4 touch-none"
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{ perspective: '1200px' }}
     >
       {/* ─── BẦU TRỜI ĐÊM HOÀNG KIM HỘI AN ─── */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#091124] to-[#1a0804] pointer-events-none" />
 
-      {/* Ánh trăng rằm huyền ảo rọi từ góc trên */}
+      {/* Ánh trăng rằm huyền ảo */}
       <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-radial from-amber-200/20 via-yellow-500/5 to-transparent pointer-events-none blur-3xl" />
 
       {/* ─── DÒNG SÔNG HOÀI PHẢN CHIẾU ÁNH ĐÈN HOA ĐĂNG ─── */}
@@ -568,8 +649,49 @@ export default function LanternFestivalFX({ config }: Props) {
         )}
       </header>
 
-      {/* ─── CONTAINER CHỨA LỒNG ĐÈN 3D (TỰ ĐỘNG CÂN BẰNG KHÔNG BỊ TRÀN VIEWPORT) ─── */}
-      <div className="relative z-20 flex-1 w-full flex items-center justify-center my-auto overflow-visible py-1">
+      {/* ─── VÙNG TƯƠNG TÁC 3D TOÀN DIỆN (CHẠM VUỐT BẤT KỲ ĐÂU ĐỀU XOAY TỰ DO ĐƯỢC) ─── */}
+      <div
+        className="relative z-20 flex-1 w-full flex items-center justify-center my-auto overflow-hidden touch-none cursor-grab active:cursor-grabbing select-none"
+        onPointerDown={handleStagePointerDown}
+        onPointerMove={handleStagePointerMove}
+        onPointerUp={handleStagePointerUp}
+        onPointerCancel={handleStagePointerUp}
+      >
+        {/* CỤM NÚT ĐIỀU KHIỂN ZOOM VÀ ĐẶT LẠI GÓC NHÌN Ở GÓC TRÊN */}
+        <div
+          className="absolute top-2 right-2 sm:right-4 z-30 flex flex-col gap-1.5 bg-black/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/15 shadow-lg pointer-events-auto"
+          onPointerDown={(e) => e.stopPropagation()} // Ngăn chặn kéo xoay khi bấm nút zoom
+        >
+          <button
+            onClick={() => handleZoom(0.12)}
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/25 text-amber-200 active:scale-95 transition-all shadow-sm"
+            title="Phóng to"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => handleZoom(-0.12)}
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/25 text-amber-200 active:scale-95 transition-all shadow-sm"
+            title="Thu nhỏ"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => {
+              soundFx.playPinClick();
+              setScale(1);
+              setRotY(-20);
+              setRotX(-8);
+              setViewMode('cinematic');
+            }}
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/25 text-amber-200 active:scale-95 transition-all shadow-sm"
+            title="Đặt lại góc ban đầu"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* THÂN LỒNG ĐÈN 3D NGUYÊN KHỐI */}
         <motion.div
           animate={
             isReleased
@@ -597,17 +719,15 @@ export default function LanternFestivalFX({ config }: Props) {
               : {
                   y: { duration: 3.6, repeat: Infinity, ease: 'easeInOut' },
                   rotateZ: { duration: 4.5, repeat: Infinity, ease: 'easeInOut' },
-                  scale: { duration: 0.4, ease: 'easeOut' },
+                  scale: { duration: 0.35, ease: 'easeOut' },
                 }
           }
-          className="relative flex items-center justify-center cursor-grab active:cursor-grabbing"
+          className="relative flex items-center justify-center pointer-events-none"
           style={{
             width: `${FACE_WIDTH}px`,
             height: `${FACE_HEIGHT}px`,
             transformStyle: 'preserve-3d',
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
         >
           {/* LÕI ÁNH SÁNG NỘI TẠI TỎA HÀO QUANG VÀNG KIM TẠI TÂM */}
           <div
@@ -715,7 +835,6 @@ export default function LanternFestivalFX({ config }: Props) {
                     transform: `rotateY(${faceAngle}deg) translateZ(${RADIUS}px)`,
                     transformStyle: 'preserve-3d',
                     backfaceVisibility: 'visible',
-                    // Nền lụa tơ tằm vàng mật ong & hổ phách ngọc bích cực kỳ mềm mại, không bị chói gắt
                     background:
                       'radial-gradient(ellipse at 50% 55%, rgba(255, 253, 245, 0.99) 0%, rgba(254, 243, 199, 0.96) 32%, rgba(251, 191, 36, 0.92) 72%, rgba(217, 119, 6, 0.95) 100%)',
                     boxShadow:
@@ -846,7 +965,7 @@ export default function LanternFestivalFX({ config }: Props) {
         </motion.div>
       </div>
 
-      {/* ─── THANH ĐIỀU KHIỂN & CHỌN MẶT THANH THOÁT Ở ĐÁY (KHÔNG CHE KHUẤT) ─── */}
+      {/* ─── THANH ĐIỀU KHIỂN & CHỌN MẶT THANH THOÁT Ở ĐÁY ─── */}
       <footer className="relative z-30 w-full max-w-md flex flex-col items-center gap-1.5 pb-1 px-1">
         {/* Nút Chọn Nhanh 4 Mặt */}
         <div className="flex items-center justify-center gap-1 w-full bg-black/45 backdrop-blur-xl p-1 rounded-2xl border border-white/10 shadow-lg">
@@ -876,7 +995,7 @@ export default function LanternFestivalFX({ config }: Props) {
           </button>
 
           <span className="text-[10.5px] text-amber-200/70 font-medium">
-            Mặt {currentFace + 1}/4 • Vuốt tay để xoay 360°
+            Mặt {currentFace + 1}/4 • Chạm vuốt mọi góc độ 360°
           </span>
 
           <button
