@@ -17,7 +17,7 @@ import {
   Download,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { TEMPLATES, type CreatedCard, type CardTemplate } from '../types';
+import { TEMPLATES, resolveTemplate, type CreatedCard, type CardTemplate } from '../types';
 import TemplateThumbnail from '../components/TemplateThumbnail';
 import {
   getUserCards,
@@ -139,7 +139,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-20 sm:pb-24 px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20 sm:pt-28 pb-32 sm:pb-24 px-3.5 sm:px-6 lg:px-8">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -228,37 +228,36 @@ export default function Dashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
                 {cards.map((card) => {
-                  const template = TEMPLATES.find((t) => t.id === card.templateId) || TEMPLATES[0];
+                  const template = resolveTemplate(card.templateId);
                   const tmplStats = getTemplateLiveStats(template.id);
 
                   return (
                     <motion.div
                       key={card.id}
-                      layout
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group"
+                      className="w-full mx-auto bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group"
                     >
                       <div>
-                        {/* Thumbnail Header: Compact on mobile */}
-                        <div className="relative aspect-[16/9] sm:aspect-[16/10] max-h-48 sm:max-h-none bg-slate-900 overflow-hidden">
-                          <img
-                            src={template.thumbnail}
-                            alt={card.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        {/* Thumbnail Header: Tỉ lệ 4:3 cao ráo, trọn vẹn toàn bộ thiệp không bị cắt góc */}
+                        <div className="relative aspect-[4/3] sm:aspect-[16/10] bg-slate-900 overflow-hidden">
+                          <TemplateThumbnail
+                            effectType={template.effectType}
+                            thumbnailUrl={template.thumbnail}
+                            className="w-full h-full"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
-                          {/* Template Badge */}
-                          <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1">
+                          {/* Template Badge (Góc trên trái) */}
+                          <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] font-extrabold text-slate-800 shadow-sm flex items-center gap-1 z-10">
                             <span>{template.icon}</span>
                             <span>{template.titleVi}</span>
                           </div>
 
-                          {/* Template Global Live Stats Pill (Đồng bộ chuẩn xác với Tab 2 và Trang Chủ) */}
-                          <div className="absolute bottom-2.5 left-3 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/55 backdrop-blur-md text-[11px] font-medium text-white/90">
+                          {/* Live Stats Pill (Góc dưới PHẢI - Không bao giờ đè lên badge TemplateThumbnail ở góc dưới trái) */}
+                          <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 z-10 border border-white/10">
                             <span className="flex items-center gap-1" title="Lượt xem của mẫu thiệp này">
                               <Eye className="w-3 h-3 text-purple-300" />
                               <span>{formatStat(tmplStats.views)}</span>
@@ -284,13 +283,13 @@ export default function Dashboard() {
                             </h3>
 
                             <div className="text-xs text-slate-600 space-y-1 mt-1">
-                              <p>
+                              <p className="truncate">
                                 <span className="text-slate-400">Gửi đến:</span>{' '}
                                 <span className="font-bold text-rose-600">
                                   {card.cardData.recipientName}
                                 </span>
                               </p>
-                              <p>
+                              <p className="truncate">
                                 <span className="text-slate-400">Người gửi:</span>{' '}
                                 <span className="font-semibold text-slate-700">
                                   {card.cardData.senderName}
@@ -307,11 +306,11 @@ export default function Dashboard() {
 
                       {/* Action Bar */}
                       <div className="p-3.5 pt-0 border-t border-slate-100 flex items-center justify-between gap-2 mt-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <button
                             onClick={() => handleCopyLink(card)}
                             title="Sao chép link gửi"
-                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
+                            className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
                               copiedId === card.id
                                 ? 'bg-emerald-500 border-emerald-500 text-white'
                                 : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -328,7 +327,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => setActiveQrCard(card)}
                             title="Mở mã QR"
-                            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-purple-50 hover:text-purple-600 transition-colors cursor-pointer"
                           >
                             <QrCode className="w-4 h-4" />
                           </button>
@@ -336,7 +335,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => handleDelete(card.id)}
                             title="Xóa khỏi lịch sử"
-                            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -345,7 +344,7 @@ export default function Dashboard() {
                         <Link
                           to={`/card/${card.id}`}
                           target="_blank"
-                          className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                          className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 shrink-0"
                         >
                           <span>Mở thiệp</span>
                           <ExternalLink className="w-3 h-3" />
@@ -382,29 +381,28 @@ export default function Dashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
                 {likedTemplates.map((tmpl) => {
                   const stats = getTemplateLiveStats(tmpl.id);
 
                   return (
                     <motion.div
                       key={tmpl.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="group bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="group w-full mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                     >
                       {/* Entire upper portion is clickable to Studio */}
                       <Link to={`/studio/${tmpl.id}`} className="block relative">
-                        {/* Compact on mobile, rich on desktop */}
-                        <div className="relative aspect-[16/9] sm:aspect-[4/3] max-h-48 sm:max-h-none overflow-hidden bg-slate-900">
+                        {/* Tỉ lệ 4:3 cao thoáng, trọn vẹn toàn bộ thiệp không bị cắt đầu cắt đuôi */}
+                        <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-slate-900">
                           <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-700 ease-out">
                             <TemplateThumbnail effectType={tmpl.effectType} thumbnailUrl={tmpl.thumbnail} className="w-full h-full" />
                           </div>
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
 
-                          {/* Category Pill */}
-                          <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none">
+                          {/* Category Pill (Góc trên trái) */}
+                          <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 bg-white/95 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold text-slate-800 shadow-sm pointer-events-none z-10">
                             {tmpl.category === '20-10'
                               ? '🌹 20/10'
                               : tmpl.category === 'love'
@@ -416,7 +414,7 @@ export default function Dashboard() {
                               : '🎞️ Bạn bè'}
                           </div>
 
-                          {/* Action Controls: Preview & Heart Button */}
+                          {/* Action Controls: Preview & Heart Button (Góc trên phải) */}
                           <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex items-center gap-1.5 z-10">
                             <Link
                               to={`/card/demo-${tmpl.id}`}
@@ -441,8 +439,8 @@ export default function Dashboard() {
                             </button>
                           </div>
 
-                          {/* Live Stats Pill ở góc dưới trái của ảnh */}
-                          <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none">
+                          {/* Live Stats Pill ở góc dưới PHẢI (Không bao giờ đè lên badge TemplateThumbnail ở góc dưới trái) */}
+                          <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none z-10 border border-white/10">
                             <span className="flex items-center gap-1" title="Lượt xem của mẫu này">
                               <Eye className="w-3 h-3 text-purple-300" />
                               <span>{formatStat(stats.views)}</span>
@@ -462,7 +460,7 @@ export default function Dashboard() {
                       </Link>
 
                       {/* Bottom Compact Info */}
-                      <div className="p-3 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">
+                      <div className="p-3.5 sm:p-4.5 flex items-center justify-between gap-2.5 sm:gap-3 bg-white">
                         <div className="min-w-0 flex-1">
                           <Link
                             to={`/studio/${tmpl.id}`}

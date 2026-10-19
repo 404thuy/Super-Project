@@ -737,8 +737,8 @@ export default function Landing() {
                     </button>
                   </div>
 
-                  {/* Live Stats Pill ở góc dưới trái - Gọn gàng, kính mờ siêu thanh thoát */}
-                  <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/45 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none z-10 border border-white/10">
+                  {/* Live Stats Pill ở góc dưới PHẢI - Không đè lên badge góc dưới trái */}
+                  <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3.5 flex items-center gap-1.5 sm:gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] sm:text-[11px] font-medium text-white/90 pointer-events-none z-10 border border-white/10">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3 text-purple-300" />
                       <span>{formatStat(stats.views)}</span>

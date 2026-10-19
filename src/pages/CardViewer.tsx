@@ -307,7 +307,7 @@ export default function CardViewer() {
       <main
         ref={cardContainerRef}
         key={replayKey}
-        className={`w-full flex-1 flex items-center justify-center px-1 sm:px-4 ${
+        className={`w-full flex-1 flex items-center justify-center px-2.5 sm:px-4 ${
           isDemo ? 'pt-14 pb-16 sm:pt-20 sm:pb-28' : 'pt-14 pb-4 sm:pt-16 sm:pb-6'
         }`}
       >
