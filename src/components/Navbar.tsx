@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings, Database } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { isSupabaseReady } from '../utils/supabaseClient';
 import { soundFx } from '../utils/soundEffects';
 
 export default function Navbar() {
@@ -68,23 +67,6 @@ export default function Navbar() {
 
             {/* Auth / Profile Area */}
             <div className="flex items-center gap-2">
-              {/* Cloud Database Status & Configuration Button */}
-              <button
-                type="button"
-                onClick={openDbModal}
-                title={isSupabaseReady ? 'Cơ sở dữ liệu Cloud: Đã kết nối' : 'Cơ sở dữ liệu Cloud: Chưa kết nối'}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                  isSupabaseReady
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200/90 hover:bg-emerald-100/80 shadow-xs'
-                    : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 animate-pulse shadow-xs'
-                }`}
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">
-                  {isSupabaseReady ? 'Cloud DB' : 'Cấu hình DB'}
-                </span>
-              </button>
-
               {user ? (
                 <div className="relative">
                   <button
