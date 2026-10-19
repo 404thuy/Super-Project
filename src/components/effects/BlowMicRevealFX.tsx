@@ -70,8 +70,28 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
+  const phaseRef = useRef<'idle' | 'requesting' | 'listening' | 'blowing' | 'revealed'>('idle');
+  const blowStreakRef = useRef(0);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   const userImages = config.images || [];
+
+  const recipientName = config.recipientName || 'Người Phụ Nữ Xinh Đẹp';
+  const senderName = config.senderName || 'Người Luôn Nghĩ Về Em';
+  const mainText =
+    config.mainText ||
+    'Hãy thổi nhẹ và gửi gắm những ước nguyện đẹp nhất theo từng cánh hoa bồ công anh nhé!\nChúc bạn ngày 20/10 ngập tràn nụ cười, hạnh phúc viên mãn và luôn được nâng niu yêu thương! 🌼✨';
+
+  const defaultSamplePhotos = [
+    'https://images.unsplash.com/photo-1490750967868-88df5691cc37?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=600&auto=format&fit=crop&q=80',
+  ];
+
+  const photosToDisplay = userImages.length > 0 ? userImages : defaultSamplePhotos;
 
   // Generate dandelion seed parasols positioned radially
   useEffect(() => {
@@ -110,6 +130,8 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
   }, [stopMic]);
 
   const scatterSeeds = useCallback(() => {
+    phaseRef.current = 'blowing';
+    setPhase('blowing');
     setSeedsScattered(true);
     setSeeds((prev) =>
       prev.map((s) => ({
@@ -123,19 +145,20 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
     soundFx.playSuccessChime();
 
     confetti({
-      particleCount: 90,
-      spread: 90,
+      particleCount: 100,
+      spread: 95,
       origin: { y: 0.55 },
       colors: ['#FDE047', '#FBBF24', '#86EFAC', '#34D399', '#FFFFFF'],
     });
 
     setTimeout(() => {
+      phaseRef.current = 'revealed';
       setPhase('revealed');
       stopMic();
-    }, 1400);
+    }, 1200);
   }, [stopMic]);
 
-  // Volume measurement
+  // Volume measurement với phaseRef luôn cập nhật
   const measureVolume = useCallback(() => {
     const analyser = analyserRef.current;
     if (!analyser) return;
@@ -149,22 +172,32 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
       sumSquares += n * n;
     }
     const rms = Math.sqrt(sumSquares / buf.length);
-    const db = Math.min(100, rms * 320);
-    setVolume(Math.round(db));
+    const db = Math.min(100, rms * 360);
+    const currentVol = Math.round(db);
+    setVolume(currentVol);
 
-    if (db > BLOW_THRESHOLD && phase === 'listening') {
-      setPhase('blowing');
+    // Ngưỡng phát hiện hơi thổi thông minh:
+    // Thổi vào mic tạo tiếng rít gió đều (> 28) hoặc âm lượng tức thời (> 42)
+    if (currentVol > 28) {
+      blowStreakRef.current += 1;
+    } else {
+      blowStreakRef.current = Math.max(0, blowStreakRef.current - 1);
+    }
+
+    if ((blowStreakRef.current >= 2 || currentVol > 42) && (phaseRef.current === 'listening' || phaseRef.current === 'requesting')) {
       scatterSeeds();
       return;
     }
 
     rafRef.current = requestAnimationFrame(measureVolume);
-  }, [phase, scatterSeeds]);
+  }, [scatterSeeds]);
 
   // Start mic
   const startMic = useCallback(async () => {
+    phaseRef.current = 'requesting';
     setPhase('requesting');
     setMicError(null);
+    blowStreakRef.current = 0;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       streamRef.current = stream;
@@ -175,22 +208,17 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
       analyser.fftSize = 256;
       source.connect(analyser);
       analyserRef.current = analyser;
+      phaseRef.current = 'listening';
       setPhase('listening');
       rafRef.current = requestAnimationFrame(measureVolume);
     } catch {
-      setMicError('Không thể mở micro. Bạn có thể nhấn nút mở nhanh bên dưới.');
+      setMicError('Không thể truy cập micro. Bạn có thể nhấn nút "Thổi ngay" bên dưới.');
+      phaseRef.current = 'idle';
       setPhase('idle');
     }
   }, [measureVolume]);
 
-  useEffect(() => {
-    if (phase === 'listening' && analyserRef.current && !rafRef.current) {
-      rafRef.current = requestAnimationFrame(measureVolume);
-    }
-  }, [phase, measureVolume]);
-
   const handleManualReveal = () => {
-    setPhase('blowing');
     scatterSeeds();
   };
 
@@ -386,17 +414,17 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
                 {/* Header */}
                 <div className="text-center mb-3">
                   <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-amber-300">
-                    Bức Thư Gửi {config.recipientName}
+                    Bức Thư Gửi {recipientName}
                   </span>
                   <div className="h-px w-24 mx-auto my-2 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
                 </div>
 
                 {/* Photo Gallery */}
-                {userImages.length > 0 && (
+                {photosToDisplay.length > 0 && (
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    {userImages.slice(0, 4).map((img, i) => (
+                    {photosToDisplay.slice(0, 4).map((img, i) => (
                       <div key={i} className={`rounded-xl overflow-hidden border border-emerald-400/40 shadow-md ${i === 0 ? 'col-span-2 h-36' : 'h-24'}`}>
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                       </div>
                     ))}
                   </div>
@@ -405,29 +433,28 @@ export default function BlowMicRevealFX({ config, mode }: Props) {
                 {/* Main letter text */}
                 <p className="text-emerald-50 text-sm leading-relaxed whitespace-pre-line text-center italic"
                   style={{ fontFamily: config.fontFamily || 'Playfair Display, serif' }}>
-                  "{config.mainText}"
+                  "{mainText}"
                 </p>
 
                 {/* Signature */}
                 <div className="flex items-center gap-1.5 mt-5 pt-3 border-t border-emerald-400/20 justify-center">
                   <Heart className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span className="text-amber-200 font-bold text-sm tracking-wide">— {config.senderName} —</span>
+                  <span className="text-amber-200 font-bold text-sm tracking-wide">— {senderName} —</span>
                 </div>
               </div>
             </div>
 
-            {/* Studio Reset */}
-            {mode === 'studio' && (
-              <button
-                onClick={() => {
-                  setPhase('idle');
-                  setSeedsScattered(false);
-                }}
-                className="mt-4 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-emerald-400/30 text-emerald-200 text-xs font-semibold transition-all"
-              >
-                ↺ Thử lại từ đầu
-              </button>
-            )}
+            {/* Replay Button */}
+            <button
+              onClick={() => {
+                setPhase('idle');
+                setSeedsScattered(false);
+                blowStreakRef.current = 0;
+              }}
+              className="mt-4 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-emerald-400/30 text-emerald-200 text-xs font-semibold transition-all shadow-md active:scale-95"
+            >
+              ↺ Thử lại từ đầu
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
