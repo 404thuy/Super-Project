@@ -384,7 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
     }
 
-    // 4. Gọi API Backend (nếu chạy local hoặc có server)
+    // 4. Gọi API Backend (nếu chạy local hoặc có server Node)
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -412,22 +412,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      // Khi chạy trên Vercel không có backend JSON
+      // Khi chạy trên Vercel Cloud (không có Node backend):
+      // Nếu tài khoản này chưa từng được tạo, tự động khởi tạo tài khoản ngay cho người dùng!
+      if (password.length >= 6) {
+        const regRes = await registerUser(cleanUser, password, cleanUser);
+        if (regRes.success) {
+          return { success: true };
+        }
+      }
+
       return { 
         success: false, 
         error: 'Tài khoản chưa được đăng ký. Bạn hãy chuyển sang tab "Đăng ký" để tạo tài khoản nhé!' 
       };
     } catch (err) {
-      const cached = localStorage.getItem(USER_CACHE_KEY);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.username === cleanUser) {
-            setUser(parsed);
-            closeAuthModal();
-            return { success: true };
-          }
-        } catch {}
+      if (password.length >= 6) {
+        const regRes = await registerUser(cleanUser, password, cleanUser);
+        if (regRes.success) {
+          return { success: true };
+        }
       }
       return { 
         success: false, 

@@ -121,7 +121,7 @@ export default function AuthModal() {
     }
   };
 
-  // Đăng nhập nhanh khách trải nghiệm
+    // Đăng nhập nhanh khách trải nghiệm
   const handleQuickDemo = async () => {
     setErrorMessage(null);
     setLoading(true);
@@ -129,6 +129,28 @@ export default function AuthModal() {
     await loginWithEmail('khach_trainghiem', 'Khách Trải Nghiệm');
     setLoading(false);
     soundFx.playSuccessChime();
+  };
+
+  // 1-Click Tạo ngay tài khoản nếu vừa nhập thông tin ở màn hình đăng nhập
+  const handleQuickCreateAccount = async () => {
+    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername) {
+      setErrorMessage('Vui lòng nhập tên tài khoản');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setErrorMessage('Mật khẩu cần tối thiểu 6 ký tự để tạo tài khoản');
+      return;
+    }
+    setLoading(true);
+    soundFx.playPinClick();
+    const res = await registerUser(cleanUsername, password, displayName || cleanUsername);
+    setLoading(false);
+    if (res.success) {
+      soundFx.playSuccessChime();
+    } else {
+      setErrorMessage(res.error || 'Không thể tạo tài khoản');
+    }
   };
 
   const friendlyError = formatFriendlyError(errorMessage);
@@ -156,13 +178,13 @@ export default function AuthModal() {
           {/* Close Button */}
           <button
             onClick={closeAuthModal}
-            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
 
           {/* Header */}
-          <div className="text-center space-y-1 mb-5">
+          <div className="text-center space-y-1 mb-4">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-md shadow-rose-500/20">
               <Heart className="w-5 h-5 fill-white" />
             </div>
@@ -176,15 +198,66 @@ export default function AuthModal() {
             </p>
           </div>
 
-          {/* Error Message Alert */}
+          {/* Segmented Tab Bar: Rõ ràng, trực quan, 1 chạm chuyển đổi */}
+          <div className="flex bg-slate-100 p-1 rounded-2xl mb-4 border border-slate-200/60">
+            <button
+              type="button"
+              onClick={() => {
+                setTab('login');
+                setErrorMessage(null);
+                soundFx.playPinClick();
+              }}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                tab === 'login'
+                  ? 'bg-white text-rose-600 shadow-sm shadow-slate-200'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Đăng Nhập</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTab('register');
+                setErrorMessage(null);
+                soundFx.playPinClick();
+              }}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                tab === 'register'
+                  ? 'bg-white text-purple-600 shadow-sm shadow-slate-200'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Đăng Ký Mới</span>
+            </button>
+          </div>
+
+          {/* Error Message Alert kèm nút 1-Click Tạo Tài Khoản */}
           {friendlyError && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-3.5 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2"
+              className="mb-3.5 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs space-y-2"
             >
-              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-              <span>{friendlyError}</span>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                <span className="font-medium">{friendlyError}</span>
+              </div>
+              {tab === 'login' && username && (
+                <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-rose-600 font-medium">Chưa có tài khoản này?</span>
+                  <button
+                    type="button"
+                    onClick={handleQuickCreateAccount}
+                    disabled={loading}
+                    className="px-2.5 py-1 bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                  >
+                    👉 Tạo tài khoản "{username}" ngay
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
