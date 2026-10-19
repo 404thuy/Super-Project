@@ -17,6 +17,9 @@ interface AuthContextType {
   isSettingsModalOpen: boolean;
   openSettingsModal: () => void;
   closeSettingsModal: () => void;
+  isDbModalOpen: boolean;
+  openDbModal: () => void;
+  closeDbModal: () => void;
   updateAvatar: (newAvatarUrl: string) => Promise<AuthResponse>;
   updatePassword: (oldPassword: string, newPassword: string) => Promise<AuthResponse>;
   loginWithPassword: (username: string, password: string) => Promise<AuthResponse>;
@@ -45,6 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isDbModalOpen, setIsDbModalOpen] = useState(false);
+
+  const openDbModal = () => setIsDbModalOpen(true);
+  const closeDbModal = () => setIsDbModalOpen(false);
 
   // Lấy token từ header Authorization
   const getAuthHeaders = (): Record<string, string> => {
@@ -223,9 +230,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(TOKEN_KEY, 'sess_sb_' + userId);
           closeAuthModal();
           return { success: true };
+        } else {
+          console.error('Supabase register insert error:', insError);
+          return {
+            success: false,
+            error: `Lỗi CSDL: ${insError.message}. Hãy kiểm tra đã chạy file supabase_schema.sql trong SQL Editor chưa.`,
+          };
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Supabase register error:', err);
+        return {
+          success: false,
+          error: `Không thể kết nối Supabase: ${err?.message || err}`,
+        };
       }
     }
 
@@ -393,7 +410,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
     }
 
-    // 4. Gọi API Backend Oracle (qua tunnel hoặc localhost)
+    // 4. Nếu đã bật Supabase Cloud mà không tìm thấy tài khoản
+    if (isSupabaseReady && supabase) {
+      return {
+        success: false,
+        error: 'Tài khoản chưa được đăng ký trên hệ thống. Vui lòng chuyển sang tab "Đăng ký"!',
+      };
+    }
+
+    // 5. Gọi API Backend Oracle (qua tunnel hoặc localhost)
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
@@ -593,6 +618,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isSettingsModalOpen,
         openSettingsModal,
         closeSettingsModal,
+        isDbModalOpen,
+        openDbModal,
+        closeDbModal,
         updateAvatar,
         updatePassword,
         loginWithPassword,

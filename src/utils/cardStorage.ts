@@ -89,27 +89,29 @@ export async function fetchLiveTemplateStats(): Promise<{
     }
   }
 
-  // 2. Oracle 19c local API fallback
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/templates`, {
-      headers: getAuthHeaders(),
-    });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    if (res.ok && isJson) {
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(data.stats));
-        if (data.likedTemplateIds) {
-          localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(data.likedTemplateIds));
+  // 2. Oracle 19c local API fallback (chỉ khi không dùng Supabase)
+  if (!isSupabaseReady) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/templates`, {
+        headers: getAuthHeaders(),
+      });
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      if (res.ok && isJson) {
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(data.stats));
+          if (data.likedTemplateIds) {
+            localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(data.likedTemplateIds));
+          }
+          return {
+            stats: data.stats || {},
+            likedTemplateIds: data.likedTemplateIds || [],
+          };
         }
-        return {
-          stats: data.stats || {},
-          likedTemplateIds: data.likedTemplateIds || [],
-        };
       }
+    } catch (err) {
+      // Vercel static fallback
     }
-  } catch (err) {
-    // Vercel static fallback
   }
 
   // 3. Fallback cache
@@ -252,9 +254,10 @@ export async function toggleTemplateHeart(
     } catch (err) {
       console.warn('Supabase toggleTemplateHeart error:', err);
     }
+    return { isLiked: false, newHearts: 0 };
   }
 
-  // 2. Oracle 19c local API fallback
+  // 2. Oracle 19c local API fallback (chỉ khi không dùng Supabase)
   try {
     const res = await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/like`, {
       method: 'POST',
@@ -327,21 +330,23 @@ export async function fetchCardById(id: string): Promise<CreatedCard | null> {
     }
   }
 
-  // 2. Oracle 19c local API fallback
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}`, {
-      headers: getAuthHeaders(),
-    });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    if (res.ok && isJson) {
-      const data = await res.json();
-      if (data.success && data.card) {
-        cacheCardLocally(data.card);
-        return data.card;
+  // 2. Oracle 19c local API fallback (chỉ thử khi chưa cấu hình Supabase Cloud)
+  if (!isSupabaseReady) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/cards/${encodeURIComponent(id)}`, {
+        headers: getAuthHeaders(),
+      });
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      if (res.ok && isJson) {
+        const data = await res.json();
+        if (data.success && data.card) {
+          cacheCardLocally(data.card);
+          return data.card;
+        }
       }
+    } catch (err) {
+      // Vercel static fallback
     }
-  } catch (err) {
-    // Vercel static fallback
   }
 
   // 3. Fallback to local cache if offline or direct template
@@ -376,9 +381,10 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
     } catch (err) {
       console.warn('Supabase saveCard fallback:', err);
     }
+    return card;
   }
 
-  // 2. Save to Oracle 19c local API fallback
+  // 2. Save to Oracle 19c local API fallback (khi không dùng Supabase)
   try {
     const res = await fetch(`${BACKEND_URL}/api/cards`, {
       method: 'POST',
@@ -414,6 +420,7 @@ export async function deleteCard(id: string): Promise<void> {
     } catch (err) {
       console.warn('Supabase deleteCard error:', err);
     }
+    return;
   }
 
   try {
@@ -457,9 +464,10 @@ export async function fetchUserCards(): Promise<CreatedCard[]> {
     } catch (err) {
       console.warn('Supabase fetchUserCards fallback:', err);
     }
+    return getUserCards(currentUid);
   }
 
-  // 2. Fetch from Oracle 19c local API
+  // 2. Fetch from Oracle 19c local API (chỉ khi không dùng Supabase)
   try {
     const res = await fetch(`${BACKEND_URL}/api/users/me/cards`, {
       headers: getAuthHeaders(),

@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Heart, Sparkles, History, User as UserIcon, LogOut, ChevronDown, Settings, Database } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { isSupabaseReady } from '../utils/supabaseClient';
 import { soundFx } from '../utils/soundEffects';
 
 export default function Navbar() {
   const location = useLocation();
-  const { user, openAuthModal, openSettingsModal, logout } = useAuth();
+  const { user, openAuthModal, openSettingsModal, openDbModal, logout } = useAuth();
   const [profileDropdown, setProfileDropdown] = useState(false);
 
   const navLinks = [
@@ -67,6 +68,23 @@ export default function Navbar() {
 
             {/* Auth / Profile Area */}
             <div className="flex items-center gap-2">
+              {/* Cloud Database Status & Configuration Button */}
+              <button
+                type="button"
+                onClick={openDbModal}
+                title={isSupabaseReady ? 'Cơ sở dữ liệu Cloud: Đã kết nối' : 'Cơ sở dữ liệu Cloud: Chưa kết nối'}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  isSupabaseReady
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200/90 hover:bg-emerald-100/80 shadow-xs'
+                    : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 animate-pulse shadow-xs'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  {isSupabaseReady ? 'Cloud DB' : 'Cấu hình DB'}
+                </span>
+              </button>
+
               {user ? (
                 <div className="relative">
                   <button
@@ -113,6 +131,17 @@ export default function Navbar() {
                           >
                             <Settings className="w-4 h-4 text-purple-600" />
                             <span>Cài đặt tài khoản</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProfileDropdown(false);
+                              openDbModal();
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                          >
+                            <Database className="w-4 h-4 text-emerald-600" />
+                            <span>Cơ sở dữ liệu Cloud</span>
                           </button>
                           <button
                             onClick={() => {

@@ -8,14 +8,25 @@ import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import SettingsModal from './components/SettingsModal';
-import { AuthProvider } from './context/AuthContext';
+import DatabaseModal from './components/DatabaseModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+function ModalsContainer() {
+  const { isDbModalOpen, closeDbModal } = useAuth();
+  return (
+    <>
+      <AuthModal />
+      <SettingsModal />
+      <DatabaseModal isOpen={isDbModalOpen} onClose={closeDbModal} />
+    </>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-slate-50 text-slate-800">
-        <AuthModal />
-        <SettingsModal />
+        <ModalsContainer />
         <AnimatePresence mode="wait">
           <Routes>
             <Route

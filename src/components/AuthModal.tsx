@@ -12,6 +12,7 @@ import {
   AtSign,
   Eye,
   EyeOff,
+  Database,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundFx } from '../utils/soundEffects';
@@ -44,6 +45,7 @@ export default function AuthModal() {
   const {
     isAuthModalOpen,
     closeAuthModal,
+    openDbModal,
     loginWithPassword,
     registerUser,
     loginWithEmail,
@@ -391,6 +393,21 @@ export default function AuthModal() {
               className="text-slate-600 hover:text-slate-900 font-bold hover:underline cursor-pointer"
             >
               {tab === 'login' ? 'Chưa có tài khoản? Đăng ký ngay' : 'Đã có tài khoản? Đăng nhập'}
+            </button>
+          </div>
+
+          {/* Cloud Database Status Link */}
+          <div className="mt-3 pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                closeAuthModal();
+                openDbModal();
+              }}
+              className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Cấu hình CSDL Cloud (Supabase) để đồng bộ mọi thiết bị</span>
             </button>
           </div>
         </motion.div>
