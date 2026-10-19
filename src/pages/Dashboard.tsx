@@ -66,8 +66,17 @@ export default function Dashboard() {
       }
     }
     loadData();
+
+    const handleStatsChange = () => {
+      if (isCurrent) {
+        setStatsVersion((v) => v + 1);
+      }
+    };
+    window.addEventListener('template_stats_changed', handleStatsChange);
+
     return () => {
       isCurrent = false;
+      window.removeEventListener('template_stats_changed', handleStatsChange);
     };
   }, [user]);
 

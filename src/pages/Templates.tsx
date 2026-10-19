@@ -44,8 +44,18 @@ export default function Templates() {
       }
     }
     syncStats();
+
+    const handleStatsChange = () => {
+      if (isCurrent) {
+        setLikedTemplateIds(getUserLikedTemplateIds(user ? user.id : null));
+        setHeartVersion((v) => v + 1);
+      }
+    };
+    window.addEventListener('template_stats_changed', handleStatsChange);
+
     return () => {
       isCurrent = false;
+      window.removeEventListener('template_stats_changed', handleStatsChange);
     };
   }, [user]);
 

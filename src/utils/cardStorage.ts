@@ -5,8 +5,20 @@ import { BACKEND_URL, getTunnelHeaders } from './apiConfig';
 
 const TOKEN_KEY = 'lovecard_session_token';
 const CARDS_CACHE_KEY = 'lovecard_cards_cache_v2';
-const TEMPLATE_STATS_KEY = 'lovecard_template_stats_v2';
-const USER_LIKED_TEMPLATES_KEY = 'lovecard_user_liked_templates_v2';
+const TEMPLATE_STATS_KEY = 'lovecard_template_stats_v3';
+const USER_LIKED_TEMPLATES_KEY = 'lovecard_user_liked_templates_v3';
+
+// Danh sách các số liệu giả cũ từng bị seed vào database để tự động dọn dẹp
+const OLD_MOCK_VIEWS = new Set([
+  1520, 2410, 1340, 1890, 1650, 2890, 3450, 2760, 1980, 2100, 1780, 1920, 2340, 1850
+]);
+
+// Phát tín hiệu cập nhật stats tới toàn bộ các component đang render
+export function notifyStatsChanged(templateId?: string) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('template_stats_changed', { detail: { templateId } }));
+  }
+}
 
 function getCurrentUserId(): string | null {
   try {
@@ -54,34 +66,104 @@ export async function fetchLiveTemplateStats(): Promise<{
   // 1. Supabase Cloud Sync
   if (isSupabaseReady && supabase) {
     try {
-      const { data: tmplData } = await supabase.from('templates').select('*');
-      const stats: Record<string, { views: number; hearts: number; uses: number }> = {};
-      if (tmplData) {
-        tmplData.forEach((row: any) => {
-          stats[row.id] = {
-            views: row.views_count || 0,
-            hearts: row.hearts_count || 0,
-            uses: row.uses_count || 0,
-          };
+      // 1.1 Lấy toàn bộ lượt thích thực tế từ bảng template_likes
+      const { data: allLikes } = await supabase.from('template_likes').select('template_id, user_id');
+      const realHeartsMap: Record<string, number> = {};
+      const uid = getCurrentUserId();
+      const likedIds: string[] = [];
+
+      if (allLikes) {
+        allLikes.forEach((l: any) => {
+          if (l.template_id) {
+            realHeartsMap[l.template_id] = (realHeartsMap[l.template_id] || 0) + 1;
+            if (uid && l.user_id === uid && !likedIds.includes(l.template_id)) {
+              likedIds.push(l.template_id);
+            }
+          }
         });
       }
 
-      const uid = getCurrentUserId();
-      let likedIds: string[] = [];
-      if (uid) {
-        const { data: likesData } = await supabase
-          .from('template_likes')
-          .select('template_id')
-          .eq('user_id', uid);
-        if (likesData) {
-          likedIds = likesData.map((l: any) => l.template_id);
+      // 1.2 Lấy toàn bộ số lượt thiệp thực tế đã được tạo từ bảng cards
+      const { data: allCards } = await supabase.from('cards').select('template_id');
+      const realUsesMap: Record<string, number> = {};
+      if (allCards) {
+        allCards.forEach((c: any) => {
+          if (c.template_id) {
+            realUsesMap[c.template_id] = (realUsesMap[c.template_id] || 0) + 1;
+          }
+        });
+      }
+
+      // 1.3 Lấy thông tin từ bảng templates
+      const { data: tmplData } = await supabase.from('templates').select('*');
+      const stats: Record<string, { views: number; hearts: number; uses: number }> = {};
+      const existingTmplMap: Record<string, any> = {};
+
+      if (tmplData) {
+        tmplData.forEach((row: any) => {
+          existingTmplMap[row.id] = row;
+        });
+      }
+
+      // 1.4 Chuẩn hóa dữ liệu cho toàn bộ danh sách 22 templates (Loại bỏ triệt để số giả)
+      for (const tmpl of TEMPLATES) {
+        const row = existingTmplMap[tmpl.id];
+        const realHearts = realHeartsMap[tmpl.id] || 0;
+        const realUses = realUsesMap[tmpl.id] || 0;
+        let realViews = 0;
+
+        if (row) {
+          const currentViews = Number(row.views_count) || 0;
+          // Nếu views là số mock ảo cũ (thuộc OLD_MOCK_VIEWS hoặc >= 1000 và chưa khớp thực tế)
+          if (OLD_MOCK_VIEWS.has(currentViews) || (currentViews >= 1000 && realUses < 100)) {
+            realViews = Math.max(realUses * 2, 0);
+          } else {
+            realViews = Math.max(0, currentViews);
+          }
+
+          // Tự động dọn dẹp các giá trị ảo cũ trên Supabase để database của người dùng sạch 100%
+          if (
+            row.hearts_count !== realHearts ||
+            row.uses_count !== realUses ||
+            OLD_MOCK_VIEWS.has(currentViews)
+          ) {
+            supabase
+              .from('templates')
+              .update({
+                views_count: realViews,
+                hearts_count: realHearts,
+                uses_count: realUses,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', tmpl.id)
+              .then();
+          }
+        } else {
+          // Chưa có bản ghi trong bảng templates -> Tạo mới với dữ liệu thật bắt đầu từ 0
+          realViews = 0;
+          supabase
+            .from('templates')
+            .upsert({
+              id: tmpl.id,
+              name: tmpl.titleVi,
+              views_count: 0,
+              hearts_count: realHearts,
+              uses_count: realUses,
+              updated_at: new Date().toISOString(),
+            })
+            .then();
         }
+
+        stats[tmpl.id] = {
+          views: realViews,
+          hearts: realHearts,
+          uses: realUses,
+        };
       }
 
       localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(stats));
-      if (uid) {
-        localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(likedIds));
-      }
+      localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(likedIds));
+      notifyStatsChanged();
 
       return { stats, likedTemplateIds: likedIds };
     } catch (err) {
@@ -103,6 +185,7 @@ export async function fetchLiveTemplateStats(): Promise<{
           if (data.likedTemplateIds) {
             localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(data.likedTemplateIds));
           }
+          notifyStatsChanged();
           return {
             stats: data.stats || {},
             likedTemplateIds: data.likedTemplateIds || [],
@@ -133,11 +216,15 @@ export function getTemplateLiveStats(templateId: string): { views: number; heart
     if (raw) {
       const data = JSON.parse(raw);
       if (data && data[templateId]) {
-        return {
-          views: data[templateId].views || 0,
-          hearts: data[templateId].hearts || 0,
-          uses: data[templateId].uses || 0,
-        };
+        const v = Number(data[templateId].views) || 0;
+        const h = Number(data[templateId].hearts) || 0;
+        const u = Number(data[templateId].uses) || 0;
+
+        // Bỏ qua nếu còn dính số liệu mock cũ
+        if (OLD_MOCK_VIEWS.has(v) || (v >= 1000 && h >= 500)) {
+          return { views: 0, hearts: 0, uses: 0 };
+        }
+        return { views: v, hearts: h, uses: u };
       }
     }
   } catch {}
@@ -145,14 +232,28 @@ export function getTemplateLiveStats(templateId: string): { views: number; heart
 }
 
 export async function incrementTemplateView(templateId: string): Promise<void> {
+  // 1. Cập nhật ngay vào LocalStorage để UI phản hồi tức thì
+  try {
+    const raw = localStorage.getItem(TEMPLATE_STATS_KEY);
+    const statsData = raw ? JSON.parse(raw) : {};
+    if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
+    statsData[templateId].views = (statsData[templateId].views || 0) + 1;
+    localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
+    notifyStatsChanged(templateId);
+  } catch {}
+
+  // 2. Đồng bộ Supabase
   if (isSupabaseReady && supabase) {
     try {
       const { data } = await supabase.from('templates').select('views_count').eq('id', templateId).maybeSingle();
-      const current = data?.views_count || 0;
+      let current = data?.views_count || 0;
+      if (OLD_MOCK_VIEWS.has(current) || current >= 1000) current = 0;
       await supabase.from('templates').upsert({ id: templateId, views_count: current + 1, updated_at: new Date().toISOString() });
       return;
     } catch {}
   }
+
+  // 3. Backend fallback
   try {
     await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/view`, {
       method: 'POST',
@@ -162,14 +263,28 @@ export async function incrementTemplateView(templateId: string): Promise<void> {
 }
 
 export async function incrementTemplateUse(templateId: string): Promise<void> {
+  // 1. Cập nhật ngay vào LocalStorage để UI phản hồi tức thì
+  try {
+    const raw = localStorage.getItem(TEMPLATE_STATS_KEY);
+    const statsData = raw ? JSON.parse(raw) : {};
+    if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
+    statsData[templateId].uses = (statsData[templateId].uses || 0) + 1;
+    localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
+    notifyStatsChanged(templateId);
+  } catch {}
+
+  // 2. Đồng bộ Supabase
   if (isSupabaseReady && supabase) {
     try {
       const { data } = await supabase.from('templates').select('uses_count').eq('id', templateId).maybeSingle();
-      const current = data?.uses_count || 0;
+      let current = data?.uses_count || 0;
+      if (current >= 1000) current = 0;
       await supabase.from('templates').upsert({ id: templateId, uses_count: current + 1, updated_at: new Date().toISOString() });
       return;
     } catch {}
   }
+
+  // 3. Backend fallback
   try {
     await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/use`, {
       method: 'POST',
@@ -194,7 +309,7 @@ export function isTemplateLikedByUser(templateId: string, _userId?: string | nul
   return list.includes(templateId);
 }
 
-// Toggle Heart
+// Toggle Heart: Like / Unlike hoạt động chuẩn 100%, 1 tài khoản = 1 tim
 export async function toggleTemplateHeart(
   templateId: string,
   userIdParam?: string
@@ -211,37 +326,31 @@ export async function toggleTemplateHeart(
         .eq('template_id', templateId)
         .maybeSingle();
 
-      const { data: tmpl } = await supabase
-        .from('templates')
-        .select('hearts_count')
-        .eq('id', templateId)
-        .maybeSingle();
-
-      let hearts = tmpl?.hearts_count || 0;
       let isLiked = false;
-
       if (existing) {
-        // Unlike
+        // Đã like -> Bỏ like
         await supabase.from('template_likes').delete().eq('user_id', uid).eq('template_id', templateId);
-        hearts = Math.max(0, hearts - 1);
         isLiked = false;
       } else {
-        // Like
+        // Chưa like -> Thả like
         await supabase.from('template_likes').insert({ user_id: uid, template_id: templateId });
-        hearts += 1;
         isLiked = true;
       }
 
+      // Đếm chính xác số like thực tế từ bảng template_likes
+      const { count } = await supabase
+        .from('template_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('template_id', templateId);
+
+      const hearts = count !== null ? count : (isLiked ? 1 : 0);
       await supabase.from('templates').upsert({ id: templateId, hearts_count: hearts, updated_at: new Date().toISOString() });
 
-      // Update local storage
+      // Cập nhật LocalStorage
       const currentLikes = getUserLikedTemplateIds();
-      let updatedLikes: string[];
-      if (isLiked) {
-        updatedLikes = [...currentLikes.filter((id) => id !== templateId), templateId];
-      } else {
-        updatedLikes = currentLikes.filter((id) => id !== templateId);
-      }
+      const updatedLikes = isLiked
+        ? [...currentLikes.filter((id) => id !== templateId), templateId]
+        : currentLikes.filter((id) => id !== templateId);
       localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
 
       const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
@@ -249,50 +358,68 @@ export async function toggleTemplateHeart(
       if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
       statsData[templateId].hearts = hearts;
       localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
+      notifyStatsChanged(templateId);
 
       return { isLiked, newHearts: hearts };
     } catch (err) {
       console.warn('Supabase toggleTemplateHeart error:', err);
     }
-    return { isLiked: false, newHearts: 0 };
   }
 
-  // 2. Oracle 19c local API fallback (chỉ khi không dùng Supabase)
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/like`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-    });
+  // 2. Oracle 19c local API fallback
+  if (!isSupabaseReady) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/templates/${encodeURIComponent(templateId)}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) {
-        const currentLikes = getUserLikedTemplateIds();
-        let updatedLikes: string[];
-        if (data.isLiked) {
-          updatedLikes = [...currentLikes.filter((id) => id !== templateId), templateId];
-        } else {
-          updatedLikes = currentLikes.filter((id) => id !== templateId);
-        }
-        localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          const currentLikes = getUserLikedTemplateIds();
+          const updatedLikes = data.isLiked
+            ? [...currentLikes.filter((id) => id !== templateId), templateId]
+            : currentLikes.filter((id) => id !== templateId);
+          localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
 
-        const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
-        const statsData = rawStats ? JSON.parse(rawStats) : {};
-        if (statsData[templateId]) {
+          const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
+          const statsData = rawStats ? JSON.parse(rawStats) : {};
+          if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
           statsData[templateId].hearts = data.newHearts;
           localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
-        }
+          notifyStatsChanged(templateId);
 
-        return { isLiked: data.isLiked, newHearts: data.newHearts };
+          return { isLiked: data.isLiked, newHearts: data.newHearts };
+        }
       }
+    } catch (err) {
+      console.warn('Backend toggle template heart error:', err);
     }
-  } catch (err) {
-    console.warn('Toggle template heart error:', err);
   }
-  return { isLiked: false, newHearts: 0 };
+
+  // 3. Fallback LocalStorage an toàn (chạy khi offline hoặc chưa cấu hình DB)
+  const currentLikes = getUserLikedTemplateIds();
+  const alreadyLiked = currentLikes.includes(templateId);
+  const isLiked = !alreadyLiked;
+  const updatedLikes = isLiked
+    ? [...currentLikes.filter((id) => id !== templateId), templateId]
+    : currentLikes.filter((id) => id !== templateId);
+  localStorage.setItem(USER_LIKED_TEMPLATES_KEY, JSON.stringify(updatedLikes));
+
+  const rawStats = localStorage.getItem(TEMPLATE_STATS_KEY);
+  const statsData = rawStats ? JSON.parse(rawStats) : {};
+  if (!statsData[templateId]) statsData[templateId] = { views: 0, hearts: 0, uses: 0 };
+  const currentHearts = statsData[templateId].hearts || 0;
+  const newHearts = Math.max(0, currentHearts + (isLiked ? 1 : -1));
+  statsData[templateId].hearts = newHearts;
+  localStorage.setItem(TEMPLATE_STATS_KEY, JSON.stringify(statsData));
+  notifyStatsChanged(templateId);
+
+  return { isLiked, newHearts };
 }
 
 export function getLikedTemplates(userId: string | null): CardTemplate[] {

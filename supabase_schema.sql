@@ -92,21 +92,46 @@ CREATE POLICY "Allow public all templates" ON public.templates
 CREATE POLICY "Allow public all template_likes" ON public.template_likes 
   FOR ALL USING (true) WITH CHECK (true);
 
--- Khởi tạo dữ liệu ban đầu cho các mẫu thiệp (14 mẫu hot 20/10)
+-- Khởi tạo dữ liệu ban đầu cho toàn bộ 22 mẫu thiệp (Bắt đầu từ số liệu thực tế: 0)
 INSERT INTO public.templates (id, name, views_count, hearts_count, uses_count)
 VALUES
-  ('passcode-envelope', 'Mật Thư Tình Yêu & Khóa Số Hoàng Gia', 1520, 890, 420),
-  ('galaxy-memories', 'Ngân Hà Tinh Tú & Lăng Kính Pha Lê 3D', 2410, 1680, 890),
-  ('blossom-rain', 'Cơn Mưa Cánh Hoa & Lời Thì Thầm Mùa Thu', 1340, 780, 310),
-  ('vinyl-record', 'Đĩa Than Cổ Điển & Bản Tình Ca Năm Tháng', 1890, 1120, 560),
-  ('scratch-vintage', 'Vé Cào May Mắn & Thông Điệp Bất Ngờ', 1650, 930, 470),
-  ('lantern-festival', 'Đèn Trời Ước Nguyện & Bầu Trời Đêm 3D', 2890, 1940, 980),
-  ('crystal-carousel', 'Hộp Pha Lê 3D & Vương Quốc Kỳ Diệu', 3450, 2580, 1340),
-  ('cinema-film', 'Thước Phim Điện Ảnh Kỷ Niệm 20/10', 2760, 1850, 910),
-  ('rose-bouquet', 'Bó Hoa Hồng 3D Tươi Thắm & Thiệp Đính Kèm', 1980, 1340, 670),
-  ('hold-to-reveal', 'Chạm & Giữ Mở Quà Cảm Xúc (TikTok Hot)', 2100, 1420, 720),
-  ('foggy-mirror', 'Lau Kính Mờ Hơi Sương Tìm Thông Điệp', 1780, 1050, 540),
-  ('blow-mic', 'Thổi Micro Thổi Nến & Bật Hiệu Ứng', 1920, 1260, 610),
-  ('polaroid-swipe', 'Vuốt Ảnh Polaroid Kỷ Niệm (Tinder Style)', 2340, 1590, 830),
-  ('ai-gesture', 'Nhận Diện Cử Chỉ Tay Mở Khóa Phép Thuật', 1850, 1180, 590)
-ON CONFLICT (id) DO NOTHING;
+  ('passcode-envelope', 'Mật Thư Tình Yêu & Khóa Số Hoàng Gia', 0, 0, 0),
+  ('galaxy-memories', 'Ngân Hà Tinh Tú & Lăng Kính Pha Lê 3D', 0, 0, 0),
+  ('blossom-rain', 'Cơn Mưa Cánh Hoa & Lời Thì Thầm Mùa Thu', 0, 0, 0),
+  ('vinyl-record', 'Đĩa Than Cổ Điển & Bản Tình Ca Năm Tháng', 0, 0, 0),
+  ('scratch-vintage', 'Vé Cào May Mắn & Thông Điệp Bất Ngờ', 0, 0, 0),
+  ('lantern-festival', 'Đèn Trời Ước Nguyện & Bầu Trời Đêm 3D', 0, 0, 0),
+  ('crystal-carousel', 'Hộp Pha Lê 3D & Vương Quốc Kỳ Diệu', 0, 0, 0),
+  ('cinema-film', 'Thước Phim Điện Ảnh Kỷ Niệm 20/10', 0, 0, 0),
+  ('rose-bouquet', 'Bó Hoa Hồng 3D Tươi Thắm & Thiệp Đính Kèm', 0, 0, 0),
+  ('hold-to-reveal', 'Chạm & Giữ Mở Quà Cảm Xúc (TikTok Hot)', 0, 0, 0),
+  ('foggy-mirror', 'Lau Kính Mờ Hơi Sương Tìm Thông Điệp', 0, 0, 0),
+  ('blow-mic', 'Thổi Micro Thổi Nến & Bật Hiệu Ứng', 0, 0, 0),
+  ('polaroid-swipe', 'Vuốt Ảnh Polaroid Kỷ Niệm (Tinder Style)', 0, 0, 0),
+  ('ai-gesture', 'Nhận Diện Cử Chỉ Tay Mở Khóa Phép Thuật', 0, 0, 0),
+  ('newspaper-love', 'Báo Tình Yêu Vintage & Bản Tin Đặc Biệt', 0, 0, 0),
+  ('music-player', 'Trình Phát Nhạc Mini & Lời Bài Hát Lãng Mạn', 0, 0, 0),
+  ('message-bottle', 'Chiếc Chai Thủy Tinh & Bức Thư Đại Dương', 0, 0, 0),
+  ('interactive-quiz', 'Câu Đố Trắc Nghiệm Tình Yêu Thú Vị', 0, 0, 0),
+  ('ticket-voucher', 'Vé Cặp Đôi & Voucher Tình Yêu Độc Quyền', 0, 0, 0),
+  ('blooming-tulip', 'Vườn Hoa Tulip Nở Rộ Chúc Mừng 20/10', 0, 0, 0),
+  ('starry-fortune', 'Bói Bài Chiêm Tinh Sao & Thông Điệp Vũ Trụ', 0, 0, 0),
+  ('pixel-retro', 'Máy Gameboy Pixel 8-bit Cổ Điển Hoài Niệm', 0, 0, 0),
+  ('ai-gesture-unlock', 'Mật Mã Nụ Cười (Camera AI Mở Khóa)', 0, 0, 0)
+ON CONFLICT (id) DO UPDATE SET 
+  name = EXCLUDED.name;
+
+-- DỌN DẸP DỮ LIỆU ẢO CŨ & ĐỒNG BỘ CHÍNH XÁC THEO HOẠT ĐỘNG THỰC TẾ
+-- 1. Đếm chính xác số tim từ bảng template_likes
+UPDATE public.templates t
+SET hearts_count = COALESCE((SELECT COUNT(*) FROM public.template_likes l WHERE l.template_id = t.id), 0);
+
+-- 2. Đếm chính xác số lượt tạo thiệp từ bảng cards
+UPDATE public.templates t
+SET uses_count = COALESCE((SELECT COUNT(*) FROM public.cards c WHERE c.template_id = t.id), 0);
+
+-- 3. Xóa các con số views ảo cũ (> 300) về số lượt thực tế
+UPDATE public.templates
+SET views_count = uses_count * 2
+WHERE views_count >= 1000;
+

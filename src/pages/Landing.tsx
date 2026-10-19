@@ -28,6 +28,7 @@ import {
   getTemplateLiveStats,
   getUserLikedTemplateIds,
   toggleTemplateHeart,
+  fetchLiveTemplateStats,
 } from '../utils/cardStorage';
 import { soundFx } from '../utils/soundEffects';
 import { PRESET_WISHES } from '../utils/presetWishes';
@@ -65,7 +66,28 @@ export default function Landing() {
   const [copiedWishId, setCopiedWishId] = useState<string | null>(null);
 
   useEffect(() => {
-    setLikedTemplateIds(getUserLikedTemplateIds(user ? user.id : null));
+    let isCurrent = true;
+    async function syncStats() {
+      const data = await fetchLiveTemplateStats();
+      if (isCurrent) {
+        setLikedTemplateIds(data.likedTemplateIds);
+        setHeartVersion((v) => v + 1);
+      }
+    }
+    syncStats();
+
+    const handleStatsChange = () => {
+      if (isCurrent) {
+        setLikedTemplateIds(getUserLikedTemplateIds(user ? user.id : null));
+        setHeartVersion((v) => v + 1);
+      }
+    };
+    window.addEventListener('template_stats_changed', handleStatsChange);
+
+    return () => {
+      isCurrent = false;
+      window.removeEventListener('template_stats_changed', handleStatsChange);
+    };
   }, [user]);
 
   // Handle heart toggle with sound & auth check

@@ -127,6 +127,16 @@ export default function CardViewer() {
   useEffect(() => {
     setHasLiked(isTemplateLikedByUser(template.id, user ? user.id : null));
     setHeartsCount(getTemplateLiveStats(template.id).hearts);
+
+    const handleStatsChange = () => {
+      setHasLiked(isTemplateLikedByUser(template.id, user ? user.id : null));
+      setHeartsCount(getTemplateLiveStats(template.id).hearts);
+    };
+    window.addEventListener('template_stats_changed', handleStatsChange);
+
+    return () => {
+      window.removeEventListener('template_stats_changed', handleStatsChange);
+    };
   }, [user, template.id]);
 
   // Auto-increment view count on mount & initialize background music
@@ -172,7 +182,7 @@ export default function CardViewer() {
     setReplayKey((prev) => prev + 1);
   };
 
-  // Handle Recipient Heart Reaction (Drops hearts with delightful confetti; syncs to account if logged in)
+  // Handle Recipient Heart Reaction (Drops hearts with delightful confetti; syncs to account or guest storage)
   const handleHeartReaction = async () => {
     soundFx.playHeartPop();
     confetti({
@@ -180,17 +190,13 @@ export default function CardViewer() {
       spread: 70,
       origin: { y: 0.8 },
     });
-    setHasLiked(true);
-    setHeartsCount((prev) => prev + (hasLiked ? 0 : 1));
 
-    if (user) {
-      try {
-        const res = await toggleTemplateHeart(template.id, user.id);
-        setHasLiked(res.isLiked);
-        setHeartsCount(res.newHearts);
-      } catch (err) {
-        console.warn('Lỗi lưu tim:', err);
-      }
+    try {
+      const res = await toggleTemplateHeart(template.id, user ? user.id : 'guest');
+      setHasLiked(res.isLiked);
+      setHeartsCount(res.newHearts);
+    } catch (err) {
+      console.warn('Lỗi lưu tim:', err);
     }
   };
 
