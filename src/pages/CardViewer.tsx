@@ -29,12 +29,17 @@ import { resolvePlayableAudioUrl } from '../utils/userMusicStorage';
 
 export default function CardViewer() {
   const params = useParams();
-  const cardId = params['*'] ? (params.cardId ? `${params.cardId}/${params['*']}` : params['*']) : params.cardId;
+  const rawParam = params['*'] ? (params.cardId ? `${params.cardId}/${params['*']}` : params['*']) : params.cardId;
+  // Bóc tách ID sạch sẽ: loại bỏ query params (?fbclid=...), hash (#...), trailing slashes
+  const cleanParam = (rawParam || '').split('?')[0].split('#')[0].trim().replace(/\/+$/, '');
+  const cardId = cleanParam ? decodeURIComponent(cleanParam) : '';
+
   const { user, openAuthModal } = useAuth();
   const [replayKey, setReplayKey] = useState(0);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted);
   const [isCapturing, setIsCapturing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lookupCode, setLookupCode] = useState<string>('');
   const [customTrackInfo, setCustomTrackInfo] = useState<{ title?: string; artist?: string } | null>(null);
 
   const cardContainerRef = useRef<HTMLDivElement>(null);
@@ -85,18 +90,17 @@ export default function CardViewer() {
       // Chỉ fetch remote nếu có cardId cụ thể (lc_ hoặc id bên trong c_)
       if (resolvedCardId && (resolvedCardId.startsWith('lc_') || cardId?.startsWith('c_'))) {
         try {
-          // Thêm timeout an toàn 8 giây để không bao giờ bị đơ trên mạng di động 4G
-          let remote = await Promise.race([
-            fetchCardById(resolvedCardId),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
-          ]);
-
-          // Nếu lần đầu chưa kịp lấy được (do người gửi vừa ấn lưu xong), thử lại 1 lần nữa sau 1.2s
-          if (!remote && isCurrent) {
+          // Thử tối đa 3 lần với khoảng cách 1.2s để chống độ trễ mạng và độ trễ ghi Supabase
+          let remote: CreatedCard | null = null;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (!isCurrent) break;
+            remote = await Promise.race([
+              fetchCardById(resolvedCardId),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 7000)),
+            ]);
+            if (remote) break;
+            // Chờ trước khi thử lại
             await new Promise((r) => setTimeout(r, 1200));
-            if (isCurrent) {
-              remote = await fetchCardById(resolvedCardId);
-            }
           }
 
           if (remote && isCurrent) {
@@ -306,6 +310,32 @@ export default function CardViewer() {
             Xem kho mẫu thiệp
           </Link>
         </div>
+
+        {/* Ô nhập mã thiệp trực tiếp để người nhận dễ dàng dán mã */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const val = lookupCode.trim().replace(/^.*\/card\//, '').split('?')[0].split('#')[0].replace(/\/+$/, '');
+            if (val) {
+              window.location.href = `/card/${encodeURIComponent(val)}`;
+            }
+          }}
+          className="mt-6 w-full max-w-xs flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={lookupCode}
+            onChange={(e) => setLookupCode(e.target.value)}
+            placeholder="Hoặc dán mã thiệp (VD: lc_...)"
+            className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-rose-400 font-mono"
+          />
+          <button
+            type="submit"
+            className="px-3 py-2 bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0"
+          >
+            Mở thiệp
+          </button>
+        </form>
       </div>
     );
   }

@@ -1008,11 +1008,8 @@ export default function Studio() {
       updatedAt: new Date().toLocaleDateString('vi-VN'),
     };
     try {
-      // Lưu tức thì vào local và đồng bộ Supabase với timeout an toàn 8 giây
-      await Promise.race([
-        saveCard(newCard),
-        new Promise((resolve) => setTimeout(resolve, 8000)),
-      ]);
+      // Lưu tức thì vào local và đồng bộ Supabase Cloud
+      await saveCard(newCard);
       incrementTemplateUse(template.id).catch(() => {});
     } catch (err) {
       console.warn('Lỗi lưu thiệp:', err);

@@ -495,6 +495,7 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
   if (isSupabaseReady && supabase) {
     try {
       const potentialUid = card.creatorId || getCurrentUserId() || null;
+      const safeCardData = JSON.parse(JSON.stringify(card.cardData || {}));
       const row: any = {
         id: card.id,
         user_id: potentialUid,
@@ -502,7 +503,7 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
         sender_name: card.cardData?.senderName || null,
         recipient_name: card.cardData?.recipientName || null,
         wish_message: card.cardData?.mainText || null,
-        card_data: card.cardData,
+        card_data: safeCardData,
         views_count: card.viewsCount || 1,
         hearts_count: card.heartsCount || 0,
         updated_at: new Date().toISOString(),
