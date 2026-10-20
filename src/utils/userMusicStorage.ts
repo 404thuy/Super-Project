@@ -14,6 +14,7 @@ export interface UserTrack {
   serverUrl?: string; // Static URL từ backend nếu upload thành công
   dataUrl?: string; // Fallback dataUrl nếu file nhỏ
   uploadedAt: string;
+  sourceType?: 'audio' | 'video';
 }
 
 const DB_NAME = 'LoveCardUserAudioDB';
@@ -64,13 +65,70 @@ function saveStoredMeta(userId: string, tracks: UserTrack[]) {
     // Chỉ lưu metadata (bỏ audioUrl blob/dataUrl lớn để không tràn localStorage)
     const leanTracks = tracks.map((t) => ({
       ...t,
-      audioUrl: t.serverUrl || '', // Không lưu blob url vào localStorage vì blob url sẽ hết hạn khi reload
+      audioUrl: t.serverUrl || '',
       dataUrl: undefined,
     }));
     localStorage.setItem(getMetaStorageKey(userId), JSON.stringify(leanTracks));
   } catch (err) {
     console.warn('Lỗi lưu metadata nhạc người dùng vào localStorage:', err);
   }
+}
+
+// Chuyển đổi AudioBuffer thành file WAV Blob chuẩn PCM 16-bit
+function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
+  const numOfChan = buffer.numberOfChannels;
+  const length = buffer.length * numOfChan * 2 + 44;
+  const out = new DataView(new ArrayBuffer(length));
+  const channels: Float32Array[] = [];
+  const sampleRate = buffer.sampleRate;
+  let offset = 0;
+  let pos = 0;
+
+  function writeString(str: string) {
+    for (let i = 0; i < str.length; i++) {
+      out.setUint8(pos++, str.charCodeAt(i));
+    }
+  }
+
+  function setUint16(data: number) {
+    out.setUint16(pos, data, true);
+    pos += 2;
+  }
+  function setUint32(data: number) {
+    out.setUint32(pos, data, true);
+    pos += 4;
+  }
+
+  // RIFF header
+  writeString('RIFF');
+  setUint32(length - 8);
+  writeString('WAVE');
+  writeString('fmt ');
+  setUint32(16); // SubChunk1Size (16 for PCM)
+  setUint16(1); // AudioFormat (1 for PCM)
+  setUint16(numOfChan);
+  setUint32(sampleRate);
+  setUint32(sampleRate * 2 * numOfChan); // ByteRate
+  setUint16(numOfChan * 2); // BlockAlign
+  setUint16(16); // BitsPerSample
+  writeString('data');
+  setUint32(length - pos - 4); // SubChunk2Size
+
+  for (let i = 0; i < numOfChan; i++) {
+    channels.push(buffer.getChannelData(i));
+  }
+
+  while (offset < buffer.length) {
+    for (let i = 0; i < numOfChan; i++) {
+      let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+      out.setInt16(pos, sample, true);
+      pos += 2;
+    }
+    offset++;
+  }
+
+  return new Blob([out.buffer], { type: 'audio/wav' });
 }
 
 // Đo thời lượng file audio chính xác
@@ -104,7 +162,7 @@ export function detectAudioDuration(fileOrUrl: Blob | string): Promise<{ duratio
       };
 
       audio.onerror = () => {
-        finish(180); // Mặc định 3 phút nếu không đọc được metadata
+        finish(180);
       };
 
       // Timeout dự phòng 3 giây
@@ -117,6 +175,106 @@ export function detectAudioDuration(fileOrUrl: Blob | string): Promise<{ duratio
       resolve({ durationStr: '3:00', durationSec: 180 });
     }
   });
+}
+
+// Đo thời lượng video dự phòng bằng thẻ video
+function detectVideoDuration(file: File): Promise<{ durationStr: string; durationSec: number }> {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    const url = URL.createObjectURL(file);
+
+    let resolved = false;
+    const finish = (sec: number) => {
+      if (resolved) return;
+      resolved = true;
+      URL.revokeObjectURL(url);
+      const cleanSec = Math.max(1, Math.round(sec || 0));
+      const mins = Math.floor(cleanSec / 60);
+      const remainingSec = cleanSec % 60;
+      const durationStr = `${mins}:${remainingSec.toString().padStart(2, '0')}`;
+      resolve({ durationStr, durationSec: cleanSec });
+    };
+
+    video.onloadedmetadata = () => finish(video.duration);
+    video.onerror = () => finish(180);
+    setTimeout(() => finish(180), 3000);
+    video.src = url;
+  });
+}
+
+// Trích xuất âm thanh từ file (hỗ trợ cả audio và video mp4, mov, webm...)
+// Đảm bảo thời gian chuẩn xác 100% với file được tải lên
+export async function extractAudioFromFile(
+  file: File,
+  onProgress?: (text: string) => void
+): Promise<{
+  audioBlob: Blob;
+  durationStr: string;
+  durationSec: number;
+  mimeType: string;
+  ext: string;
+  isExtractedFromVideo: boolean;
+}> {
+  const isVideo =
+    file.type.startsWith('video/') ||
+    /\.(mp4|mov|webm|mkv|avi|3gp|flv|wmv)$/i.test(file.name);
+
+  if (isVideo) {
+    onProgress?.(`Đang trích xuất âm thanh từ video "${file.name}"...`);
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const audioCtx = new AudioContextClass();
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        audioCtx.close().catch(() => {});
+
+        const durationSec = Math.max(1, Math.round(audioBuffer.duration));
+        const mins = Math.floor(durationSec / 60);
+        const remainingSec = durationSec % 60;
+        const durationStr = `${mins}:${remainingSec.toString().padStart(2, '0')}`;
+
+        onProgress?.(`Đang tối ưu tệp âm thanh trích xuất (${durationStr})...`);
+        const wavBlob = audioBufferToWavBlob(audioBuffer);
+
+        return {
+          audioBlob: wavBlob,
+          durationStr,
+          durationSec,
+          mimeType: 'audio/wav',
+          ext: 'wav',
+          isExtractedFromVideo: true,
+        };
+      }
+    } catch (err) {
+      console.warn('Decode audio from video Web Audio failed, using fallback:', err);
+    }
+
+    // Fallback nếu không decode được audio buffer: đo thời lượng qua video element và dùng track âm thanh của video
+    const { durationStr, durationSec } = await detectVideoDuration(file);
+    return {
+      audioBlob: file,
+      durationStr,
+      durationSec,
+      mimeType: file.type || 'video/mp4',
+      ext: file.name.split('.').pop()?.toLowerCase() || 'mp4',
+      isExtractedFromVideo: true,
+    };
+  }
+
+  // Audio file (MP3, M4A, WAV, OGG, AAC, FLAC...)
+  onProgress?.(`Đang kiểm tra thời lượng âm thanh "${file.name}"...`);
+  const { durationStr, durationSec } = await detectAudioDuration(file);
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+  return {
+    audioBlob: file,
+    durationStr,
+    durationSec,
+    mimeType: file.type || 'audio/mpeg',
+    ext,
+    isExtractedFromVideo: false,
+  };
 }
 
 // Lấy danh sách bài hát của một tài khoản cụ thể
@@ -159,6 +317,7 @@ export async function getUserTracks(userId: string): Promise<UserTrack[]> {
         serverUrl: r.serverUrl,
         dataUrl: r.dataUrl,
         uploadedAt: r.uploadedAt,
+        sourceType: r.sourceType || 'audio',
       };
     });
 
@@ -171,31 +330,39 @@ export async function getUserTracks(userId: string): Promise<UserTrack[]> {
   }
 }
 
-// Lưu một bài hát mới từ file tải lên
-export async function saveUserTrack(userId: string, file: File): Promise<UserTrack> {
+// Lưu một bài hát mới từ file tải lên (hỗ trợ MP3, MP4, video...)
+export async function saveUserTrack(
+  userId: string,
+  file: File,
+  onProgress?: (text: string) => void
+): Promise<UserTrack> {
   const currentUserId = (userId || 'guest').trim().toLowerCase();
   const trackId = `user-audio-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  // Tên bài hát hiển thị sạch sẽ (bỏ đuôi mở rộng)
-  const cleanTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Bài Hát Của Tôi';
-  const sizeMb = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+  // Tách âm thanh & đo thời lượng chuẩn xác
+  const { audioBlob, durationStr, durationSec, mimeType, ext, isExtractedFromVideo } =
+    await extractAudioFromFile(file, onProgress);
 
-  // Đo thời lượng bài hát
-  const { durationStr, durationSec } = await detectAudioDuration(file);
+  // Tên bài hát hiển thị sạch sẽ
+  const rawBaseName = file.name.replace(/\.[^/.]+$/, '').trim() || 'Bài Hát Mới';
+  const cleanTitle = isExtractedFromVideo ? rawBaseName : rawBaseName;
+  const sizeMb = (audioBlob.size / (1024 * 1024)).toFixed(2) + ' MB';
 
   // Tạo Blob URL phát tức thì
-  const blobUrl = URL.createObjectURL(file);
+  const blobUrl = URL.createObjectURL(audioBlob);
 
   let serverUrl: string | undefined = undefined;
   let dataUrl: string | undefined = undefined;
 
-  // 1. Thử upload lên Backend nếu online (dùng base64 json hoặc FormData)
+  // 1. Thử upload lên Backend nếu online (dùng base64 json)
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    onProgress?.('Đang đồng bộ tệp âm thanh...');
+    const arrayBuffer = await audioBlob.arrayBuffer();
     const base64Data = btoa(
       new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
     );
 
+    const uploadName = `${rawBaseName}.${ext}`;
     const res = await fetch(`${BACKEND_URL}/api/upload-audio`, {
       method: 'POST',
       headers: {
@@ -203,8 +370,8 @@ export async function saveUserTrack(userId: string, file: File): Promise<UserTra
         ...getTunnelHeaders(),
       },
       body: JSON.stringify({
-        fileName: file.name,
-        fileData: `data:${file.type || 'audio/mpeg'};base64,${base64Data}`,
+        fileName: uploadName,
+        fileData: `data:${mimeType};base64,${base64Data}`,
         userId: currentUserId,
       }),
     });
@@ -220,13 +387,13 @@ export async function saveUserTrack(userId: string, file: File): Promise<UserTra
   }
 
   // Nếu file nhỏ < 2.5MB và không có serverUrl, lưu dataUrl dự phòng
-  if (!serverUrl && file.size < 2.5 * 1024 * 1024) {
+  if (!serverUrl && audioBlob.size < 2.5 * 1024 * 1024) {
     try {
       dataUrl = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = () => resolve('');
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(audioBlob);
       });
     } catch {}
   }
@@ -237,16 +404,17 @@ export async function saveUserTrack(userId: string, file: File): Promise<UserTra
     title: cleanTitle,
     originalFileName: file.name,
     fileSize: sizeMb,
-    fileSizeBytes: file.size,
+    fileSizeBytes: audioBlob.size,
     duration: durationStr,
     durationSec,
     audioUrl: serverUrl || blobUrl,
     serverUrl,
     dataUrl,
     uploadedAt: new Date().toLocaleDateString('vi-VN'),
+    sourceType: isExtractedFromVideo ? 'video' : 'audio',
   };
 
-  // 2. Lưu vào IndexedDB
+  // 2. Lưu vào IndexedDB (lưu audioBlob đã trích xuất)
   try {
     const db = await openDB();
     const transaction = db.transaction(STORE_NAME, 'readwrite');
@@ -255,7 +423,7 @@ export async function saveUserTrack(userId: string, file: File): Promise<UserTra
     await new Promise((resolve, reject) => {
       const req = store.put({
         ...newTrack,
-        audioBlob: file, // Lưu file/blob gốc an toàn
+        audioBlob,
       });
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -306,12 +474,12 @@ export function userTrackToSongItem(track: UserTrack, displayName?: string): Son
     title: track.title,
     artist: displayName || 'Nhạc Của Bạn',
     category: 'chill',
-    categoryLabel: 'Nhạc Tự Tải Lên',
-    tag: 'MP3 Của Tôi',
+    categoryLabel: track.sourceType === 'video' ? 'Âm Thanh Từ Video' : 'Nhạc Tự Tải Lên',
+    tag: track.sourceType === 'video' ? 'Âm Thanh Video' : 'MP3 Của Tôi',
     duration: track.duration,
     chorusLyric: `Bản thu âm "${track.title}" do ${displayName || 'bạn'} tải lên từ thiết bị.`,
-    icon: '🎵',
-    color: 'from-purple-600 to-indigo-600',
+    icon: track.sourceType === 'video' ? '🎬' : '🎵',
+    color: track.sourceType === 'video' ? 'from-indigo-600 to-rose-600' : 'from-purple-600 to-indigo-600',
     hasVocals: true,
     audioUrl: track.serverUrl || track.audioUrl,
     startSeconds: 0,

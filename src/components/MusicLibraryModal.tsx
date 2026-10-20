@@ -304,37 +304,40 @@ export default function MusicLibraryModal({
 
     if (!file) return;
 
-    // Kiểm tra loại file âm thanh
-    const isAudio =
+    // Kiểm tra loại file: hỗ trợ mọi định dạng âm thanh và video phổ biến
+    const isAudioOrVideo =
       file.type.startsWith('audio/') ||
-      /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(file.name);
+      file.type.startsWith('video/') ||
+      /\.(mp3|m4a|wav|ogg|flac|aac|wma|mp4|mov|webm|mkv|avi|3gp|flv|wmv)$/i.test(file.name);
 
-    if (!isAudio) {
-      setUploadError('Vui lòng chọn định dạng file âm thanh hợp lệ (.mp3, .m4a, .wav, .ogg)!');
+    if (!isAudioOrVideo) {
+      setUploadError('Vui lòng chọn tệp âm thanh (.mp3, .m4a, .wav...) hoặc video (.mp4, .mov, .webm...)!');
       return;
     }
 
-    // Giới hạn 50MB
-    if (file.size > 50 * 1024 * 1024) {
-      setUploadError('Dung lượng file vượt quá giới hạn tối đa 50MB.');
+    // Giới hạn 150MB cho video / audio
+    if (file.size > 150 * 1024 * 1024) {
+      setUploadError('Dung lượng tệp vượt quá giới hạn tối đa 150MB.');
       return;
     }
 
     setUploadError(null);
     setUploadSuccessMessage(null);
     setIsUploading(true);
-    setUploadProgressText(`Đang xử lý và lưu bài hát "${file.name}"...`);
+    setUploadProgressText(`Đang đọc tệp "${file.name}"...`);
     soundFx.playPinClick();
 
     try {
-      // Lưu vào kho IndexedDB và Backend upload
-      const newTrack = await saveUserTrack(currentUserId, file);
+      // Lưu vào kho IndexedDB và Backend upload (tự động tách âm thanh nếu là video)
+      const newTrack = await saveUserTrack(currentUserId, file, (progressMsg) => {
+        setUploadProgressText(progressMsg);
+      });
 
       // Cập nhật lại danh sách bài của user
       const updatedList = await getUserTracks(currentUserId);
       setMySongs(updatedList);
 
-      // Tự động phát thử bài hát vừa tải lên
+      // Tự động phát thử bài hát vừa tải lên/trích xuất
       soundFx.startBackgroundMusic('custom-mp3', newTrack.audioUrl, 0);
       setPlayingSongId(newTrack.id);
 
@@ -345,16 +348,21 @@ export default function MusicLibraryModal({
         track: newTrack,
       });
 
-      setUploadSuccessMessage(`🎉 Đã tải lên và lưu bài hát "${newTrack.title}" vào mục "Tôi"!`);
+      const successDetail =
+        newTrack.sourceType === 'video'
+          ? `🎉 Đã trích xuất âm thanh từ video "${newTrack.title}" (${newTrack.duration}) và lưu vào mục "Tôi"!`
+          : `🎉 Đã tải lên và lưu bài hát "${newTrack.title}" (${newTrack.duration}) vào mục "Tôi"!`;
+
+      setUploadSuccessMessage(successDetail);
       soundFx.playSuccessChime();
 
-      // Tự động chuyển sang tab "Tôi" để người dùng xem ngay bộ sưu tập
+      // Tự động chuyển sang tab "Tôi" để người dùng xem ngay bài hát đã lưu
       setTimeout(() => {
         setActiveCategory('my-music');
       }, 1000);
     } catch (err: any) {
-      console.error('Lỗi tải file âm thanh:', err);
-      setUploadError('Không thể xử lý file âm thanh. Vui lòng thử lại với file khác.');
+      console.error('Lỗi tải tệp âm thanh/video:', err);
+      setUploadError('Không thể xử lý tệp âm thanh hoặc video này. Vui lòng thử lại với tệp khác.');
     } finally {
       setIsUploading(false);
       setUploadProgressText('');
@@ -543,11 +551,11 @@ export default function MusicLibraryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-      {/* Hidden File Input */}
+      {/* Hidden File Input (Hỗ trợ cả audio và video mp4, mov, webm...) */}
       <input
         ref={fileInputRef}
         type="file"
-        accept="audio/*,.mp3,.m4a,.wav,.ogg"
+        accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.aac,.flac,.wma,.mp4,.mov,.webm,.mkv,.avi,.3gp"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -576,7 +584,7 @@ export default function MusicLibraryModal({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Tìm kiếm trực tiếp từ Internet, chọn bài sẵn có hoặc lưu nhạc riêng vào mục "Tôi"
+                Tìm kiếm trực tiếp từ Internet, chọn bài sẵn có hoặc xem các bài đã lưu tại mục "Tôi"
               </p>
             </div>
           </div>
@@ -619,9 +627,9 @@ export default function MusicLibraryModal({
             </div>
           </div>
 
-          {/* Categories Tab Bar: NÚT "TÔI" NẰM NGAY BÊN TRÁI NÚT "TẢI FILE MP3" */}
+          {/* Categories Tab Bar: NÚT "TÔI" NẰM NGAY BÊN TRÁI NÚT "TẢI LÊN" */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-            {/* 1. NÚT "TÔI" (LƯU RIÊNG TỪNG TÀI KHOẢN) */}
+            {/* 1. NÚT "TÔI" (CHỈ DÙNG LƯU LẠI NHẠC ĐÃ THÊM CHO TỪNG TÀI KHOẢN) */}
             <button
               type="button"
               onClick={() => {
@@ -649,7 +657,7 @@ export default function MusicLibraryModal({
               )}
             </button>
 
-            {/* 2. Direct MP3 Upload Tab */}
+            {/* 2. NÚT "TẢI LÊN" (HỖ TRỢ MP3, MP4, VIDEO - TÁCH ÂM THÂM CHUẨN THỜI GIAN) */}
             <button
               type="button"
               onClick={() => {
@@ -663,7 +671,7 @@ export default function MusicLibraryModal({
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Tải file MP3</span>
+              <span>Tải lên</span>
             </button>
 
             {/* Các danh mục hệ thống */}
@@ -718,7 +726,7 @@ export default function MusicLibraryModal({
 
         {/* Songs List / Search Results / Upload Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-h-[58vh]">
-          {/* TAB: "TÔI" - NHẠC ĐÃ TẢI LÊN CỦA RIÊNG TÀI KHOẢN NÀY */}
+          {/* TAB: "TÔI" - CHỈ DÙNG ĐỂ LƯU LẠI NHỮNG BÀI HÁT ĐÃ THÊM CỦA TÀI KHOẢN NÀY */}
           {activeCategory === 'my-music' ? (
             <div className="space-y-4 animate-fadeIn">
               {/* Account Header Banner */}
@@ -735,32 +743,21 @@ export default function MusicLibraryModal({
                     <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                       <span>Kho nhạc của {user?.displayName || 'Tài khoản khách'}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
-                        Lưu riêng tư
+                        {mySongs.length} bài đã lưu
                       </span>
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      Chỉ tài khoản này mới có thể nghe và chọn những bài hát đã tải lên bên dưới.
+                      Nơi lưu trữ lại những bài nhạc và âm thanh video bạn đã thêm, riêng biệt cho từng tài khoản.
                     </p>
                   </div>
                 </div>
-
-                {/* Nút tải nhanh thêm bài */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Tải Thêm Bài Mới</span>
-                </button>
               </div>
 
               {/* Thông báo trạng thái đang tải lên nếu có */}
               {isUploading && (
                 <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200 flex items-center gap-3 text-purple-700 text-xs font-bold animate-pulse">
                   <Loader2 className="w-4 h-4 animate-spin text-purple-600 shrink-0" />
-                  <span>{uploadProgressText || 'Đang xử lý và lưu bài hát...'}</span>
+                  <span>{uploadProgressText || 'Đang xử lý và lưu âm thanh...'}</span>
                 </div>
               )}
 
@@ -778,20 +775,22 @@ export default function MusicLibraryModal({
                   </div>
                   <div className="max-w-md mx-auto space-y-1">
                     <h4 className="text-sm font-extrabold text-slate-800">
-                      Tài khoản của bạn chưa có bài hát nào tải lên
+                      Tài khoản của bạn chưa có bài hát nào được lưu lại
                     </h4>
                     <p className="text-xs text-slate-500">
-                      Chọn file MP3 hoặc M4A từ điện thoại hoặc máy tính để lưu vào bộ sưu tập riêng của bạn và dùng cho mọi tấm thiệp!
+                      Mục "Tôi" dùng để lưu lại các bài nhạc bạn đã thêm. Hãy chuyển qua mục "Tải lên" để thêm file nhạc (.mp3, .m4a...) hoặc trích xuất âm thanh từ video (.mp4, .mov...)!
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-500/25 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    onClick={() => {
+                      soundFx.playPinClick();
+                      setActiveCategory('upload');
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs transition-all shadow-md shadow-purple-500/25 inline-flex items-center gap-2 cursor-pointer"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>Tải Lên File Nhạc Đầu Tiên (.mp3, .m4a)</span>
+                    <span>Chuyển Sang Tab Tải Lên</span>
                   </button>
                 </div>
               ) : (
@@ -799,6 +798,7 @@ export default function MusicLibraryModal({
                   {filteredMySongs.map((track) => {
                     const isSelected = currentPreset === track.id || currentAudioUrl === track.audioUrl;
                     const isPlaying = playingSongId === track.id;
+                    const isVideoTrack = track.sourceType === 'video';
 
                     return (
                       <div
@@ -812,16 +812,28 @@ export default function MusicLibraryModal({
                       >
                         {/* Info */}
                         <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center text-xl shadow-md shrink-0">
-                            🎵
+                          <div
+                            className={`w-12 h-12 rounded-2xl text-white flex items-center justify-center text-xl shadow-md shrink-0 ${
+                              isVideoTrack
+                                ? 'bg-gradient-to-tr from-indigo-600 to-rose-600'
+                                : 'bg-gradient-to-tr from-purple-500 to-pink-500'
+                            }`}
+                          >
+                            {isVideoTrack ? '🎬' : '🎵'}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-rose-600 transition-colors truncate">
                                 {track.title}
                               </h4>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                                MP3 Của Tôi
+                              <span
+                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                                  isVideoTrack
+                                    ? 'bg-indigo-100 text-indigo-700'
+                                    : 'bg-purple-100 text-purple-700'
+                                }`}
+                              >
+                                {isVideoTrack ? '🎬 Âm Thanh Video' : 'MP3 Của Tôi'}
                               </span>
                               <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                                 ⏱️ {track.duration}
@@ -831,7 +843,7 @@ export default function MusicLibraryModal({
                               </span>
                             </div>
                             <p className="text-xs text-slate-400 mt-0.5 truncate">
-                              File gốc: {track.originalFileName} • Tải lên: {track.uploadedAt}
+                              File gốc: {track.originalFileName} • Đã lưu ngày: {track.uploadedAt}
                             </p>
                           </div>
                         </div>
@@ -901,7 +913,7 @@ export default function MusicLibraryModal({
               )}
             </div>
           ) : activeCategory === 'upload' ? (
-            /* TAB 2: UPLOAD LOCAL MP3 FILE TỪ THIẾT BỊ */
+            /* TAB 2: TẢI LÊN FILE ÂM THANH HOẶC VIDEO TỪ THIẾT BỊ */
             <div className="p-6 bg-gradient-to-br from-purple-50/70 via-white to-pink-50/50 rounded-3xl border-2 border-dashed border-purple-200 text-center space-y-5 animate-fadeIn">
               <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-purple-500/25">
                 <FileAudio className="w-8 h-8" />
@@ -909,10 +921,10 @@ export default function MusicLibraryModal({
 
               <div className="max-w-md mx-auto space-y-1.5">
                 <h4 className="text-base font-extrabold text-slate-900">
-                  Tải lên file nhạc MP3 từ máy của bạn
+                  Tải lên tệp âm thanh hoặc video từ máy của bạn
                 </h4>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Chọn bất kỳ bài hát nào từ điện thoại hoặc máy tính (Sơn Tùng, Đức Phúc, Masew...). Bài hát sẽ được lưu riêng vào mục <strong className="text-purple-700">"Tôi"</strong> của tài khoản này!
+                  Hỗ trợ tệp âm thanh (.mp3, .m4a, .wav, .ogg, .aac...) và tệp video (.mp4, .mov, .webm...). Hệ thống sẽ tự động tách âm thanh với thời lượng chuẩn xác 100% và lưu vào mục <strong className="text-purple-700">"Tôi"</strong> của tài khoản này!
                 </p>
               </div>
 
@@ -942,12 +954,12 @@ export default function MusicLibraryModal({
                 {isUploading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{uploadProgressText || 'Đang tải lên...'}</span>
+                    <span>{uploadProgressText || 'Đang xử lý tệp...'}</span>
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    <span>Chọn File Nhạc Từ Thiết Bị (.mp3, .m4a)</span>
+                    <span>Chọn Tệp Âm Thanh Hoặc Video (.mp3, .mp4, .mov...)</span>
                   </>
                 )}
               </button>
