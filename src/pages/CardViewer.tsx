@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { TEMPLATES, resolveTemplate, type CardConfig } from '../types';
+import { TEMPLATES, resolveTemplate, type CardConfig, type CreatedCard } from '../types';
 import EffectRenderer from '../components/effects/EffectRenderer';
 import {
   decodeCardData,
