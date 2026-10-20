@@ -764,7 +764,7 @@ export function getCardById(id: string): CreatedCard | null {
 
 interface CompactPayload {
   t: string;       // templateId
-  id?: string;     // card shortId for hydration from Oracle
+  id?: string;     // card shortId for hydration from Supabase / Oracle
   c: {
     r: string;     // recipientName
     s: string;     // senderName
@@ -784,6 +784,8 @@ interface CompactPayload {
     cbs?: string;  // crystalBaseSubtitle
     cq?: string[]; // crystalQuotes
     ccap?: string[]; // cinemaCaptions
+    pc?: string[]; // polaroidCaptions
+    pn?: string[]; // polaroidNotes
   };
 }
 
@@ -820,6 +822,8 @@ export function encodeCardData(
         cbs: config.crystalBaseSubtitle,
         cq: config.crystalQuotes,
         ccap: config.cinemaCaptions,
+        pc: config.polaroidCaptions?.slice(0, 12),
+        pn: config.polaroidNotes?.slice(0, 12),
       },
     };
 
@@ -842,7 +846,42 @@ export function decodeCardData(
   fallbackTemplate: CardTemplate
 ): { templateId: string; config: CardConfig; cardId?: string } {
   try {
-    // Check if direct shortId like lc_...
+    if (!encodedOrId) {
+      return {
+        templateId: fallbackTemplate.id,
+        config: { ...fallbackTemplate.defaultConfig, images: [] },
+      };
+    }
+
+    // 1. Kiểm tra nếu là đường dẫn ghép kiểu {templateId}/{cardId}
+    if (encodedOrId.includes('/')) {
+      const parts = encodedOrId.split('/').filter(Boolean);
+      if (parts.length >= 2) {
+        const tmplId = parts[0];
+        const subCardId = parts[1];
+        const matched = TEMPLATES.find((t) => t.id === tmplId);
+        if (matched) {
+          const stored = getCardById(subCardId);
+          if (stored) {
+            return {
+              templateId: stored.templateId,
+              config: {
+                ...stored.cardData,
+                images: stored.cardData?.images || [],
+              },
+              cardId: stored.id,
+            };
+          }
+          return {
+            templateId: matched.id,
+            config: { ...matched.defaultConfig, images: [] },
+            cardId: subCardId,
+          };
+        }
+      }
+    }
+
+    // 2. Kiểm tra nếu là direct shortId like lc_...
     if (encodedOrId.startsWith('lc_')) {
       const stored = getCardById(encodedOrId);
       if (stored) {
@@ -855,6 +894,11 @@ export function decodeCardData(
           cardId: stored.id,
         };
       }
+      return {
+        templateId: fallbackTemplate.id,
+        config: { ...fallbackTemplate.defaultConfig, images: [] },
+        cardId: encodedOrId,
+      };
     }
 
     let cleanEncoded = encodedOrId.replace(/^c_/, '');
@@ -873,31 +917,37 @@ export function decodeCardData(
     );
     const data: CompactPayload = JSON.parse(jsonStr);
 
+    // Xác định mẫu thiệp đích chính xác từ payload URL (không bị ép về fallback)
+    const targetTmplId = data.t || fallbackTemplate.id;
+    const targetTemplate = TEMPLATES.find((t) => t.id === targetTmplId) || fallbackTemplate;
+
     const isUserPreset = data.c?.mp?.startsWith('user-audio-');
-    const defaultAudio = isUserPreset ? undefined : fallbackTemplate.defaultConfig.audioUrl;
+    const defaultAudio = isUserPreset ? undefined : targetTemplate.defaultConfig.audioUrl;
 
     return {
-      templateId: data.t || fallbackTemplate.id,
+      templateId: targetTemplate.id,
       cardId: data.id,
       config: {
-        recipientName: data.c?.r || fallbackTemplate.defaultConfig.recipientName,
-        senderName: data.c?.s || fallbackTemplate.defaultConfig.senderName,
-        mainText: data.c?.m || fallbackTemplate.defaultConfig.mainText,
-        passcode: data.c?.p || fallbackTemplate.defaultConfig.passcode,
-        passcodeHint: data.c?.ph || fallbackTemplate.defaultConfig.passcodeHint,
+        recipientName: data.c?.r ?? targetTemplate.defaultConfig.recipientName,
+        senderName: data.c?.s ?? targetTemplate.defaultConfig.senderName,
+        mainText: data.c?.m ?? targetTemplate.defaultConfig.mainText,
+        passcode: data.c?.p ?? targetTemplate.defaultConfig.passcode,
+        passcodeHint: data.c?.ph ?? targetTemplate.defaultConfig.passcodeHint,
         audioUrl: data.c?.a || defaultAudio,
-        musicPreset: data.c?.mp || fallbackTemplate.defaultConfig.musicPreset,
-        audioStartTime: data.c?.ast ?? fallbackTemplate.defaultConfig.audioStartTime,
-        audioEndTime: data.c?.aet ?? fallbackTemplate.defaultConfig.audioEndTime,
-        fontFamily: data.c?.f || fallbackTemplate.defaultConfig.fontFamily,
-        themeColor: data.c?.tc || fallbackTemplate.defaultConfig.themeColor,
-        crystalTheme: data.c?.ct || fallbackTemplate.defaultConfig.crystalTheme,
-        crystalCenterpiece: data.c?.cc || fallbackTemplate.defaultConfig.crystalCenterpiece,
-        crystalWeather: data.c?.cw || fallbackTemplate.defaultConfig.crystalWeather,
-        crystalBaseTitle: data.c?.cbt || fallbackTemplate.defaultConfig.crystalBaseTitle,
-        crystalBaseSubtitle: data.c?.cbs || fallbackTemplate.defaultConfig.crystalBaseSubtitle,
-        crystalQuotes: data.c?.cq || fallbackTemplate.defaultConfig.crystalQuotes,
-        cinemaCaptions: data.c?.ccap || fallbackTemplate.defaultConfig.cinemaCaptions,
+        musicPreset: data.c?.mp || targetTemplate.defaultConfig.musicPreset,
+        audioStartTime: data.c?.ast ?? targetTemplate.defaultConfig.audioStartTime,
+        audioEndTime: data.c?.aet ?? targetTemplate.defaultConfig.audioEndTime,
+        fontFamily: data.c?.f || targetTemplate.defaultConfig.fontFamily,
+        themeColor: data.c?.tc || targetTemplate.defaultConfig.themeColor,
+        crystalTheme: data.c?.ct || targetTemplate.defaultConfig.crystalTheme,
+        crystalCenterpiece: data.c?.cc || targetTemplate.defaultConfig.crystalCenterpiece,
+        crystalWeather: data.c?.cw || targetTemplate.defaultConfig.crystalWeather,
+        crystalBaseTitle: data.c?.cbt || targetTemplate.defaultConfig.crystalBaseTitle,
+        crystalBaseSubtitle: data.c?.cbs || targetTemplate.defaultConfig.crystalBaseSubtitle,
+        crystalQuotes: data.c?.cq || targetTemplate.defaultConfig.crystalQuotes,
+        cinemaCaptions: data.c?.ccap || targetTemplate.defaultConfig.cinemaCaptions,
+        polaroidCaptions: data.c?.pc || targetTemplate.defaultConfig.polaroidCaptions,
+        polaroidNotes: data.c?.pn || targetTemplate.defaultConfig.polaroidNotes,
         images: [], // Default to empty array - only user images are loaded
       },
     };

@@ -342,7 +342,7 @@ export default function Dashboard() {
                         </div>
 
                         <Link
-                          to={`/card/${card.id}`}
+                          to={getCardShareUrl(card)}
                           target="_blank"
                           className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 shrink-0"
                         >

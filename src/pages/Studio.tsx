@@ -536,9 +536,10 @@ export default function Studio() {
     }
   }, [isMusicModalOpen]);
 
-  // Đường dẫn thiệp chia sẻ chuẩn xác nhất bằng mã thẻ duy nhất (không bao giờ làm vỡ mã QR)
-  const shareUrl = `${window.location.origin}/card/${currentCardId}`;
-  const encodedSlug = currentCardId;
+  // Đường dẫn thiệp chia sẻ hybrid tối ưu: Tự mang theo toàn bộ nội dung, lời chúc & mẫu thiệp
+  // Đảm bảo quét mã QR hay mở link trên điện thoại người nhận luôn hiển thị đúng 100% mẫu đã chọn, mở tức thì không bao giờ bị treo "đang chuẩn bị"
+  const encodedSlug = encodeCardData(template.id, config, currentCardId);
+  const shareUrl = `${window.location.origin}/card/c_${encodedSlug}`;
 
   const updateConfig = (key: keyof CardConfig, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -998,8 +999,12 @@ export default function Studio() {
       updatedAt: new Date().toLocaleDateString('vi-VN'),
     };
     try {
-      await saveCard(newCard);
-      await incrementTemplateUse(template.id);
+      // Lưu tức thì vào local và đồng bộ Supabase với timeout an toàn
+      await Promise.race([
+        saveCard(newCard),
+        new Promise((resolve) => setTimeout(resolve, 3500)),
+      ]);
+      incrementTemplateUse(template.id).catch(() => {});
     } catch (err) {
       console.warn('Lỗi lưu thiệp:', err);
     } finally {
@@ -2556,7 +2561,7 @@ export default function Studio() {
 
             <div className="pt-2 flex items-center justify-between border-t border-slate-100 text-xs">
               <Link
-                to={`/card/${currentCardId}`}
+                to={shareUrl}
                 target="_blank"
                 className="text-purple-600 hover:text-purple-700 font-bold flex items-center gap-1 mx-auto py-1 px-3 rounded-lg hover:bg-purple-50 transition-colors"
               >

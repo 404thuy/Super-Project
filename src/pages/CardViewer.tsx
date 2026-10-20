@@ -47,7 +47,7 @@ export default function CardViewer() {
   let initialConfig: CardConfig = { ...TEMPLATES[0].defaultConfig, images: [] };
   let resolvedCardId = cardId || 'demo-passcode-envelope';
 
-  if (cardId?.startsWith('c_')) {
+  if (cardId?.startsWith('c_') || cardId?.includes('/')) {
     const decoded = decodeCardData(cardId, TEMPLATES[0]);
     initialTemplateId = decoded.templateId;
     initialConfig = decoded.config;
@@ -68,10 +68,12 @@ export default function CardViewer() {
   const [activeTemplateId, setActiveTemplateId] = useState<string>(initialTemplateId);
   const [activeConfig, setActiveConfig] = useState<CardConfig>(initialConfig);
   const [isLoadingCard, setIsLoadingCard] = useState<boolean>(() => {
-    if (resolvedCardId?.startsWith('lc_')) {
-      return !getCardById(resolvedCardId);
+    // Nếu là c_... (tự chứa toàn bộ dữ liệu & mẫu) hoặc demo/template trực tiếp -> KHÔNG BAO GIỜ BLOCK LOADING
+    if (cardId?.startsWith('c_') || cardId?.startsWith('demo-') || !cardId?.startsWith('lc_')) {
+      return false;
     }
-    return false;
+    // Chỉ bật loading spinner nếu là mã ngắn lc_... và chưa có trong local cache
+    return !getCardById(resolvedCardId);
   });
 
   const template = resolveTemplate(activeTemplateId);
@@ -80,18 +82,34 @@ export default function CardViewer() {
   useEffect(() => {
     let isCurrent = true;
     async function loadCardFromRemote() {
-      if (resolvedCardId) {
+      // Chỉ fetch remote nếu có cardId cụ thể (lc_ hoặc id bên trong c_)
+      if (resolvedCardId && (resolvedCardId.startsWith('lc_') || cardId?.startsWith('c_'))) {
         try {
-          const remote = await fetchCardById(resolvedCardId);
+          // Thêm timeout an toàn 6 giây để không bao giờ bị đơ trên mạng di động 4G
+          const remote = await Promise.race([
+            fetchCardById(resolvedCardId),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+          ]);
+
           if (remote && isCurrent) {
             setActiveTemplateId(remote.templateId);
-            setActiveConfig(remote.cardData);
+            setActiveConfig((prev) => ({
+              ...prev,
+              ...remote.cardData,
+              // Giữ lại hoặc hợp nhất ảnh từ database nếu có
+              images: (remote.cardData?.images && remote.cardData.images.length > 0)
+                ? remote.cardData.images
+                : prev.images,
+            }));
             setLoadError(null);
-          } else if (!remote && isCurrent && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
-            setLoadError('Không tìm thấy thông tin thiệp hoặc mã thẻ chưa sẵn sàng.');
+          } else if (!remote && isCurrent) {
+            // Nếu là dạng c_... đã decode lời chúc thành công, TUYỆT ĐỐI KHÔNG BÁO LỖI!
+            if (!cardId?.startsWith('c_') && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
+              setLoadError('Không tìm thấy thông tin thiệp hoặc mã thẻ chưa sẵn sàng. Người gửi có thể chưa bấm "Hoàn tất & Gửi thiệp".');
+            }
           }
         } catch {
-          if (isCurrent && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
+          if (isCurrent && !cardId?.startsWith('c_') && resolvedCardId.startsWith('lc_') && !getCardById(resolvedCardId)) {
             setLoadError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
           }
         } finally {
@@ -105,7 +123,7 @@ export default function CardViewer() {
     return () => {
       isCurrent = false;
     };
-  }, [resolvedCardId]);
+  }, [resolvedCardId, cardId]);
 
   // Strictly controlled like state per user account
   const [hasLiked, setHasLiked] = useState<boolean>(() =>
