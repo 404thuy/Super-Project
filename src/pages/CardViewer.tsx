@@ -85,11 +85,19 @@ export default function CardViewer() {
       // Chỉ fetch remote nếu có cardId cụ thể (lc_ hoặc id bên trong c_)
       if (resolvedCardId && (resolvedCardId.startsWith('lc_') || cardId?.startsWith('c_'))) {
         try {
-          // Thêm timeout an toàn 6 giây để không bao giờ bị đơ trên mạng di động 4G
-          const remote = await Promise.race([
+          // Thêm timeout an toàn 8 giây để không bao giờ bị đơ trên mạng di động 4G
+          let remote = await Promise.race([
             fetchCardById(resolvedCardId),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
           ]);
+
+          // Nếu lần đầu chưa kịp lấy được (do người gửi vừa ấn lưu xong), thử lại 1 lần nữa sau 1.2s
+          if (!remote && isCurrent) {
+            await new Promise((r) => setTimeout(r, 1200));
+            if (isCurrent) {
+              remote = await fetchCardById(resolvedCardId);
+            }
+          }
 
           if (remote && isCurrent) {
             setActiveTemplateId(remote.templateId);
@@ -99,7 +107,7 @@ export default function CardViewer() {
               // Giữ lại hoặc hợp nhất ảnh từ database nếu có
               images: (remote.cardData?.images && remote.cardData.images.length > 0)
                 ? remote.cardData.images
-                : prev.images,
+                : (remote.cardData?.images || prev.images || []),
             }));
             setLoadError(null);
           } else if (!remote && isCurrent) {
@@ -173,7 +181,7 @@ export default function CardViewer() {
       let finalAudioUrl = activeConfig.audioUrl;
 
       // Hồi sinh nhạc người dùng tải lên từ IndexedDB hoặc DataURL vĩnh viễn
-      if (activeConfig.musicPreset?.startsWith('user-audio-') || activeConfig.audioUrl?.startsWith('blob:')) {
+      if (activeConfig.musicPreset?.startsWith('user-audio-') || activeConfig.audioUrl?.startsWith('blob:') || activeConfig.audioUrl?.startsWith('data:')) {
         const resolved = await resolvePlayableAudioUrl(activeConfig.musicPreset, activeConfig.audioUrl);
         if (isCurrent) {
           if (resolved.audioUrl) {
@@ -182,6 +190,22 @@ export default function CardViewer() {
           if (resolved.songTitle || resolved.artist) {
             setCustomTrackInfo({ title: resolved.songTitle, artist: resolved.artist });
           }
+        }
+      }
+
+      // Nếu không có audioUrl nhưng có musicPreset từ kho nhạc
+      if (!finalAudioUrl && activeConfig.musicPreset) {
+        const matched = getSongById(activeConfig.musicPreset);
+        if (matched?.audioUrl) {
+          finalAudioUrl = matched.audioUrl;
+        }
+      }
+
+      // Cập nhật thông tin bài hát lên thanh phát nếu chưa có
+      if (activeConfig.musicPreset) {
+        const song = getSongById(activeConfig.musicPreset);
+        if (song) {
+          setCustomTrackInfo({ title: song.title, artist: song.artist });
         }
       }
 
@@ -234,6 +258,7 @@ export default function CardViewer() {
 
   // Handle Mute/Unmute toggle for music pill
   const handleToggleMute = () => {
+    soundFx.resumeAudioContext();
     const nextMuted = soundFx.toggleMute();
     setIsMuted(nextMuted);
   };
@@ -330,11 +355,11 @@ export default function CardViewer() {
                 className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/30 hidden xs:inline"
               />
               <span className="font-bold text-[11px] sm:text-xs truncate max-w-[90px] sm:max-w-[140px]">
-                {customTrackInfo?.title || (activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3') : (song?.title || 'Giai điệu lãng mạn'))}
+                {customTrackInfo?.title || song?.title || 'Giai điệu lãng mạn'}
               </span>
               <span className="text-slate-400 text-[10px] hidden sm:inline">•</span>
               <span className="text-slate-300 text-[11px] truncate max-w-[100px] hidden sm:inline">
-                {customTrackInfo?.artist || (activeConfig.audioUrl ? 'Bản Thu Gốc' : (song?.artist || 'LoveCard'))}
+                {customTrackInfo?.artist || song?.artist || 'LoveCard'}
               </span>
               {!isMuted ? (
                 <span className="flex items-end gap-0.5 h-2.5 ml-0.5 sm:ml-1 shrink-0">

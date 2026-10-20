@@ -25,7 +25,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { TEMPLATES, resolveTemplate, type CardConfig, type CreatedCard } from '../types';
 import EffectRenderer from '../components/effects/EffectRenderer';
-import { encodeCardData, saveCard, generateShortId, getCardById, incrementTemplateUse } from '../utils/cardStorage';
+import { saveCard, generateShortId, getCardById, incrementTemplateUse } from '../utils/cardStorage';
 import { soundFx, MUSIC_PRESETS } from '../utils/soundEffects';
 import { PRESET_WISHES } from '../utils/presetWishes';
 import { useAuth } from '../context/AuthContext';
@@ -475,11 +475,11 @@ export default function Studio() {
       setConfig((prev) => ({
         ...prev,
         musicPreset: newTrack.id,
-        audioUrl: newTrack.audioUrl,
+        audioUrl: newTrack.dataUrl || newTrack.audioUrl,
         audioStartTime: 0,
         audioEndTime: newTrack.durationSec,
       }));
-      soundFx.startBackgroundMusic(newTrack.id, newTrack.audioUrl, 0);
+      soundFx.startBackgroundMusic(newTrack.id, newTrack.dataUrl || newTrack.audioUrl, 0);
       setIsStudioAudioPlaying(true);
     } catch (err) {
       console.warn('Lỗi tải file nhạc trực tiếp từ Studio:', err);
@@ -536,10 +536,9 @@ export default function Studio() {
     }
   }, [isMusicModalOpen]);
 
-  // Đường dẫn thiệp chia sẻ hybrid tối ưu: Tự mang theo toàn bộ nội dung, lời chúc & mẫu thiệp
-  // Đảm bảo quét mã QR hay mở link trên điện thoại người nhận luôn hiển thị đúng 100% mẫu đã chọn, mở tức thì không bao giờ bị treo "đang chuẩn bị"
-  const encodedSlug = encodeCardData(template.id, config, currentCardId);
-  const shareUrl = `${window.location.origin}/card/c_${encodedSlug}`;
+  // Đường dẫn thiệp chia sẻ gọn gàng theo mã thiệp (lc_...)
+  // Quét mã QR hoặc mở link đều ngắn gọn, tải trực tiếp dữ liệu chuẩn xác từ Supabase Cloud
+  const shareUrl = `${window.location.origin}/card/${currentCardId}`;
 
   const updateConfig = (key: keyof CardConfig, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -984,6 +983,16 @@ export default function Studio() {
       }
     }
 
+    // Nếu không có audioUrl nhưng có preset trong kho nhạc chuẩn
+    if (!persistedAudioUrl && config.musicPreset) {
+      const matched = getSongById(config.musicPreset);
+      if (matched?.audioUrl) {
+        persistedAudioUrl = matched.audioUrl;
+      }
+    } else if (!persistedAudioUrl && selectedOnlineSong?.audioUrl) {
+      persistedAudioUrl = selectedOnlineSong.audioUrl;
+    }
+
     const newCard: CreatedCard = {
       id: cardIdToSave,
       creatorId: user ? user.id : null,
@@ -999,10 +1008,10 @@ export default function Studio() {
       updatedAt: new Date().toLocaleDateString('vi-VN'),
     };
     try {
-      // Lưu tức thì vào local và đồng bộ Supabase với timeout an toàn
+      // Lưu tức thì vào local và đồng bộ Supabase với timeout an toàn 8 giây
       await Promise.race([
         saveCard(newCard),
-        new Promise((resolve) => setTimeout(resolve, 3500)),
+        new Promise((resolve) => setTimeout(resolve, 8000)),
       ]);
       incrementTemplateUse(template.id).catch(() => {});
     } catch (err) {

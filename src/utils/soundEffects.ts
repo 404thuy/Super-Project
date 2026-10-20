@@ -176,6 +176,15 @@ class SoundEngine {
 
   public toggleMute(): boolean {
     this.setMuted(!this.isMuted);
+    if (!this.isMuted) {
+      if (this.pendingAutoplayAudio) {
+        const audio = this.pendingAutoplayAudio;
+        this.pendingAutoplayAudio = null;
+        audio.play().catch(() => {});
+      } else if (this.activeCustomAudio && this.activeCustomAudio.paused && this.isMusicPlaying) {
+        this.activeCustomAudio.play().catch(() => {});
+      }
+    }
     return this.isMuted;
   }
 

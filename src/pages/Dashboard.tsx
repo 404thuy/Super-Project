@@ -23,7 +23,6 @@ import {
   getUserCards,
   fetchUserCards,
   deleteCard,
-  encodeCardData,
   formatStat,
   getLikedTemplates,
   toggleTemplateHeart,
@@ -82,8 +81,7 @@ export default function Dashboard() {
 
   const handleCopyLink = (card: CreatedCard) => {
     soundFx.playPinClick();
-    const encoded = 'c_' + encodeCardData(card.templateId, card.cardData, card.id);
-    const url = `${window.location.origin}/card/${encoded}`;
+    const url = getCardShareUrl(card);
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(card.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -109,8 +107,7 @@ export default function Dashboard() {
   };
 
   const getCardShareUrl = (card: CreatedCard) => {
-    const encoded = 'c_' + encodeCardData(card.templateId, card.cardData, card.id);
-    return `${window.location.origin}/card/${encoded}`;
+    return `${window.location.origin}/card/${card.id}`;
   };
 
   const handleDownloadQr = (card: CreatedCard) => {

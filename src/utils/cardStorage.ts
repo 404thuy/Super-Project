@@ -438,12 +438,18 @@ export async function fetchCardById(id: string): Promise<CreatedCard | null> {
     try {
       const { data, error } = await supabase.from('cards').select('*').eq('id', id).maybeSingle();
       if (!error && data) {
+        let parsedCardData = data.card_data;
+        if (typeof parsedCardData === 'string') {
+          try {
+            parsedCardData = JSON.parse(parsedCardData);
+          } catch {}
+        }
         const card: CreatedCard = {
           id: data.id,
           creatorId: data.user_id,
           templateId: data.template_id,
           title: data.template_id,
-          cardData: data.card_data,
+          cardData: parsedCardData,
           viewsCount: data.views_count || 1,
           heartsCount: data.hearts_count || 0,
           createdAt: data.created_at,
@@ -504,8 +510,8 @@ export async function saveCard(card: CreatedCard): Promise<CreatedCard> {
 
       let { error } = await supabase.from('cards').upsert(row);
 
-      // Nếu gặp lỗi foreign key do user_id không tồn tại trong bảng users trên Supabase -> Thử lại với user_id = null
-      if (error && (error.code === '23503' || error.message?.includes('foreign key') || error.message?.includes('cards_user_id_fkey'))) {
+      // Nếu gặp bất kỳ lỗi nào liên quan tới user_id (foreign key, không tồn tại) -> Thử lại ngay với user_id = null
+      if (error && row.user_id) {
         row.user_id = null;
         const retryResult = await supabase.from('cards').upsert(row);
         error = retryResult.error;

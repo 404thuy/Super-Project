@@ -543,7 +543,7 @@ export async function resolvePermanentAudioForSave(
   currentAudioUrl?: string
 ): Promise<string | undefined> {
   // Nếu đã là link static hợp lệ hoặc DataURL, giữ nguyên
-  if (currentAudioUrl && currentAudioUrl.startsWith('data:audio/')) {
+  if (currentAudioUrl && currentAudioUrl.startsWith('data:')) {
     return currentAudioUrl;
   }
   if (
@@ -615,7 +615,7 @@ export async function resolvePlayableAudioUrl(
     // 1.2 Nếu không có trong IndexedDB (người nhận mở link trên thiết bị khác)
     if (currentAudioUrl) {
       // Nếu là DataURL hoặc URL online hợp lệ
-      if (currentAudioUrl.startsWith('data:audio/') || currentAudioUrl.startsWith('http')) {
+      if (currentAudioUrl.startsWith('data:') || currentAudioUrl.startsWith('http')) {
         return {
           audioUrl: currentAudioUrl,
           songTitle: 'Bản Thu Âm Riêng',
