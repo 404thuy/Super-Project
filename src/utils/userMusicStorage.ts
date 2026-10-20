@@ -74,14 +74,43 @@ function saveStoredMeta(userId: string, tracks: UserTrack[]) {
   }
 }
 
-// Chuyển đổi AudioBuffer thành file WAV Blob chuẩn PCM 16-bit
+// Chuyển đổi Blob thành Base64 DataURL nhanh và an toàn
+export function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string) || '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Chuyển đổi AudioBuffer thành file WAV Blob chuẩn PCM 16-bit (tự động tối ưu mono 22050Hz giúp file siêu nhẹ <2MB)
 function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
-  const numOfChan = buffer.numberOfChannels;
-  const length = buffer.length * numOfChan * 2 + 44;
+  const sourceChannels = buffer.numberOfChannels;
+  const sourceSampleRate = buffer.sampleRate;
+  // Downsample về 22050Hz mono để dung lượng giảm 75%, đảm bảo lưu trữ vĩnh viễn và phát tức thì
+  const targetSampleRate = Math.min(22050, sourceSampleRate);
+  const ratio = sourceSampleRate / targetSampleRate;
+  const targetLength = Math.floor(buffer.length / ratio);
+
+  // Tạo mảng trộn mono (downmix all channels to 1 channel)
+  const monoData = new Float32Array(targetLength);
+  const sourceData: Float32Array[] = [];
+  for (let c = 0; c < sourceChannels; c++) {
+    sourceData.push(buffer.getChannelData(c));
+  }
+
+  for (let i = 0; i < targetLength; i++) {
+    const sourceIdx = Math.floor(i * ratio);
+    let sum = 0;
+    for (let c = 0; c < sourceChannels; c++) {
+      sum += sourceData[c][sourceIdx] || 0;
+    }
+    monoData[i] = sum / sourceChannels;
+  }
+
+  const length = targetLength * 2 + 44;
   const out = new DataView(new ArrayBuffer(length));
-  const channels: Float32Array[] = [];
-  const sampleRate = buffer.sampleRate;
-  let offset = 0;
   let pos = 0;
 
   function writeString(str: string) {
@@ -106,26 +135,19 @@ function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
   writeString('fmt ');
   setUint32(16); // SubChunk1Size (16 for PCM)
   setUint16(1); // AudioFormat (1 for PCM)
-  setUint16(numOfChan);
-  setUint32(sampleRate);
-  setUint32(sampleRate * 2 * numOfChan); // ByteRate
-  setUint16(numOfChan * 2); // BlockAlign
+  setUint16(1); // Mono channel = 1
+  setUint32(targetSampleRate);
+  setUint32(targetSampleRate * 2); // ByteRate (2 bytes per sample for 1 channel)
+  setUint16(2); // BlockAlign (16-bit mono = 2 bytes)
   setUint16(16); // BitsPerSample
   writeString('data');
-  setUint32(length - pos - 4); // SubChunk2Size
+  setUint32(targetLength * 2);
 
-  for (let i = 0; i < numOfChan; i++) {
-    channels.push(buffer.getChannelData(i));
-  }
-
-  while (offset < buffer.length) {
-    for (let i = 0; i < numOfChan; i++) {
-      let sample = Math.max(-1, Math.min(1, channels[i][offset]));
-      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
-      out.setInt16(pos, sample, true);
-      pos += 2;
-    }
-    offset++;
+  for (let i = 0; i < targetLength; i++) {
+    let sample = Math.max(-1, Math.min(1, monoData[i]));
+    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+    out.setInt16(pos, sample, true);
+    pos += 2;
   }
 
   return new Blob([out.buffer], { type: 'audio/wav' });
@@ -354,48 +376,42 @@ export async function saveUserTrack(
   let serverUrl: string | undefined = undefined;
   let dataUrl: string | undefined = undefined;
 
-  // 1. Thử upload lên Backend nếu online (dùng base64 json)
+  // Tự động tạo DataURL dự phòng (hỗ trợ lưu vĩnh viễn trên Supabase/Oracle khi offline hoặc server tĩnh Vercel)
+  if (audioBlob.size <= 8 * 1024 * 1024) {
+    try {
+      dataUrl = await blobToDataUrl(audioBlob);
+    } catch (dataUrlErr) {
+      console.warn('Lỗi tạo DataURL:', dataUrlErr);
+    }
+  }
+
+  // 1. Thử upload lên Backend nếu online (dùng base64)
   try {
-    onProgress?.('Đang đồng bộ tệp âm thanh...');
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    const base64Data = btoa(
-      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
+    if (dataUrl) {
+      onProgress?.('Đang đồng bộ tệp âm thanh...');
+      const uploadName = `${rawBaseName}.${ext}`;
+      const res = await fetch(`${BACKEND_URL}/api/upload-audio`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getTunnelHeaders(),
+        },
+        body: JSON.stringify({
+          fileName: uploadName,
+          fileData: dataUrl,
+          userId: currentUserId,
+        }),
+      });
 
-    const uploadName = `${rawBaseName}.${ext}`;
-    const res = await fetch(`${BACKEND_URL}/api/upload-audio`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getTunnelHeaders(),
-      },
-      body: JSON.stringify({
-        fileName: uploadName,
-        fileData: `data:${mimeType};base64,${base64Data}`,
-        userId: currentUserId,
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.audioUrl) {
-        serverUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_URL}${data.audioUrl}`;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.audioUrl) {
+          serverUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_URL}${data.audioUrl}`;
+        }
       }
     }
   } catch (backendErr) {
     console.warn('Không thể gửi file lên server backend, lưu trữ cục bộ:', backendErr);
-  }
-
-  // Nếu file nhỏ < 2.5MB và không có serverUrl, lưu dataUrl dự phòng
-  if (!serverUrl && audioBlob.size < 2.5 * 1024 * 1024) {
-    try {
-      dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => resolve('');
-        reader.readAsDataURL(audioBlob);
-      });
-    } catch {}
   }
 
   const newTrack: UserTrack = {
@@ -486,3 +502,135 @@ export function userTrackToSongItem(track: UserTrack, displayName?: string): Son
     synthPreset: 'spring-acoustic',
   };
 }
+
+// Lấy bản ghi UserTrack từ IndexedDB theo ID
+export async function getUserTrackById(trackId: string): Promise<any | null> {
+  try {
+    const db = await openDB();
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    return await new Promise((resolve) => {
+      const req = store.get(trackId);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Tạo fresh Blob URL hoặc lấy URL khả dụng cho bài hát từ IndexedDB
+export async function getFreshAudioUrlForTrack(trackId: string): Promise<string | null> {
+  const record = await getUserTrackById(trackId);
+  if (!record) return null;
+  if (record.audioBlob instanceof Blob) {
+    try {
+      return URL.createObjectURL(record.audioBlob);
+    } catch {}
+  }
+  if (record.serverUrl && record.serverUrl.startsWith('http')) {
+    return record.serverUrl;
+  }
+  if (record.dataUrl && record.dataUrl.startsWith('data:')) {
+    return record.dataUrl;
+  }
+  return null;
+}
+
+// Giải quyết audioUrl vĩnh viễn trước khi lưu thiệp (chống lưu URL blob tạm thời)
+export async function resolvePermanentAudioForSave(
+  presetId?: string,
+  currentAudioUrl?: string
+): Promise<string | undefined> {
+  // Nếu đã là link static hợp lệ hoặc DataURL, giữ nguyên
+  if (currentAudioUrl && currentAudioUrl.startsWith('data:audio/')) {
+    return currentAudioUrl;
+  }
+  if (
+    currentAudioUrl &&
+    currentAudioUrl.startsWith('http') &&
+    !currentAudioUrl.includes('localhost:5173') &&
+    !currentAudioUrl.startsWith('blob:')
+  ) {
+    return currentAudioUrl;
+  }
+
+  // Tra cứu từ IndexedDB theo trackId
+  if (presetId) {
+    const record = await getUserTrackById(presetId);
+    if (record) {
+      if (record.serverUrl && record.serverUrl.startsWith('http')) {
+        return record.serverUrl;
+      }
+      if (record.dataUrl && record.dataUrl.startsWith('data:')) {
+        return record.dataUrl;
+      }
+      if (record.audioBlob instanceof Blob) {
+        try {
+          const convertedDataUrl = await blobToDataUrl(record.audioBlob);
+          // Cập nhật lại vào IndexedDB
+          record.dataUrl = convertedDataUrl;
+          try {
+            const db = await openDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(record);
+          } catch {}
+          return convertedDataUrl;
+        } catch {}
+      }
+    }
+  }
+
+  return currentAudioUrl?.startsWith('blob:') ? undefined : currentAudioUrl;
+}
+
+// Giải quyết URL phát nhạc chuẩn xác cho CardViewer (tự động hồi sinh từ IndexedDB hoặc dùng DataURL/ServerURL)
+export async function resolvePlayableAudioUrl(
+  presetId?: string,
+  currentAudioUrl?: string
+): Promise<{ audioUrl?: string; songTitle?: string; artist?: string }> {
+  // 1. Nếu là preset của người dùng tự tải lên
+  if (presetId?.startsWith('user-audio-')) {
+    // 1.1 Ưu tiên tìm trong IndexedDB cục bộ (người tạo hoặc cùng máy/trình duyệt)
+    const record = await getUserTrackById(presetId);
+    if (record) {
+      let freshUrl: string | undefined = undefined;
+      if (record.audioBlob instanceof Blob) {
+        freshUrl = URL.createObjectURL(record.audioBlob);
+      } else if (record.serverUrl && record.serverUrl.startsWith('http')) {
+        freshUrl = record.serverUrl;
+      } else if (record.dataUrl && record.dataUrl.startsWith('data:')) {
+        freshUrl = record.dataUrl;
+      }
+
+      if (freshUrl) {
+        return {
+          audioUrl: freshUrl,
+          songTitle: record.title || 'Bài Hát Tải Lên',
+          artist: 'Bản Thu Của Bạn',
+        };
+      }
+    }
+
+    // 1.2 Nếu không có trong IndexedDB (người nhận mở link trên thiết bị khác)
+    if (currentAudioUrl) {
+      // Nếu là DataURL hoặc URL online hợp lệ
+      if (currentAudioUrl.startsWith('data:audio/') || currentAudioUrl.startsWith('http')) {
+        return {
+          audioUrl: currentAudioUrl,
+          songTitle: 'Bản Thu Âm Riêng',
+          artist: 'Người Thương Gửi Tặng',
+        };
+      }
+    }
+  }
+
+  // 2. Nếu currentAudioUrl là blob URL (bị hết hạn session) nhưng không tìm thấy trong DB
+  if (currentAudioUrl?.startsWith('blob:')) {
+    // Không dùng URL blob chết vì sẽ gây lỗi mạng và làm đứng audio player
+    return { audioUrl: undefined };
+  }
+
+  return { audioUrl: currentAudioUrl };
+}
+

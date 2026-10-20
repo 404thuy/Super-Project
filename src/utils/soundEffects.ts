@@ -537,6 +537,12 @@ class SoundEngine {
       } catch {}
 
       this.activeAudioUrl = url;
+      audio.onerror = (e) => {
+        console.warn('Native audio load error for URL:', url);
+        if (this.activeAudioUrl === url) {
+          this.activeAudioUrl = null;
+        }
+      };
       audio.src = url;
       audio.load();
       this.attachLoopHandler(audio);

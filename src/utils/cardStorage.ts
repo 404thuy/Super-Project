@@ -793,8 +793,10 @@ export function encodeCardData(
   cardId?: string
 ): string {
   try {
-    // Tuyệt đối không nén audio dạng data: (Base64) vào URL slug để tránh tràn bộ nhớ
-    const safeAudioUrl = config.audioUrl?.startsWith('data:') ? undefined : config.audioUrl;
+    // Tuyệt đối không nén audio dạng data: (Base64) hoặc blob: (session tạm thời) vào URL slug
+    const safeAudioUrl = (config.audioUrl?.startsWith('data:') || config.audioUrl?.startsWith('blob:'))
+      ? undefined
+      : config.audioUrl;
 
     const payload: CompactPayload = {
       t: templateId,
@@ -871,6 +873,9 @@ export function decodeCardData(
     );
     const data: CompactPayload = JSON.parse(jsonStr);
 
+    const isUserPreset = data.c?.mp?.startsWith('user-audio-');
+    const defaultAudio = isUserPreset ? undefined : fallbackTemplate.defaultConfig.audioUrl;
+
     return {
       templateId: data.t || fallbackTemplate.id,
       cardId: data.id,
@@ -880,7 +885,7 @@ export function decodeCardData(
         mainText: data.c?.m || fallbackTemplate.defaultConfig.mainText,
         passcode: data.c?.p || fallbackTemplate.defaultConfig.passcode,
         passcodeHint: data.c?.ph || fallbackTemplate.defaultConfig.passcodeHint,
-        audioUrl: data.c?.a || fallbackTemplate.defaultConfig.audioUrl,
+        audioUrl: data.c?.a || defaultAudio,
         musicPreset: data.c?.mp || fallbackTemplate.defaultConfig.musicPreset,
         audioStartTime: data.c?.ast ?? fallbackTemplate.defaultConfig.audioStartTime,
         audioEndTime: data.c?.aet ?? fallbackTemplate.defaultConfig.audioEndTime,

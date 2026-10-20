@@ -25,6 +25,7 @@ import {
 import { soundFx } from '../utils/soundEffects';
 import { useAuth } from '../context/AuthContext';
 import { getSongById, getSongCoverUrl } from '../data/vietnameseMusic';
+import { resolvePlayableAudioUrl } from '../utils/userMusicStorage';
 
 export default function CardViewer() {
   const params = useParams();
@@ -34,6 +35,7 @@ export default function CardViewer() {
   const [isMuted, setIsMuted] = useState(soundFx.isMuted);
   const [isCapturing, setIsCapturing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [customTrackInfo, setCustomTrackInfo] = useState<{ title?: string; artist?: string } | null>(null);
 
   const cardContainerRef = useRef<HTMLDivElement>(null);
 
@@ -144,21 +146,48 @@ export default function CardViewer() {
     soundFx.setMuted(false);
     setIsMuted(false);
 
-    // Start background music preset if configured
-    if (activeConfig.musicPreset || activeConfig.audioUrl) {
-      soundFx.startBackgroundMusic(
-        activeConfig.musicPreset,
-        activeConfig.audioUrl,
-        activeConfig.audioStartTime || 0,
-        activeConfig.audioEndTime
-      );
+    // Không vội phát nhạc khi thẻ đang tải từ remote database để tránh phát nhầm mẫu mặc định
+    if (isLoadingCard) return;
+
+    let isCurrent = true;
+
+    async function initMusic() {
+      let finalAudioUrl = activeConfig.audioUrl;
+
+      // Hồi sinh nhạc người dùng tải lên từ IndexedDB hoặc DataURL vĩnh viễn
+      if (activeConfig.musicPreset?.startsWith('user-audio-') || activeConfig.audioUrl?.startsWith('blob:')) {
+        const resolved = await resolvePlayableAudioUrl(activeConfig.musicPreset, activeConfig.audioUrl);
+        if (isCurrent) {
+          if (resolved.audioUrl) {
+            finalAudioUrl = resolved.audioUrl;
+          }
+          if (resolved.songTitle || resolved.artist) {
+            setCustomTrackInfo({ title: resolved.songTitle, artist: resolved.artist });
+          }
+        }
+      }
+
+      if (!isCurrent) return;
+
+      if (activeConfig.musicPreset || finalAudioUrl) {
+        soundFx.startBackgroundMusic(
+          activeConfig.musicPreset,
+          finalAudioUrl,
+          activeConfig.audioStartTime || 0,
+          activeConfig.audioEndTime
+        );
+      }
     }
 
+    initMusic();
+
     return () => {
+      isCurrent = false;
       soundFx.stopBackgroundMusic();
       soundFx.setMuted(false);
     };
   }, [
+    isLoadingCard,
     resolvedCardId,
     template?.id,
     activeConfig.musicPreset,
@@ -261,7 +290,7 @@ export default function CardViewer() {
         {/* Center Music Pill: Hiển thị đẹp mắt trên cả Mobile lẫn Máy tính */}
         {(() => {
           const song = soundFx.getCurrentSong() || getSongById(activeConfig.musicPreset || '');
-          if (!song && !activeConfig.musicPreset) return null;
+          if (!song && !activeConfig.musicPreset && !activeConfig.audioUrl) return null;
           return (
             <div
               onClick={handleToggleMute}
@@ -283,11 +312,11 @@ export default function CardViewer() {
                 className="w-4 h-4 rounded-full object-cover shrink-0 border border-white/30 hidden xs:inline"
               />
               <span className="font-bold text-[11px] sm:text-xs truncate max-w-[90px] sm:max-w-[140px]">
-                {activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3') : (song?.title || 'Giai điệu lãng mạn')}
+                {customTrackInfo?.title || (activeConfig.audioUrl ? (song?.title ? `${song.title} (MP3)` : 'Bài Hát MP3') : (song?.title || 'Giai điệu lãng mạn'))}
               </span>
               <span className="text-slate-400 text-[10px] hidden sm:inline">•</span>
               <span className="text-slate-300 text-[11px] truncate max-w-[100px] hidden sm:inline">
-                {activeConfig.audioUrl ? 'Bản Thu Gốc' : (song?.artist || 'LoveCard')}
+                {customTrackInfo?.artist || (activeConfig.audioUrl ? 'Bản Thu Gốc' : (song?.artist || 'LoveCard'))}
               </span>
               {!isMuted ? (
                 <span className="flex items-end gap-0.5 h-2.5 ml-0.5 sm:ml-1 shrink-0">

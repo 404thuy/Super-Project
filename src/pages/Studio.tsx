@@ -37,7 +37,7 @@ import {
   type SongItem,
 } from '../data/vietnameseMusic';
 import { Play, Pause } from 'lucide-react';
-import { saveUserTrack, userTrackToSongItem } from '../utils/userMusicStorage';
+import { saveUserTrack, userTrackToSongItem, resolvePermanentAudioForSave } from '../utils/userMusicStorage';
 
 function parseSongDurationToSeconds(durationStr?: string, defaultSec: number = 180): number {
   if (!durationStr) return defaultSec;
@@ -970,12 +970,28 @@ export default function Studio() {
       sessionStorage.setItem(`lovecard_active_id_${template.id}`, cardIdToSave);
     } catch {}
 
+    // Đảm bảo audioUrl được lưu vĩnh viễn (DataURL hoặc Server URL) thay vì Blob URL tạm thời
+    let persistedAudioUrl = config.audioUrl;
+    if (config.musicPreset?.startsWith('user-audio-') || config.audioUrl?.startsWith('blob:')) {
+      try {
+        const resolved = await resolvePermanentAudioForSave(config.musicPreset, config.audioUrl);
+        if (resolved) {
+          persistedAudioUrl = resolved;
+        }
+      } catch (audioResolveErr) {
+        console.warn('Lỗi xử lý audio lưu thiệp:', audioResolveErr);
+      }
+    }
+
     const newCard: CreatedCard = {
       id: cardIdToSave,
       creatorId: user ? user.id : null,
       templateId: template.id,
       title: `${template.titleVi} — Gửi ${config.recipientName || 'người thương'}`,
-      cardData: config,
+      cardData: {
+        ...config,
+        audioUrl: persistedAudioUrl,
+      },
       viewsCount: 1,
       heartsCount: 0,
       createdAt: new Date().toLocaleDateString('vi-VN'),
