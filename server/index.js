@@ -1039,6 +1039,49 @@ app.get('/api/sync-music', async (req, res) => {
   return res.json({ success: true, message: 'Đang tải sẵn nhạc vào thư mục public/music' });
 });
 
+// Endpoint tải file nhạc MP3 từ thiết bị người dùng lên server
+app.post('/api/upload-audio', async (req, res) => {
+  try {
+    const { fileName, fileData, userId } = req.body;
+    if (!fileData) {
+      return res.status(400).json({ success: false, error: 'Thiếu dữ liệu fileData' });
+    }
+
+    const uploadsDir = path.resolve(__dirname, '../public/music/uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Tách base64 data
+    const matches = fileData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    const buffer = matches && matches[2]
+      ? Buffer.from(matches[2], 'base64')
+      : Buffer.from(fileData, 'base64');
+
+    const extMatch = (fileName || '').match(/\.([a-zA-Z0-9]+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'mp3';
+    const safeCleanName = (fileName || 'audio')
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF-]/g, '_')
+      .slice(0, 40);
+
+    const uniqueFileName = `${Date.now()}_${safeCleanName}.${ext}`;
+    const targetPath = path.join(uploadsDir, uniqueFileName);
+
+    fs.writeFileSync(targetPath, buffer);
+    console.log(`[MUSIC] 🎧 Đã tải lên file nhạc người dùng: ${uniqueFileName} (${(buffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+
+    return res.json({
+      success: true,
+      audioUrl: `/music/uploads/${uniqueFileName}`,
+      fileName: fileName || uniqueFileName,
+    });
+  } catch (err) {
+    console.error('Upload audio error:', err);
+    return res.status(500).json({ success: false, error: 'Lỗi tải lên file âm thanh: ' + err.message });
+  }
+});
+
 // Helper tìm kiếm YouTube Video ID qua truy vấn tìm kiếm
 async function searchYouTubeVideoId(query) {
   try {

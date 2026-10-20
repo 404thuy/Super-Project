@@ -37,6 +37,7 @@ import {
   type SongItem,
 } from '../data/vietnameseMusic';
 import { Play, Pause } from 'lucide-react';
+import { saveUserTrack, userTrackToSongItem } from '../utils/userMusicStorage';
 
 function parseSongDurationToSeconds(durationStr?: string, defaultSec: number = 180): number {
   if (!durationStr) return defaultSec;
@@ -427,7 +428,7 @@ export default function Studio() {
   };
 
   const handleSelectSongFromModal = (song: SongItem, startSeconds: number = 0) => {
-    if (song.id.startsWith('online-')) {
+    if (song.id.startsWith('online-') || song.id.startsWith('user-audio-')) {
       setSelectedOnlineSong(song);
     } else {
       setSelectedOnlineSong(null);
@@ -458,29 +459,31 @@ export default function Studio() {
     setIsStudioAudioPlaying(true);
   };
 
-  // Direct fast upload from Studio music card
-  const handleStudioFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Direct fast upload from Studio music card (tự động lưu vào mục "Tôi" của tài khoản)
+  const handleStudioFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
     soundFx.playPinClick();
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        soundFx.playHeartPop();
-        setConfig((prev) => ({
-          ...prev,
-          musicPreset: 'custom-mp3',
-          audioUrl: dataUrl,
-          audioStartTime: prev.audioStartTime || 0,
-          audioEndTime: undefined,
-        }));
-        soundFx.startBackgroundMusic('custom-mp3', dataUrl, config.audioStartTime || 0);
-        setIsStudioAudioPlaying(true);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const currentUid = user?.id || 'guest';
+      const newTrack = await saveUserTrack(currentUid, file);
+      const songItem = userTrackToSongItem(newTrack, user?.displayName);
+      setSelectedOnlineSong(songItem);
+      soundFx.playHeartPop();
+      setConfig((prev) => ({
+        ...prev,
+        musicPreset: newTrack.id,
+        audioUrl: newTrack.audioUrl,
+        audioStartTime: 0,
+        audioEndTime: newTrack.durationSec,
+      }));
+      soundFx.startBackgroundMusic(newTrack.id, newTrack.audioUrl, 0);
+      setIsStudioAudioPlaying(true);
+    } catch (err) {
+      console.warn('Lỗi tải file nhạc trực tiếp từ Studio:', err);
+    }
   };
 
   const handleToggleStudioMusic = () => {
@@ -1702,17 +1705,25 @@ export default function Studio() {
               {/* Current Active Song Card */}
               {(() => {
                 const isOnlineSong = config.musicPreset?.startsWith('online-');
+                const isUserSong = config.musicPreset?.startsWith('user-audio-');
                 const isCustomUpload = config.musicPreset === 'custom-mp3';
-                const currentSong = isOnlineSong
+                const currentSong = isOnlineSong || isUserSong
                   ? selectedOnlineSong
                   : getSongById(config.musicPreset || 'anh-nang-cua-anh');
-                const isSystemSong = !isOnlineSong && !isCustomUpload && !!currentSong;
+                const isSystemSong = !isOnlineSong && !isUserSong && !isCustomUpload && !!currentSong;
 
-                const displayTitle = isCustomUpload
+                const meta = config.musicPreset ? soundFx.getSongMetadata(config.musicPreset) : undefined;
+                const displayTitle = isUserSong
+                  ? (selectedOnlineSong?.title || meta?.title || 'Bài Hát Trong Mục "Tôi"')
+                  : isCustomUpload
                   ? 'Bài Hát Tải Lên Từ Máy'
                   : currentSong?.title || 'Ánh Nắng Của Anh';
-                const displayArtist = !isCustomUpload ? currentSong?.artist : null;
-                const displayCover = isCustomUpload
+                const displayArtist = isUserSong
+                  ? (selectedOnlineSong?.artist || meta?.artist || user?.displayName || 'Nhạc Của Bạn')
+                  : !isCustomUpload
+                  ? currentSong?.artist
+                  : null;
+                const displayCover = (isCustomUpload || isUserSong)
                   ? 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80'
                   : getSongCoverUrl(currentSong);
 
@@ -1726,9 +1737,9 @@ export default function Studio() {
                         className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shrink-0 shadow-md border border-rose-200/90 relative group/img bg-rose-100"
                       >
                         <div
-                          className={`w-full h-full bg-gradient-to-tr ${currentSong?.color || 'from-rose-500 to-pink-500'} text-white flex items-center justify-center text-lg absolute inset-0`}
+                          className={`w-full h-full bg-gradient-to-tr ${currentSong?.color || 'from-purple-600 to-pink-500'} text-white flex items-center justify-center text-lg absolute inset-0`}
                         >
-                          {isCustomUpload ? '🎵' : (currentSong?.icon || '🎵')}
+                          {isCustomUpload || isUserSong ? '🎵' : (currentSong?.icon || '🎵')}
                         </div>
                         <img
                           src={displayCover}
@@ -1759,7 +1770,11 @@ export default function Studio() {
 
                         {/* Badges */}
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                          {isCustomUpload ? (
+                          {isUserSong ? (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 whitespace-nowrap">
+                              MP3 Của Tôi
+                            </span>
+                          ) : isCustomUpload ? (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 whitespace-nowrap">
                               MP3 Tự Tải Lên
                             </span>

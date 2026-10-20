@@ -66,6 +66,10 @@ class SoundEngine {
     }
   }
 
+  public getSongMetadata(idOrUrl: string): { title: string; artist: string } | undefined {
+    return this.onlineSongMetadata.get(idOrUrl);
+  }
+
   constructor() {
     if (typeof window !== 'undefined') {
       setTimeout(() => {
