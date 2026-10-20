@@ -21,6 +21,7 @@ import {
   Layers,
   RotateCw,
   Plus,
+  Loader2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { TEMPLATES, resolveTemplate, type CardConfig, type CreatedCard } from '../types';
@@ -399,7 +400,9 @@ export default function Studio() {
   const [shareTab, setShareTab] = useState<'qr' | 'link'>('qr');
   const [copied, setCopied] = useState(false);
 
-  const [fileInputRef] = useState(() => ({ current: null as HTMLInputElement | null }));
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState<number | 'batch' | null>(null);
+  const [uploadNotice, setUploadNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Music Modal State & Live Preview in Studio
   const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
@@ -553,56 +556,133 @@ export default function Studio() {
     setTimeout(() => setWishAppliedNotice(null), 3000);
   };
 
-  // Helper nén ảnh siêu nhẹ và mượt mà, tối ưu dung lượng <100KB/ảnh, chống tràn bộ nhớ localStorage & database
-  const compressImageFile = (file: File, maxDim = 800, quality = 0.72): Promise<string> => {
+  // Helper nén và xử lý ảnh siêu an toàn, tương thích mọi thiết bị (Cốc Cốc, Chrome, Safari, iOS, Android, Windows)
+  const compressImageFile = async (file: File, maxDim = 1200, quality = 0.78): Promise<string> => {
     return new Promise((resolve) => {
-      // 1. Thử dùng Blob URL trực tiếp (không bị ảnh hưởng bởi e.target.value = '')
-      try {
-        const blobUrl = URL.createObjectURL(file);
-        const img = new Image();
+      let resolved = false;
+      const safeResolve = (val: string) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(val);
+        }
+      };
 
-        img.onload = () => {
-          URL.revokeObjectURL(blobUrl);
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+      // Bảo vệ: timeout 12 giây chống treo vĩnh viễn trên trình duyệt di động
+      const timer = setTimeout(() => {
+        console.warn('Image compression timed out for file:', file.name);
+        safeResolve('');
+      }, 12000);
+
+      const finish = (result: string) => {
+        clearTimeout(timer);
+        safeResolve(result);
+      };
+
+      // 1. Thử dùng createImageBitmap (nhanh nhất, tự xoay EXIF, hỗ trợ GPU)
+      if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
+        createImageBitmap(file)
+          .then((bitmap) => {
+            try {
+              let { width, height } = bitmap;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = Math.max(1, width);
+              canvas.height = Math.max(1, height);
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(bitmap, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                bitmap.close?.();
+                if (dataUrl && dataUrl.length > 50) {
+                  finish(dataUrl);
+                  return;
+                }
+              }
+              bitmap.close?.();
+              fallbackWithFileReader(file, maxDim, quality, finish);
+            } catch (err) {
+              console.warn('createImageBitmap drawing error, trying FileReader fallback:', err);
+              fallbackWithFileReader(file, maxDim, quality, finish);
             }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            resolve(dataUrl);
-            return;
-          }
-          fallbackRead(file, resolve);
-        };
-
-        img.onerror = () => {
-          URL.revokeObjectURL(blobUrl);
-          fallbackRead(file, resolve);
-        };
-
-        img.src = blobUrl;
-      } catch {
-        fallbackRead(file, resolve);
+          })
+          .catch(() => {
+            fallbackWithFileReader(file, maxDim, quality, finish);
+          });
+        return;
       }
+
+      fallbackWithFileReader(file, maxDim, quality, finish);
     });
   };
 
-  const fallbackRead = (file: File, resolve: (val: string) => void) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve((e.target?.result as string) || '');
-    reader.onerror = () => resolve('');
-    reader.readAsDataURL(file);
+  const fallbackWithFileReader = (
+    file: File,
+    maxDim: number,
+    quality: number,
+    finish: (val: string) => void
+  ) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawUrl = (e.target?.result as string) || '';
+        if (!rawUrl) {
+          finish('');
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          try {
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, width);
+            canvas.height = Math.max(1, height);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              if (dataUrl && dataUrl.length > 50) {
+                finish(dataUrl);
+                return;
+              }
+            }
+            // Nếu canvas gặp hạn chế, giữ nguyên ảnh nếu dưới 600KB
+            if (rawUrl.length < 800000) {
+              finish(rawUrl);
+            } else {
+              finish('');
+            }
+          } catch {
+            finish(rawUrl.length < 800000 ? rawUrl : '');
+          }
+        };
+        img.onerror = () => {
+          console.warn('Image element decode error for file:', file.name);
+          finish(rawUrl.length < 800000 ? rawUrl : '');
+        };
+        img.src = rawUrl;
+      };
+      reader.onerror = () => finish('');
+      reader.readAsDataURL(file);
+    } catch {
+      finish('');
+    }
   };
 
   // Handle Batch Image Upload (tải hàng loạt an toàn, nén nhanh và cập nhật chuẩn xác)
@@ -611,6 +691,7 @@ export default function Studio() {
     if (!files || files.length === 0) return;
 
     soundFx.playPinClick();
+    setIsUploadingImage('batch');
     const isCinema = template.effectType === 'CINEMA_FILM';
     const isPolaroid = template.effectType === 'POLAROID_SWIPE';
     const photoConfig = getTemplatePhotoConfig(template.effectType);
@@ -659,11 +740,28 @@ export default function Studio() {
             images: current.slice(0, maxPhotos),
           };
         });
+
+        setUploadNotice({
+          type: 'success',
+          text: `✓ Đã tải và tối ưu thành công ${validBase64.length} ảnh kỷ niệm!`,
+        });
+        setTimeout(() => setUploadNotice(null), 3500);
+      } else {
+        setUploadNotice({
+          type: 'error',
+          text: 'Không thể đọc được ảnh đã chọn. Vui lòng thử ảnh định dạng JPG, PNG hoặc WebP.',
+        });
+        setTimeout(() => setUploadNotice(null), 4000);
       }
     } catch (err) {
       console.warn('Batch image upload warning:', err);
+      setUploadNotice({
+        type: 'error',
+        text: 'Có lỗi xảy ra khi xử lý ảnh. Vui lòng thử lại!',
+      });
+      setTimeout(() => setUploadNotice(null), 4000);
     } finally {
-      // Chỉ reset sau khi đã nạp và nén xong toàn bộ
+      setIsUploadingImage(null);
       e.target.value = '';
     }
   };
@@ -681,6 +779,7 @@ export default function Studio() {
     const file = e.target.files?.[0];
     if (!file) return;
     soundFx.playPinClick();
+    setIsUploadingImage(slotIndex);
 
     try {
       const base64 = await compressImageFile(file);
@@ -698,11 +797,28 @@ export default function Studio() {
           }
           return { ...prev, images: current.slice(0, photoConfig.maxPhotos) };
         });
+
+        setUploadNotice({
+          type: 'success',
+          text: `✓ Đã nạp ảnh thành công vào vị trí ${slotIndex + 1}!`,
+        });
+        setTimeout(() => setUploadNotice(null), 3000);
+      } else {
+        setUploadNotice({
+          type: 'error',
+          text: 'Không thể đọc định dạng ảnh này. Vui lòng chọn ảnh JPG, PNG hoặc WebP.',
+        });
+        setTimeout(() => setUploadNotice(null), 4000);
       }
     } catch (err) {
       console.warn('Slot image upload warning:', err);
+      setUploadNotice({
+        type: 'error',
+        text: 'Lỗi khi tải ảnh lên. Vui lòng thử lại!',
+      });
+      setTimeout(() => setUploadNotice(null), 4000);
     } finally {
-      // Chỉ reset value sau khi đã hoàn tất xử lý ảnh
+      setIsUploadingImage(null);
       e.target.value = '';
     }
   };
@@ -1347,6 +1463,18 @@ export default function Studio() {
                     </span>
                   </div>
 
+                  {/* Toast thông báo tải ảnh trực quan */}
+                  {uploadNotice && (
+                    <div className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs ${
+                      uploadNotice.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                        : 'bg-rose-50 text-rose-800 border border-rose-300'
+                    }`}>
+                      <span>{uploadNotice.type === 'success' ? '✨' : '⚠️'}</span>
+                      <span className="flex-1">{uploadNotice.text}</span>
+                    </div>
+                  )}
+
                   {/* Lựa chọn Có ảnh / Không có ảnh (Chỉ chứa nội dung) cho Mẫu Nhấn Giữ */}
                   {isHoldToReveal && (
                     <div className="bg-white/95 backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-amber-300 shadow-xs space-y-2.5">
@@ -1474,18 +1602,29 @@ export default function Studio() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      disabled={isUploadingImage !== null}
+                      className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-70 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
-                      <Upload className="w-3.5 h-3.5 text-rose-300" />
-                      <span>{isCinema || isPolaroid ? 'Tải nhanh nhiều ảnh' : `Tải nhanh ${maxPhotos} ảnh cùng lúc`}</span>
+                      {isUploadingImage === 'batch' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-300" />
+                          <span>Đang nén & nạp ảnh...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3.5 h-3.5 text-rose-300" />
+                          <span>{isCinema || isPolaroid ? 'Tải nhanh nhiều ảnh' : `Tải nhanh ${maxPhotos} ảnh cùng lúc`}</span>
+                        </>
+                      )}
                     </button>
                     <input
                       ref={fileInputRef}
+                      id="batch-photo-upload-input"
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif"
                       multiple
                       onChange={handleImageUpload}
-                      className="hidden"
+                      className="sr-only"
                     />
                   </div>
 
@@ -1513,6 +1652,9 @@ export default function Studio() {
                         ? (config.polaroidNotes?.[idx] ?? defaultPolaroidNotes[idx % defaultPolaroidNotes.length])
                         : null;
 
+                      const isSlotUploading = isUploadingImage === idx;
+                      const slotInputId = `slot-photo-input-${idx}`;
+
                       return (
                         <div
                           key={idx}
@@ -1521,7 +1663,12 @@ export default function Studio() {
                           <div className="flex items-center gap-2.5">
                             {/* Photo thumbnail or upload button */}
                             <div className={`relative w-14 h-14 ${isVinylCenter ? 'rounded-full' : 'rounded-xl'} overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group`}>
-                              {img ? (
+                              {isSlotUploading ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-purple-600">
+                                  <Loader2 className="w-5 h-5 animate-spin" />
+                                  <span className="text-[7.5px] font-bold mt-0.5">Đang xử lý</span>
+                                </div>
+                              ) : img ? (
                                 <>
                                   <img
                                     src={img}
@@ -1538,15 +1685,13 @@ export default function Studio() {
                                   </button>
                                 </>
                               ) : (
-                                <label className={`w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-purple-600 hover:bg-purple-50/50 cursor-pointer transition-colors ${isVinylCenter ? 'rounded-full' : ''}`}>
-                                  <Upload className="w-4 h-4 mb-0.5" />
+                                <label
+                                  htmlFor={slotInputId}
+                                  className={`w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-purple-600 hover:bg-purple-50/70 cursor-pointer transition-colors ${isVinylCenter ? 'rounded-full' : ''}`}
+                                  title="Chọn ảnh từ thiết bị"
+                                >
+                                  <Upload className="w-4 h-4 mb-0.5 text-purple-500" />
                                   <span className="text-[8px] font-bold">Thêm</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleSlotImageUpload(idx, e)}
-                                    className="hidden"
-                                  />
                                 </label>
                               )}
                             </div>
@@ -1554,22 +1699,29 @@ export default function Studio() {
                             {/* Slot Info & Replace */}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-1">
-                                <span className="text-[10px] font-bold text-slate-800 truncate flex items-center gap-1">
+                                <label
+                                  htmlFor={slotInputId}
+                                  className="text-[10px] font-bold text-slate-800 truncate flex items-center gap-1 cursor-pointer hover:text-purple-600 transition-colors"
+                                  title="Bấm để chọn ảnh từ thiết bị"
+                                >
                                   <span>{slotInfo.icon}</span>
                                   <span className="truncate">{slotInfo.title}</span>
-                                </span>
+                                </label>
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  {img && (
-                                    <label className="text-[10px] text-purple-600 hover:underline cursor-pointer font-bold shrink-0">
-                                      Đổi
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleSlotImageUpload(idx, e)}
-                                        className="hidden"
-                                      />
-                                    </label>
-                                  )}
+                                  <label
+                                    htmlFor={slotInputId}
+                                    className="text-[10px] text-purple-600 hover:text-purple-800 hover:underline cursor-pointer font-bold shrink-0 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md transition-colors"
+                                  >
+                                    {img ? 'Đổi ảnh' : '+ Chọn ảnh'}
+                                  </label>
+                                  {/* Accessible hidden file input */}
+                                  <input
+                                    id={slotInputId}
+                                    type="file"
+                                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif"
+                                    onChange={(e) => handleSlotImageUpload(idx, e)}
+                                    className="sr-only"
+                                  />
                                   {isCinema && currentCinemaCount > 1 && (
                                     <button
                                       type="button"
